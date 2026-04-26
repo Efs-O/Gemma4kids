@@ -17,6 +17,7 @@ const buildMain = () =>
 const buildRenderer = () => {
   mkdirSync('dist/renderer', { recursive: true });
   copyFileSync('src/renderer/index.html', 'dist/renderer/index.html');
+  copyFileSync('src/renderer/styles.css', 'dist/renderer/styles.css');
   return esbuild.build({
     entryPoints: ['src/renderer/index.tsx'],
     bundle: true,
