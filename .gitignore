@@ -8,3 +8,9 @@ npm-debug.log*
 Thumbs.db
 *.env
 .env.local
+.claude/settings.local.json
+
+# Generated icon files — regenerate with: npm run icons
+assets/icon.png
+assets/icon.ico
+assets/icon.icns
