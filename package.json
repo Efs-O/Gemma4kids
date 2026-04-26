@@ -1,0 +1,33 @@
+{
+  "name": "gemma4kids",
+  "version": "0.1.0",
+  "description": "Offline AI coding teacher for kids — powered by Gemma 4",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build:main": "node esbuild.config.mjs main",
+    "build:renderer": "node esbuild.config.mjs renderer",
+    "build": "node esbuild.config.mjs",
+    "dev": "npm run build && electron .",
+    "typecheck": "tsc --noEmit",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux"
+  },
+  "keywords": ["electron", "gemma", "kids", "ai", "coding", "education", "offline"],
+  "author": "Gemma4kids contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.0.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  }
+}
