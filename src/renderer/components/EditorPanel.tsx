@@ -46,7 +46,7 @@ export function EditorPanel({ code, onChange }: Props) {
 
   return (
     <div className="editor-panel">
-      <div className="editor-label">Code Editor</div>
+      <div className="editor-label">✏️ Your Code</div>
       <div ref={containerRef} className="editor-container" />
     </div>
   );
