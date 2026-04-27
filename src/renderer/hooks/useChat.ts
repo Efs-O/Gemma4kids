@@ -13,6 +13,17 @@ function extractHtml(text: string): string | null {
   return match ? match[1].trim() : null;
 }
 
+/** Extracts partial HTML as it streams — no closing fence required. */
+function extractPartialHtml(text: string): string | null {
+  const start = text.indexOf('<!DOCTYPE html>');
+  if (start === -1) return null;
+  let html = text.slice(start);
+  // Strip trailing fence if the block has closed
+  const fence = html.lastIndexOf('\n```');
+  if (fence !== -1) html = html.slice(0, fence);
+  return html.trim() || null;
+}
+
 /** Keep system + last 24 non-system messages to avoid context blowout. */
 function buildRequestMessages(history: ChatMessage[]): ChatMessage[] {
   const nonSystem = history.filter(m => m.role !== 'system');
@@ -64,7 +75,12 @@ export function useChat(model: string): UseChatResult {
             numPredict: OLLAMA_MAX_REPLY_TOKENS,
           },
           {
-            onToken: (t) => { assembled += t; setStreamingText(assembled); },
+            onToken: (t) => {
+              assembled += t;
+              setStreamingText(assembled);
+              const partial = extractPartialHtml(assembled);
+              if (partial) setLatestCode(partial);
+            },
             onToolCalls: (calls) => { firedToolCalls = calls; },
             onDone: () => resolve(),
             onError: (err) => { loopError = err; resolve(); },
@@ -95,8 +111,8 @@ export function useChat(model: string): UseChatResult {
       if (firedToolCalls) {
         const calls = firedToolCalls as ToolCall[];
 
-        // Append the assistant tool_calls turn (no text content).
-        const assistantMsg: ChatMessage = { role: 'assistant', content: null, tool_calls: calls };
+        // Append the assistant tool_calls turn — preserve any streamed explanation text.
+        const assistantMsg: ChatMessage = { role: 'assistant', content: assembled || null, tool_calls: calls };
         history = [...history, assistantMsg];
         historyRef.current = history;
         setMessages([...history]);
@@ -149,7 +165,13 @@ export function useChat(model: string): UseChatResult {
           setMessages([...history]);
         }
 
-        // Re-enter the loop — Gemma generates its follow-up text.
+        // If Gemma already wrote text before the tool call, that IS the response — no follow-up needed.
+        if (assembled.trim()) {
+          setStreamingText('');
+          setStatus('idle');
+          return;
+        }
+        // No text yet — re-enter so Gemma can confirm the action.
         continue;
       }
 
