@@ -25,10 +25,6 @@ function createWindow(): void {
   });
 
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
-
-  if (process.env.NODE_ENV === 'development') {
-    win.webContents.openDevTools();
-  }
 }
 
 app.whenReady().then(() => {

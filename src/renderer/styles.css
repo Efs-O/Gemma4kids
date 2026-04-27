@@ -29,6 +29,19 @@ body {
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.2px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.app-model-tag {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: ui-monospace, 'Cascadia Code', monospace;
 }
 
 .header-controls { display: flex; align-items: center; gap: 10px; }
@@ -294,6 +307,21 @@ body {
   background: #fef2f2;
   border-radius: 10px;
   border-left: 3px solid #ef4444;
+}
+
+.error-detail {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #991b1b;
+  background: #fff7ed;
+  border-radius: 6px;
+  max-height: 8rem;
+  overflow-y: auto;
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
 }
 
 /* ── Retry button (Day 11) ────────────────────────────────────── */

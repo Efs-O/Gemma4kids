@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
-import { streamChatCompletion } from '../llm/OpenAIClient';
+import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
 import { SYSTEM_PROMPT } from '../prompts';
+import { OLLAMA_MAX_REPLY_TOKENS, OLLAMA_NUM_CTX } from '../ollamaConstants';
 
 const OLLAMA_BASE = 'http://localhost:11434';
 
@@ -52,9 +53,16 @@ export function useChat(model: string): UseChatResult {
       let loopError: Error | null = null;
 
       await new Promise<void>((resolve) => {
-        streamChatCompletion(
+        streamOllamaNativeChat(
           OLLAMA_BASE,
-          { model, messages: buildRequestMessages(history), stream: true, temperature: 0.7, tools: KIDS_TOOLS },
+          {
+            model,
+            messages: buildRequestMessages(history),
+            temperature: 0.7,
+            tools: KIDS_TOOLS,
+            numCtx: OLLAMA_NUM_CTX,
+            numPredict: OLLAMA_MAX_REPLY_TOKENS,
+          },
           {
             onToken: (t) => { assembled += t; setStreamingText(assembled); },
             onToolCalls: (calls) => { firedToolCalls = calls; },

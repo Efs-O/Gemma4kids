@@ -24,9 +24,10 @@ interface Props {
   onCancel: () => void;
   onRetry: () => void;
   e4bAvailable: boolean;
+  transcribeModel: string;
 }
 
-export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, onCancel, onRetry, e4bAvailable }: Props) {
+export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, onCancel, onRetry, e4bAvailable, transcribeModel }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,7 +68,10 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
         {streamingText && <Message role="assistant" content={streamingText} streaming />}
         {errorMsg && (
           <div>
-            <div className="error-msg">😕 Oops! Something went wrong. Try again?</div>
+            <div className="error-msg">
+              <div>😕 Oops! Gemma hit a snag. You can try again, or show this note to a grown-up.</div>
+              <pre className="error-detail" role="status">{errorMsg}</pre>
+            </div>
             <button className="btn-retry" onClick={onRetry}>🔄 Try Again</button>
           </div>
         )}
@@ -82,7 +86,7 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
           ))}
         </div>
       )}
-      <InputRow status={status} onSend={onSend} onCancel={onCancel} e4bAvailable={e4bAvailable} />
+      <InputRow status={status} onSend={onSend} onCancel={onCancel} e4bAvailable={e4bAvailable} transcribeModel={transcribeModel} />
     </div>
   );
 }

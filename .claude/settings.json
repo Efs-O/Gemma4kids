@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(python -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''),end='')\"); case \"$f\" in *.ts|*.tsx) cd \"c:/Users/efso office/Desktop/Gemma4kids\" && npm run build && npm run typecheck;; esac",
+            "timeout": 60,
+            "statusMessage": "Building + typechecking..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"c:/Users/efso office/Desktop/Gemma4kids\" && s=$(git status --short 2>&1); [ -z \"$s\" ] && s=\"working tree clean\"; echo \"$s\" | python -c \"import json,sys; print(json.dumps({'systemMessage': 'Gemma4kids git: ' + sys.stdin.read().strip()}))\""
+          }
+        ]
+      }
+    ]
+  }
+}

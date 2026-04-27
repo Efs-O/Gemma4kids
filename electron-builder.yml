@@ -1,8 +1,8 @@
 appId: com.gemma4kids.app
 productName: Gemma4kids
-copyright: "Copyright © 2026 Gemma4kids contributors"
+copyright: "Copyright (c) 2026 Gemma4kids contributors"
 
-# Compiled output only — everything is bundled by esbuild into dist/
+# Compiled output only - everything is bundled by esbuild into dist/
 files:
   - dist/**
   - "!dist/**/*.map"
@@ -12,9 +12,10 @@ directories:
   buildResources: assets
   output: release
 
-# ── Windows ────────────────────────────────────────────────────────────────
+# Windows
 win:
-  icon: assets/icon.png   # electron-builder converts → .ico automatically
+  icon: assets/icon.png
+  signAndEditExecutable: false
   target:
     - target: nsis
       arch: [x64]
@@ -27,13 +28,13 @@ nsis:
   shortcutName: Gemma4kids
   license: LICENSE
 
-# ── macOS ──────────────────────────────────────────────────────────────────
+# macOS
 mac:
-  icon: assets/icon.png   # converted → .icns on macOS build host
+  icon: assets/icon.png
   category: public.app-category.education
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  # Unsigned — judges are pre-warned in SETUP.md
+  # Unsigned - judges are pre-warned in SETUP.md
   hardenedRuntime: false
   target:
     - target: dmg
@@ -42,7 +43,7 @@ mac:
 dmg:
   title: "Gemma4kids ${version}"
 
-# ── Linux ──────────────────────────────────────────────────────────────────
+# Linux
 linux:
   icon: assets/icon.png
   category: Education

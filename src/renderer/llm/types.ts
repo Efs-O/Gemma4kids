@@ -38,6 +38,8 @@ export interface ChatCompletionRequest {
   model: string;
   messages: ChatMessage[];
   stream: true;
+  /** Ollama /v1/chat/completions extension: maps to runner num_ctx when supported. */
+  context_length?: number;
   temperature?: number;
   top_p?: number;
   top_k?: number;

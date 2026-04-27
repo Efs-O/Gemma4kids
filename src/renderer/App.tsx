@@ -1,26 +1,21 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { EditorPanel } from './components/EditorPanel';
 import { ProjectList } from './components/ProjectList';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
+import { isGemma4EdgeE4b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
 
 export default function App() {
   const { status: ollamaStatus, models, recheck } = useOllama();
 
-  // Auto-pick best available coding model — no selector exposed to kids.
-  const [model, setModel] = useState('gemma4:26b');
-  useEffect(() => {
-    if (models.length === 0) return;
-    const g26b = models.find(m => m.includes('gemma') && m.includes('26b'));
-    const gemma = models.find(m => m.toLowerCase().includes('gemma'));
-    setModel(g26b ?? gemma ?? models[0]);
-  }, [models]);
+  // Derive synchronously from /api/tags so useChat never lags one frame behind (effect + setState used to pick 26B early).
+  const codingModel = useMemo(() => pickCodingModel(models), [models]);
+  const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
+  const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
 
-  const e4bAvailable = models.some(m => m.includes('e4b'));
-
-  const { messages, streamingText, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry } = useChat(model);
+  const { messages, streamingText, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry } = useChat(codingModel);
 
   const [displayCode, setDisplayCode] = useState('');
   useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
@@ -88,7 +83,12 @@ export default function App() {
     <ErrorBoundary>
       <div className="app">
         <header className="app-header">
-          <span className="app-title">✨ gemma4kids</span>
+          <span className="app-title">
+            ✨ gemma4kids
+            <span className="app-model-tag" title="Model used for chat & code">
+              {codingModel}
+            </span>
+          </span>
           <div className="header-controls">
             <input
               className="filename-input"
@@ -117,6 +117,7 @@ export default function App() {
             onCancel={cancel}
             onRetry={retry}
             e4bAvailable={e4bAvailable}
+            transcribeModel={transcribeModel}
           />
         </div>
       </div>
