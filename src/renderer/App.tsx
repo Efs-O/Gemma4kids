@@ -19,11 +19,13 @@ export default function App() {
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const s = localStorage.getItem('g4k-sidebar-width');
-    return s ? parseInt(s, 10) : 196;
+    const v = s ? parseInt(s, 10) : 196;
+    return isNaN(v) || v < 80 || v > 400 ? 196 : v;
   });
   const [chatWidth, setChatWidth] = useState(() => {
     const s = localStorage.getItem('g4k-chat-width');
-    return s ? parseInt(s, 10) : 390;
+    const v = s ? parseInt(s, 10) : 390;
+    return isNaN(v) || v < 200 || v > 700 ? 390 : v;
   });
 
   // Persist widths whenever they change
