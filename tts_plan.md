@@ -3,13 +3,26 @@
 **Date:** 2026-04-27
 **Feature:** Text-to-Speech output for Gemma's responses
 **Primary engine:** Piper TTS (offline, child-process from Electron main, no CSP changes)
-**Fallback:** Gemini 2.5 Flash TTS via Electron main process IPC (if Piper quality is unacceptable on demo hardware)
+**Fallback:** Gemini 2.5 Flash TTS via Electron main process IPC (approved — see Phase 5)
+
+---
+
+## Decisions (locked — implement these exactly)
+
+| # | Decision | Detail |
+|---|---|---|
+| 1 | **Piper binary location** | Check `<projectRoot>/piper/piper.exe` first (dev convenience), then `app.getPath('userData')/piper/piper.exe` (prod). Windows = `piper.exe`, POSIX = `piper`. |
+| 2 | **Voice models location** | `app.getPath('userData')/voices/` — user drops `.onnx` + `.onnx.json` pairs there. Dev: also check `<projectRoot>/voices/`. |
+| 3 | **Languages to ship** | English `en_US-lessac-high` (130 MB), German `de_DE-thorsten-high` (130 MB), Greek `el_GR-rapunzel-medium` (65 MB — no high tier exists for Greek). |
+| 4 | **Sample rate** | Read `audio.sample_rate` from `.onnx.json` — never hardcode. WAV header must use the model's actual rate. |
+| 5 | **Download script** | `scripts/download-voices.mjs` — fetches all 3 voice pairs from HuggingFace. `npm run download-voices`. |
+| 6 | **Phase 5 Gemini fallback** | Approved. Implement only if Piper quality is unacceptable on demo hardware. |
+| 7 | **stdin input** | Plain text stdin (no `--json-input` flag — not universally supported). Strip Markdown before sending. |
+| 8 | **IPC return type** | Main returns `Buffer`. Renderer casts to `ArrayBuffer` via `.buffer` on the received `Uint8Array`. |
 
 ---
 
 ## Why a Speaker Button?
-
-Yes — a speaker button on every Gemma message bubble is essential:
 
 - Kids aged 8–12 may struggle to read longer explanations
 - Lets a child replay a step they missed without retyping
@@ -28,42 +41,36 @@ Yes — a speaker button on every Gemma message bubble is essential:
         │
    ┌────┴────────────┐
    ▼                 ▼
-PiperTTS         GeminiTTS          (fallback — see Phase 5)
+PiperTTS         GeminiTTS          (Phase 5 — approved, contingent)
 (IPC → main.ts   (IPC → main.ts →
 → spawn piper    Gemini API →
-→ .wav buffer)   audio blob)
+→ WAV buffer)    audio blob)
 ```
 
 ---
 
-## Voice Model — How It Works
+## Voice Models
 
-Piper TTS is a standalone binary (C++, no Python, cross-platform). Each voice is two files:
+### Voices to download (`npm run download-voices`)
 
-```
-en_US-amy-medium.onnx          ← neural model (~65 MB)
-en_US-amy-medium.onnx.json     ← config (a few KB)
-```
+| Language | Model | Tier | Size |
+|---|---|---|---|
+| English | `en_US-lessac-high` | high | ~130 MB |
+| German | `de_DE-thorsten-high` | high | ~130 MB |
+| Greek | `el_GR-rapunzel-medium` | medium | ~65 MB |
 
-Models are downloaded from the open Piper voices library (Hugging Face). The user picks the
-language and quality tier they want — same mental model as pulling an Ollama model.
+> Greek has no `high` tier in the Piper library — `medium` is the best available.
 
-**Hackathon story:** "The app ships with one English voice. Parents can drop in any Piper voice
-file for Spanish, French, Mandarin, etc. — it's detected automatically. No subscriptions,
-no API keys, fully offline."
+HuggingFace base: `https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/`
 
-**Bundled default:** `en_US-amy-medium` (65 MB, good quality, natural for kids).
-**High-quality option:** `en_US-lessac-high` (130 MB) if bundle size allows.
-
-### Language Support
-
-30+ languages including Spanish, French, German, Italian, Portuguese, Mandarin, Japanese,
-Korean, Arabic, Russian, Polish, Dutch, Swedish. English and major European languages have
-the strongest quality. Quality varies for smaller languages.
+Paths:
+- `en/en_US/lessac/high/en_US-lessac-high.onnx` + `.onnx.json`
+- `de/de_DE/thorsten/high/de_DE-thorsten-high.onnx` + `.onnx.json`
+- `el/el_GR/rapunzel/medium/el_GR-rapunzel-medium.onnx` + `.onnx.json`
 
 ### Quality Tiers
 
-| Tier | File size | Quality |
+| Tier | Size | Quality |
 |---|---|---|
 | `low` | ~25 MB | Acceptable, slight robotic edge |
 | `medium` | ~65 MB | Good — natural enough for a kids' app |
@@ -71,43 +78,36 @@ the strongest quality. Quality varies for smaller languages.
 
 ---
 
-## Files Affected
+## Files to Create / Modify
 
 | File | Change |
 |---|---|
-| `scripts/test-piper.mjs` | NEW — standalone pipeline + quality test (run before integration) |
+| `scripts/download-voices.mjs` | NEW — downloads all 3 voice pairs from HuggingFace |
+| `scripts/test-piper.mjs` | UPDATE — read sample rate from `.onnx.json`, not hardcoded 22050 |
 | `src/renderer/services/TTSService.ts` | NEW — interface + factory |
-| `src/renderer/services/PiperTTS.ts` | NEW — Piper child-process implementation |
+| `src/renderer/services/PiperTTS.ts` | NEW — Piper IPC client + AudioContext playback |
 | `src/renderer/components/Message.tsx` | ADD speaker button on assistant messages |
-| `src/renderer/styles.css` | ADD button styles (kid-friendly, accessible) |
-| `src/main/main.ts` | ADD IPC handler `tts-speak` — spawns Piper, returns WAV buffer |
-| `src/main/preload.ts` | ADD expose `window.electronAPI.ttsSpeak` |
-| `src/renderer/global.d.ts` | ADD type for `window.electronAPI.ttsSpeak` |
-| `src/renderer/services/GeminiTTS.ts` | FUTURE — Gemini fallback implementation |
-
-No new npm packages required.
+| `src/renderer/styles.css` | ADD `.btn-speaker` styles |
+| `src/main/main.ts` | ADD `tts-speak` IPC handler |
+| `src/main/preload.ts` | ADD `window.electronAPI.ttsSpeak` |
+| `src/renderer/global.d.ts` | ADD type for `ttsSpeak` |
+| `src/renderer/services/GeminiTTS.ts` | FUTURE — Phase 5 only |
+| `package.json` | ADD `download-voices` script |
 
 ---
 
-## Phase 0 — Test Pipeline First (before any integration)
+## Phase 0 — Test Pipeline ✅ (voices tested on Piper site — sound good)
 
-**File:** `scripts/test-piper.mjs`
-
-Run this standalone script to verify Piper works on the target machine and evaluate voice
-quality before writing any app code.
+Re-run `test-piper.mjs` after downloading the binary and models to confirm local pipeline.
+**Fix needed in test script:** read sample rate from `.onnx.json → audio.sample_rate`
+instead of hardcoded 22050.
 
 ```bash
-node scripts/test-piper.mjs --binary ./piper --model ./en_US-amy-medium.onnx
+npm run download-voices
+node scripts/test-piper.mjs \
+  --binary ./piper/piper \
+  --model ./voices/en_US-lessac-high.onnx
 ```
-
-The script:
-1. Checks the binary and model files exist and are readable
-2. Runs Piper with 5 kid-friendly test phrases (short, medium, code explanation, encouragement, excited)
-3. Writes each result as a numbered `.wav` file in `scripts/tts-test-output/`
-4. Prints pass/fail per phrase with timing (ms per phrase)
-5. Prints a summary — total time, average latency, whether output files are non-empty
-
-Play the `.wav` files manually to judge quality. If quality is acceptable, proceed to Phase 1.
 
 ---
 
@@ -123,14 +123,14 @@ export interface TTSService {
 }
 
 export function createTTSService(): TTSService {
-  return new PiperTTS();   // swap to GeminiTTS here if needed
+  return new PiperTTS();
 }
 ```
 
 Rules:
-- `speak()` returns a Promise — resolves when audio finishes, rejects on error
+- `speak()` resolves when audio finishes, rejects on error
 - `cancel()` stops current audio immediately
-- `speaking` lets the button toggle between play and stop icon
+- `speaking` drives the button icon toggle
 
 ---
 
@@ -139,89 +139,82 @@ Rules:
 **File:** `src/renderer/services/PiperTTS.ts`
 
 Flow:
-1. Strip Markdown from text before sending to Piper
-2. Call `window.electronAPI.ttsSpeak(cleanText)` → returns `ArrayBuffer` (WAV)
-3. Play buffer via `AudioContext` + `decodeAudioData`
-4. Resolve promise when playback ends, reject on error
+1. Strip Markdown (remove `**`, `*`, `` ` ``, `#`, `>`, `[]()` links, `✨` notes)
+2. Call `window.electronAPI.ttsSpeak(cleanText)` → receives `Uint8Array`
+3. Cast: `uint8arr.buffer` → `ArrayBuffer`
+4. `AudioContext.decodeAudioData(buffer)` → `AudioBufferSourceNode` → play
+5. Resolve on `source.onended`, reject on decode error
 
-**IPC handler in `main.ts`:**
-- Receives text string
-- Spawns Piper binary with `--model` path and `--output-raw` flag
-- Writes text to stdin
-- Collects stdout as WAV bytes
-- Returns buffer to renderer
-
-**Piper binary + model paths** resolved via `app.getPath('userData')` — user drops files there.
-App checks on startup if binary + at least one `.onnx` model exist; shows setup instructions if not.
+**IPC handler `tts-speak` in `main.ts`:**
+1. Resolve binary: check `<app.getAppPath()>/piper/piper[.exe]` (dev), then `userData/piper/piper[.exe]` (prod)
+2. Find first `.onnx` in `<app.getAppPath()>/voices/` (dev) or `userData/voices/` (prod)
+3. Read `.onnx.json` → `audio.sample_rate`
+4. Spawn: `piper --model <path> --output-raw`, write text to stdin
+5. Collect stdout → `Buffer.concat(chunks)`
+6. Prepend 44-byte WAV header (mono, 16-bit LE, correct sample rate)
+7. Return buffer via IPC
 
 ---
 
 ## Phase 3 — Speaker Button in Message.tsx
 
-The button appears **only on assistant messages**, not user messages.
+Button on **assistant messages only**, hidden while streaming.
 
-**Behaviour:**
-- Idle: shows 🔊 icon, `aria-label="Read aloud"`
-- Speaking: shows ⏹ icon, clicking cancels immediately
-- Disabled: while message is still streaming
+States:
+- Idle → `🔊` (`aria-label="Read aloud"`)
+- Speaking → `⏹` (click cancels)
 
-**Placement:** bottom-right corner of the assistant message bubble.
+**Placement:** bottom-right of assistant bubble, `position: absolute`.
 
-**Props change:**
 ```typescript
+// Message.tsx props
 interface Props {
   role: string;
   content: string;
   streaming?: boolean;
-  tts?: TTSService;   // passed down from ChatPanel
+  tts?: TTSService;
 }
 ```
 
-`ChatPanel.tsx` creates one `TTSService` instance via `useMemo` and passes it to each `<Message>`.
+`ChatPanel.tsx` creates **one** `TTSService` via `useMemo(() => createTTSService(), [])`,
+passed to every `<Message>`. Calling `speak()` while another message plays implicitly
+cancels it (cancel then play).
 
 ---
 
-## Phase 4 — Multi-language Voice Detection (bonus)
+## Phase 4 — Multi-language Voice Detection
 
-On startup, `main.ts` scans `app.getPath('userData')` for `*.onnx` files.
-Detected voices are passed to the renderer via IPC.
-A small voice picker (dropdown or auto-select based on system locale) lets families choose
-their downloaded language without restarting.
+`tts-list-voices` IPC on startup:
+- Scan `userData/voices/` + project `voices/` for `*.onnx` + matching `.onnx.json`
+- Return `{ name, lang, sampleRate }[]` to renderer
+- Auto-select: match `app.getLocale()` → first English → first available
+- No voice-picker UI needed for hackathon
 
 ---
 
-## Phase 5 — Gemini TTS Fallback (if Piper quality is unacceptable)
+## Phase 5 — Gemini TTS Fallback (approved, contingent on Phase 0 results)
 
-**Trigger:** Piper voice quality fails on demo hardware after Phase 0 test.
-**Estimated effort:** 2–3 hours.
-
-Steps:
-1. Add `GEMINI_API_KEY` to Electron env (loaded in `main.ts` via `process.env`)
-2. Add IPC handler `tts-speak-gemini` in `main.ts` — calls Gemini 2.5 Flash TTS, returns `ArrayBuffer`
-3. Write `GeminiTTS.ts` implementing `TTSService` — calls IPC, plays via `AudioContext`
-4. Swap factory in `TTSService.ts`
-
-No renderer CSP changes needed — API call is in main process (Node.js).
-**CLAUDE.md note:** "localhost:11434 only" rule needs a one-line exception if this path is taken.
+1. `GEMINI_API_KEY` in Electron main via `process.env`
+2. IPC `tts-speak-gemini` — calls Gemini 2.5 Flash TTS, returns `ArrayBuffer`
+3. `GeminiTTS.ts` — same `TTSService` interface, swap in factory
+4. CLAUDE.md: add one-line exception for `generativelanguage.googleapis.com` from main process
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `scripts/test-piper.mjs` runs clean and produces audible `.wav` files
-- [ ] Gemma assistant messages have a visible speaker button
+- [ ] `npm run download-voices` fetches all 3 voice pairs without error
+- [ ] `test-piper.mjs` passes all 5 phrases, `.wav` files are audible
+- [ ] Assistant messages show a 🔊 speaker button (not on user messages, not while streaming)
 - [ ] Clicking speaks the full message text aloud (Markdown stripped)
 - [ ] Clicking again while speaking cancels immediately
-- [ ] Button is disabled while message is still streaming
 - [ ] No speech fires automatically — always user-initiated
-- [ ] App shows clear setup instructions if Piper binary or model is missing
 - [ ] `npm run build` and `npm run typecheck` pass clean
 
 ---
 
-## Out of Scope (this plan)
+## Out of Scope
 
 - Auto-read new messages without clicking
-- Per-voice settings UI
-- Speed/pitch controls
-- Gemini TTS (Phase 5 is contingent on Phase 0 test results)
+- Per-voice settings UI, speed/pitch controls
+- Gemini TTS unless Piper fails on demo hardware
