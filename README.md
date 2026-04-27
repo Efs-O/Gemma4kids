@@ -1,6 +1,6 @@
 # Gemma4kids
 
-**Offline AI coding teacher for kids aged 8–12, powered by Google Gemma 4.**
+**Offline AI coding teacher for kids aged 6–11, powered by Google Gemma 4.**
 
 No internet. No subscription. No data sent anywhere. Just a kid, a mic, and a coding buddy.
 

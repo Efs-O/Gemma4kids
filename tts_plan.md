@@ -24,7 +24,7 @@
 
 ## Why a Speaker Button?
 
-- Kids aged 8–12 may struggle to read longer explanations
+- Kids aged 6–11 may struggle to read longer explanations
 - Lets a child replay a step they missed without retyping
 - Natural affordance: they already expect "tap to hear" from every device they own
 - Costs almost nothing to add alongside the TTS service

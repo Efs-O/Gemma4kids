@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu, session } from 'electron';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -29,11 +29,16 @@ function createWindow(): void {
   });
 
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
+  win.webContents.openDevTools({ mode: 'detach' });
 }
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   ensureAnimationsDir();
+  // Allow microphone access from the local file:// renderer.
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === 'media');
+  });
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
