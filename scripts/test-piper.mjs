@@ -15,7 +15,7 @@
  */
 
 import { spawn } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync, statSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -60,11 +60,10 @@ function runPiper(binary, model, text) {
 
     const proc = spawn(binary, [
       '--model', model,
-      '--output-raw',          // raw PCM on stdout
-      '--json-input',          // accept JSON on stdin (handles special chars safely)
+      '--output-raw',   // raw PCM on stdout
     ]);
 
-    proc.stdin.write(JSON.stringify({ text }));
+    proc.stdin.write(text);
     proc.stdin.end();
 
     proc.stdout.on('data', (chunk) => chunks.push(chunk));
@@ -87,16 +86,28 @@ function runPiper(binary, model, text) {
 }
 
 // ---------------------------------------------------------------------------
-// Wrap raw PCM in a minimal WAV header (22050 Hz, mono, 16-bit signed LE)
-// Piper default sample rate — adjust if your model differs.
+// Read sample rate from .onnx.json — never hardcode
 // ---------------------------------------------------------------------------
 
-const SAMPLE_RATE = 22050;
+function readSampleRate(modelPath) {
+  const jsonPath = modelPath + '.json';
+  if (!existsSync(jsonPath)) return 22050;
+  try {
+    const cfg = JSON.parse(readFileSync(jsonPath, 'utf-8'));
+    return cfg?.audio?.sample_rate ?? 22050;
+  } catch {
+    return 22050;
+  }
+}
 
-function buildWav(pcmBuffer) {
+// ---------------------------------------------------------------------------
+// Wrap raw PCM in a minimal WAV header (mono, 16-bit signed LE)
+// ---------------------------------------------------------------------------
+
+function buildWav(pcmBuffer, sampleRate) {
   const numChannels = 1;
   const bitsPerSample = 16;
-  const byteRate = SAMPLE_RATE * numChannels * (bitsPerSample / 8);
+  const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
   const blockAlign = numChannels * (bitsPerSample / 8);
   const dataSize = pcmBuffer.length;
   const header = Buffer.alloc(44);
@@ -105,10 +116,10 @@ function buildWav(pcmBuffer) {
   header.writeUInt32LE(36 + dataSize, 4);
   header.write('WAVE', 8);
   header.write('fmt ', 12);
-  header.writeUInt32LE(16, 16);            // PCM chunk size
-  header.writeUInt16LE(1, 20);             // PCM format
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
   header.writeUInt16LE(numChannels, 22);
-  header.writeUInt32LE(SAMPLE_RATE, 24);
+  header.writeUInt32LE(sampleRate, 24);
   header.writeUInt32LE(byteRate, 28);
   header.writeUInt16LE(blockAlign, 32);
   header.writeUInt16LE(bitsPerSample, 34);
@@ -157,6 +168,9 @@ async function main() {
     process.exit(1);
   }
 
+  const sampleRate = readSampleRate(model);
+  console.log(`Sample rate: ${sampleRate} Hz (from .onnx.json)\n`);
+
   mkdirSync(OUTPUT_DIR, { recursive: true });
 
   const results = [];
@@ -167,7 +181,7 @@ async function main() {
 
     try {
       const pcm = await runPiper(binary, model, phrase.text);
-      const wav = buildWav(pcm);
+      const wav = buildWav(pcm, sampleRate);
       const outPath = resolve(OUTPUT_DIR, `${phrase.name}.wav`);
       writeFileSync(outPath, wav);
 
