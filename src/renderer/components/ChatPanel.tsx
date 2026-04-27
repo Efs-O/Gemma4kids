@@ -1,19 +1,42 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Message } from './Message';
 import { InputRow } from './InputRow';
 import type { ChatMessage } from '../llm/types';
+import { createTTSService } from '../services/TTSService';
 
-const STARTER_PROMPTS: { label: string; text: string }[] = [
+const ALL_STARTERS: { label: string; text: string }[] = [
   { label: '🏀 Make a bouncing ball animation', text: 'Make a bouncing ball animation' },
   { label: '❄️ Make snowflakes gently falling', text: 'Make snowflakes gently falling from the sky' },
   { label: '🎆 Make colorful fireworks exploding', text: 'Make colorful fireworks exploding in the night sky' },
+  { label: '🌈 Make a rainbow appear after rain', text: 'Make a rainbow appear after rain' },
+  { label: '🦋 Make butterflies flying around flowers', text: 'Make colorful butterflies flying around flowers' },
+  { label: '🚀 Launch a rocket into space', text: 'Make a rocket launch into space with stars in the background' },
+  { label: '🌊 Make ocean waves on a beach', text: 'Make animated ocean waves crashing on a sunny beach' },
+  { label: '🎠 Make a spinning carousel', text: 'Make a colorful spinning carousel with horses' },
+  { label: '🌙 Make a night sky with shooting stars', text: 'Make a night sky with twinkling stars and shooting stars' },
+  { label: '🐠 Make fish swimming in the sea', text: 'Make colorful fish swimming in the sea with bubbles' },
+  { label: '🍂 Make falling autumn leaves', text: 'Make colorful autumn leaves gently falling from trees' },
+  { label: '🎪 Make a bouncing clown juggling balls', text: 'Make a fun clown juggling colorful bouncing balls' },
 ];
 
-const FOLLOW_UP_CHIPS: { label: string; text: string }[] = [
+const ALL_CHIPS: { label: string; text: string }[] = [
   { label: '⚡ Make it faster', text: 'Make it faster' },
+  { label: '🐢 Make it slower', text: 'Make it slower' },
   { label: '🔴 Change color to red', text: 'Change the main color to red' },
+  { label: '💜 Change color to purple', text: 'Change the main color to purple' },
+  { label: '🌈 Add more colors', text: 'Add more bright rainbow colors' },
   { label: '🎵 Add floating music notes', text: 'Add floating music notes to the animation' },
+  { label: '⭐ Add twinkling stars', text: 'Add twinkling stars in the background' },
+  { label: '💥 Make it bigger', text: 'Make everything bigger' },
+  { label: '🔮 Make it glow', text: 'Make the shapes glow with a neon light effect' },
+  { label: '🌀 Add a spinning effect', text: 'Add a spinning or rotating effect' },
+  { label: '💦 Add splashing water', text: 'Add splashing water or bubbles' },
+  { label: '🎉 Add confetti', text: 'Add falling confetti in many colors' },
 ];
+
+function pickRandom<T>(arr: T[], n: number): T[] {
+  return [...arr].sort(() => Math.random() - 0.5).slice(0, n);
+}
 
 interface Props {
   messages: ChatMessage[];
@@ -29,6 +52,11 @@ interface Props {
 
 export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, onCancel, onRetry, e4bAvailable, transcribeModel }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const tts = useMemo(() => createTTSService(), []);
+
+  // Picked once at mount; reshuffled after each assistant reply (messages.length changes).
+  const starters = useMemo(() => pickRandom(ALL_STARTERS, 3), []);
+  const chips = useMemo(() => pickRandom(ALL_CHIPS, 3), [messages.length]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -55,7 +83,7 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
         )}
         {showStarters && (
           <div className="prompt-cards">
-            {STARTER_PROMPTS.map(p => (
+            {starters.map(p => (
               <button key={p.label} className="prompt-card" onClick={() => onSend(p.text)}>
                 {p.label}
               </button>
@@ -63,9 +91,9 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
           </div>
         )}
         {visible.map((msg, i) => (
-          <Message key={i} role={msg.role as string} content={msg.content ?? ''} />
+          <Message key={i} role={msg.role as string} content={msg.content ?? ''} tts={tts} />
         ))}
-        {streamingText && <Message role="assistant" content={streamingText} streaming />}
+        {streamingText && <Message role="assistant" content={streamingText} streaming tts={tts} />}
         {errorMsg && (
           <div>
             <div className="error-msg">
@@ -79,7 +107,7 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
       </div>
       {showChips && (
         <div className="suggestion-chips">
-          {FOLLOW_UP_CHIPS.map(c => (
+          {chips.map(c => (
             <button key={c.label} className="chip" onClick={() => onSend(c.text)}>
               {c.label}
             </button>

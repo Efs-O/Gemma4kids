@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { ChatPanel } from './components/ChatPanel';
 import { EditorPanel } from './components/EditorPanel';
 import { ProjectList } from './components/ProjectList';
@@ -16,6 +16,58 @@ export default function App() {
   const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
 
   const { messages, streamingText, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry } = useChat(codingModel);
+
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const s = localStorage.getItem('g4k-sidebar-width');
+    return s ? parseInt(s, 10) : 196;
+  });
+  const [chatWidth, setChatWidth] = useState(() => {
+    const s = localStorage.getItem('g4k-chat-width');
+    return s ? parseInt(s, 10) : 390;
+  });
+
+  // Persist widths whenever they change
+  useEffect(() => { localStorage.setItem('g4k-sidebar-width', String(sidebarWidth)); }, [sidebarWidth]);
+  useEffect(() => { localStorage.setItem('g4k-chat-width', String(chatWidth)); }, [chatWidth]);
+
+  const draggingTarget = useRef<'sidebar' | 'chat' | null>(null);
+  const dragStartX = useRef(0);
+  const dragStartWidth = useRef(0);
+
+  const onSidebarDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    draggingTarget.current = 'sidebar';
+    dragStartX.current = e.clientX;
+    dragStartWidth.current = sidebarWidth;
+    e.preventDefault();
+  }, [sidebarWidth]);
+
+  const onChatDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    draggingTarget.current = 'chat';
+    dragStartX.current = e.clientX;
+    dragStartWidth.current = chatWidth;
+    e.preventDefault();
+  }, [chatWidth]);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!draggingTarget.current) return;
+      if (draggingTarget.current === 'sidebar') {
+        const delta = e.clientX - dragStartX.current;
+        setSidebarWidth(Math.max(80, Math.min(500, dragStartWidth.current + delta)));
+      } else {
+        const delta = dragStartX.current - e.clientX;
+        const maxChat = window.innerWidth - 350;
+        setChatWidth(Math.max(0, Math.min(maxChat, dragStartWidth.current + delta)));
+      }
+    };
+    const onMouseUp = () => { draggingTarget.current = null; };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
 
   const [displayCode, setDisplayCode] = useState('');
   useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
@@ -102,23 +154,29 @@ export default function App() {
         </header>
 
         <div className="app-body">
-          <div className="sidebar">
+          <div className="sidebar" style={{ width: sidebarWidth }}>
             <ProjectList onLoad={handleLoadProject} refreshTrigger={lastSaved} />
           </div>
 
+          <div className="resize-divider" onMouseDown={onSidebarDividerMouseDown} />
+
           <EditorPanel code={displayCode} onChange={setDisplayCode} />
 
-          <ChatPanel
-            messages={messages}
-            streamingText={streamingText}
-            status={status}
-            errorMsg={errorMsg}
-            onSend={sendMessage}
-            onCancel={cancel}
-            onRetry={retry}
-            e4bAvailable={e4bAvailable}
-            transcribeModel={transcribeModel}
-          />
+          <div className="resize-divider" onMouseDown={onChatDividerMouseDown} />
+
+          <div style={{ width: chatWidth, flexShrink: 0, display: 'flex', overflow: 'hidden' }}>
+            <ChatPanel
+              messages={messages}
+              streamingText={streamingText}
+              status={status}
+              errorMsg={errorMsg}
+              onSend={sendMessage}
+              onCancel={cancel}
+              onRetry={retry}
+              e4bAvailable={e4bAvailable}
+              transcribeModel={transcribeModel}
+            />
+          </div>
         </div>
       </div>
     </ErrorBoundary>

@@ -9,4 +9,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('list-animations'),
   openInBrowser: (filename: string) =>
     ipcRenderer.invoke('open-in-browser', { filename }),
+  ttsSpeak: (text: string, lang?: string) =>
+    ipcRenderer.invoke('tts-speak', text, lang),
+  ttsListVoices: () =>
+    ipcRenderer.invoke('tts-list-voices'),
 });
