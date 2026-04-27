@@ -105,6 +105,8 @@ export async function streamOllamaNativeChat(
     messages: ChatMessage[];
     tools?: ToolDefinition[];
     temperature: number;
+    topP: number;
+    topK: number;
     numCtx: number;
     numPredict: number;
   },
@@ -116,11 +118,14 @@ export async function streamOllamaNativeChat(
     model: params.model,
     messages: messagesForOllamaApi(params.messages),
     stream: true,
+    think: true,
     tools: params.tools,
     options: {
       num_ctx: params.numCtx,
       num_predict: params.numPredict,
       temperature: params.temperature,
+      top_p: params.topP,
+      top_k: params.topK,
     },
   };
 

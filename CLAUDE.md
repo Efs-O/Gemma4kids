@@ -7,7 +7,7 @@ No Python. No cloud. No subscriptions. No server. Offline-first by design.
 ---
 
 ## What This Project Is
-Gemma4kids is an offline AI coding teacher for kids aged 8–12, built for the Google Gemma 4 Good
+Gemma4kids is an offline AI coding teacher for kids aged 6–11, built for the Google Gemma 4 Good
 Hackathon (Kaggle, May 2026). A child types or speaks a prompt → Gemma generates a full HTML
 animation live → kid sees the code, edits it, saves it, opens it in the browser. WiFi off the whole time.
 

@@ -14,6 +14,7 @@ export function VoiceInput({ e4bAvailable, transcribeModel, onTranscription, dis
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const maxRecordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceState('transcribing');
@@ -28,7 +29,8 @@ export function VoiceInput({ e4bAvailable, transcribeModel, onTranscription, dis
       setVoiceState('idle');
       // ~2s delay lets VRAM clear before the coding model picks up.
       setTimeout(() => onTranscription(text), 2000);
-    } catch {
+    } catch (err) {
+      console.error('[VoiceInput] transcription error (attempt', attempt, '):', err);
       if (attempt < 2) {
         // GGML crash retry after 8s
         setTimeout(() => { void doTranscribe(blob, attempt + 1); }, 8000);
@@ -53,6 +55,8 @@ export function VoiceInput({ e4bAvailable, transcribeModel, onTranscription, dis
       recorder.start();
       mediaRecorderRef.current = recorder;
       setVoiceState('recording');
+      // Model card: audio max 30 seconds
+      maxRecordTimerRef.current = setTimeout(() => { recorder.stop(); }, 30000);
     } catch {
       setVoiceState('error');
       setTimeout(() => setVoiceState('idle'), 3000);
@@ -60,6 +64,7 @@ export function VoiceInput({ e4bAvailable, transcribeModel, onTranscription, dis
   }, [doTranscribe]);
 
   const stopRecording = useCallback(() => {
+    if (maxRecordTimerRef.current) { clearTimeout(maxRecordTimerRef.current); maxRecordTimerRef.current = null; }
     mediaRecorderRef.current?.stop();
     mediaRecorderRef.current = null;
   }, []);

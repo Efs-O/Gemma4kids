@@ -1,6 +1,6 @@
 # Gemma4kids — Setup Guide
 
-**Gemma4kids** is a fully offline AI coding teacher for kids aged 8–12.
+**Gemma4kids** is a fully offline AI coding teacher for kids aged 6–11.
 There is no cloud, no subscription, and no internet required after setup.
 
 ---

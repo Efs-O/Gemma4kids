@@ -3,17 +3,30 @@ import { ChatPanel } from './components/ChatPanel';
 import { EditorPanel } from './components/EditorPanel';
 import { ProjectList } from './components/ProjectList';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CodeRunner } from './components/CodeRunner';
 import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
-import { isGemma4EdgeE4b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
+import { isGemma4EdgeE4b, isGemma426b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
 
 export default function App() {
   const { status: ollamaStatus, models, recheck } = useOllama();
 
   // Derive synchronously from /api/tags so useChat never lags one frame behind (effect + setState used to pick 26B early).
-  const codingModel = useMemo(() => pickCodingModel(models), [models]);
+  const autoModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
+  const gemmaModels = useMemo(() => models.filter(m => isGemma4EdgeE4b(m) || isGemma426b(m)), [models]);
+
+  const [userModel, setUserModel] = useState<string>(() => localStorage.getItem('g4k-coding-model') ?? '');
+  const codingModel = useMemo(() => {
+    if (userModel && models.includes(userModel)) return userModel;
+    return autoModel;
+  }, [userModel, models, autoModel]);
+
+  const handleModelChange = useCallback((m: string) => {
+    setUserModel(m);
+    localStorage.setItem('g4k-coding-model', m);
+  }, []);
 
   const { messages, streamingText, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry } = useChat(codingModel);
 
@@ -139,10 +152,17 @@ export default function App() {
         <header className="app-header">
           <span className="app-title">
             ✨ gemma4kids
-            <span className="app-model-tag" title="Model used for chat & code">
-              {codingModel}
-            </span>
           </span>
+          <select
+            className="model-selector"
+            value={codingModel}
+            onChange={e => handleModelChange(e.target.value)}
+            title="Coding model"
+          >
+            {gemmaModels.map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
           <div className="header-controls">
             <input
               className="filename-input"
@@ -180,6 +200,8 @@ export default function App() {
             />
           </div>
         </div>
+
+        <CodeRunner model={codingModel} streaming={status === 'streaming'} />
       </div>
     </ErrorBoundary>
   );

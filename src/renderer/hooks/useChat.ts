@@ -69,7 +69,9 @@ export function useChat(model: string): UseChatResult {
           {
             model,
             messages: buildRequestMessages(history),
-            temperature: 0.7,
+            temperature: 1.0,
+            topP: 0.95,
+            topK: 64,
             tools: KIDS_TOOLS,
             numCtx: OLLAMA_NUM_CTX,
             numPredict: OLLAMA_MAX_REPLY_TOKENS,

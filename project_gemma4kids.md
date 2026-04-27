@@ -4,7 +4,7 @@ description: Core facts about the gemma4kids hackathon project — goals, stack,
 type: project
 originSessionId: 62dcaf2f-5c89-46f4-a084-24b0edb2800b
 ---
-Offline AI coding teacher for kids (ages 8–12) built for the Google Gemma 4 Good hackathon on Kaggle.
+Offline AI coding teacher for kids (ages 6–11) built for the Google Gemma 4 Good hackathon on Kaggle.
 
 **Deadline:** ~May 18, 2026 (22 days from project start on 2026-04-26). Build target: working app by Day 15, last 7 days for video + writeup.
 
