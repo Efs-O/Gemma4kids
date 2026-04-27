@@ -15,11 +15,19 @@ export function ProjectList({ onLoad, refreshTrigger }: Props) {
 
   useEffect(() => { void refresh(); }, [refresh, refreshTrigger]);
 
-  const handleClick = useCallback(async (filename: string) => {
+  const handleLoad = useCallback(async (filename: string) => {
     const base = filename.replace(/\.html$/, '');
     const result = await window.electronAPI.readAnimation(base);
     if (result.success) onLoad(filename, result.content);
   }, [onLoad]);
+
+  const handleDelete = useCallback(async (e: React.MouseEvent, filename: string) => {
+    e.stopPropagation();
+    const name = filename.replace(/\.html$/, '');
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    const result = await window.electronAPI.deleteAnimation(filename);
+    if (result.success) await refresh();
+  }, [refresh]);
 
   if (files.length === 0) return null;
 
@@ -27,9 +35,14 @@ export function ProjectList({ onLoad, refreshTrigger }: Props) {
     <div className="project-list">
       <div className="project-list-label">My Animations</div>
       {files.map(f => (
-        <button key={f} className="project-item" onClick={() => { void handleClick(f); }}>
-          🎨 {f.replace(/\.html$/, '')}
-        </button>
+        <div key={f} className="project-item-row">
+          <button className="project-item" onClick={() => { void handleLoad(f); }}>
+            🎨 {f.replace(/\.html$/, '')}
+          </button>
+          <button className="project-delete" title="Delete" onClick={(e) => { void handleDelete(e, f); }}>
+            🗑️
+          </button>
+        </div>
       ))}
     </div>
   );

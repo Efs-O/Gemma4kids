@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -32,6 +32,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
   ensureAnimationsDir();
   createWindow();
   app.on('activate', () => {
@@ -86,6 +87,17 @@ ipcMain.handle('list-animations', async () => {
     return { success: true, files };
   } catch (err) {
     return { success: false, files: [], error: String(err) };
+  }
+});
+
+ipcMain.handle('delete-animation', async (_event, { filename }: { filename: string }) => {
+  try {
+    const name = filename.endsWith('.html') ? filename : `${filename}.html`;
+    const fullPath = path.join(getAnimationsDir(), name);
+    fs.unlinkSync(fullPath);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: String(err) };
   }
 });
 

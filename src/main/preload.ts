@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('read-animation', { filename }),
   listAnimations: () =>
     ipcRenderer.invoke('list-animations'),
+  deleteAnimation: (filename: string) =>
+    ipcRenderer.invoke('delete-animation', { filename }),
   openInBrowser: (filename: string) =>
     ipcRenderer.invoke('open-in-browser', { filename }),
   ttsSpeak: (text: string, lang?: string) =>
