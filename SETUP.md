@@ -115,4 +115,8 @@ The repo **`.gitignore`** excludes large **`piper/`** and **`voices/`** drops; c
 
 ---
 
+Open-source credits and thank-yous live in **[README → Acknowledgements](README.md#acknowledgements)**.
+
+---
+
 *Built for the Google Gemma 4 Good Hackathon · Kaggle 2026*
