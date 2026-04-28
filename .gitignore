@@ -14,3 +14,8 @@ Thumbs.db
 assets/icon.png
 assets/icon.ico
 assets/icon.icns
+
+# Internal markdown — only README.md + SETUP.md belong on public remote
+*.md
+!README.md
+!SETUP.md
