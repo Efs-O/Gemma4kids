@@ -41,6 +41,7 @@ function pickRandom<T>(arr: T[], n: number): T[] {
 interface Props {
   messages: ChatMessage[];
   streamingText: string;
+  streamingThinking: string;
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
   onSend: (text: string) => void;
@@ -48,9 +49,22 @@ interface Props {
   onRetry: () => void;
   e4bAvailable: boolean;
   transcribeModel: string;
+  showThinking: boolean;
 }
 
-export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, onCancel, onRetry, e4bAvailable, transcribeModel }: Props) {
+export function ChatPanel({
+  messages,
+  streamingText,
+  streamingThinking,
+  status,
+  errorMsg,
+  onSend,
+  onCancel,
+  onRetry,
+  e4bAvailable,
+  transcribeModel,
+  showThinking,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const tts = useMemo(() => createTTSService(), []);
 
@@ -60,14 +74,18 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, streamingText]);
+  }, [messages.length, streamingText, streamingThinking]);
 
   // Only show user and assistant text turns — hide tool call/result rows.
   const visible = messages.filter(
-    m => m.role === 'user' || (m.role === 'assistant' && m.content != null && m.content !== ''),
+    m => m.role === 'user' || (
+      m.role === 'assistant' &&
+      ((m.content != null && m.content !== '') || (showThinking && !!m.thinking))
+    ),
   );
 
-  const showStarters = visible.length === 0 && !streamingText && status === 'idle';
+  const hasStreamingMessage = !!streamingText || (showThinking && !!streamingThinking);
+  const showStarters = visible.length === 0 && !hasStreamingMessage && status === 'idle';
   const lastIsAssistant = visible.length > 0 && visible[visible.length - 1].role === 'assistant';
   const showChips = status === 'idle' && lastIsAssistant && !errorMsg;
 
@@ -75,7 +93,7 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
     <div className="chat-panel">
       <div className="chat-label">💬 Chat with Gemma</div>
       <div className="message-list">
-        {visible.length === 0 && !streamingText && (
+        {visible.length === 0 && !hasStreamingMessage && (
           <div className="chat-empty">
             Hi! I'm Gemma, your coding buddy! 🎉<br />
             <em>Tell me what you want to make!</em>
@@ -91,9 +109,25 @@ export function ChatPanel({ messages, streamingText, status, errorMsg, onSend, o
           </div>
         )}
         {visible.map((msg, i) => (
-          <Message key={i} role={msg.role as string} content={msg.content ?? ''} tts={tts} />
+          <Message
+            key={i}
+            role={msg.role as string}
+            content={msg.content ?? ''}
+            thinking={msg.thinking ?? ''}
+            showThinking={showThinking}
+            tts={tts}
+          />
         ))}
-        {streamingText && <Message role="assistant" content={streamingText} streaming tts={tts} />}
+        {(streamingText || (showThinking && streamingThinking)) && (
+          <Message
+            role="assistant"
+            content={streamingText}
+            thinking={streamingThinking}
+            showThinking={showThinking}
+            streaming
+            tts={tts}
+          />
+        )}
         {errorMsg && (
           <div>
             <div className="error-msg">

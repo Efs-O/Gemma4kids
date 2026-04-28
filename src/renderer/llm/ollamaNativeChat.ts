@@ -55,6 +55,7 @@ interface NativeStreamEvent {
   message?: {
     role?: string;
     content?: string;
+    thinking?: string;
     tool_calls?: Array<{
       id?: string;
       type?: string;
@@ -104,6 +105,7 @@ export async function streamOllamaNativeChat(
     model: string;
     messages: ChatMessage[];
     tools?: ToolDefinition[];
+    think: boolean;
     temperature: number;
     topP: number;
     topK: number;
@@ -118,7 +120,7 @@ export async function streamOllamaNativeChat(
     model: params.model,
     messages: messagesForOllamaApi(params.messages),
     stream: true,
-    think: true,
+    think: params.think,
     tools: params.tools,
     options: {
       num_ctx: params.numCtx,
@@ -172,6 +174,9 @@ export async function streamOllamaNativeChat(
     const msg = evt.message;
     if (msg?.content) {
       handlers.onToken(msg.content);
+    }
+    if (msg?.thinking && handlers.onThinkingToken) {
+      handlers.onThinkingToken(msg.thinking);
     }
 
     const deltaTools = msg?.tool_calls;

@@ -6,17 +6,23 @@ import type { TTSService } from '../services/TTSService';
 interface Props {
   role: string;
   content: string;
+  thinking?: string;
+  showThinking?: boolean;
   streaming?: boolean;
   tts?: TTSService;
 }
 
-function stripHtmlBlocks(text: string): string {
-  return text.replace(/```(?:html)?\n[\s\S]*?```/gi, '\n*✨ Your animation code is in the editor!*\n');
+function hideHtmlOutput(text: string): string {
+  let next = text.replace(/```(?:html)?\n[\s\S]*?(?:```|$)/gi, '\n\n*Your animation code is in the editor.*\n\n');
+  next = next.replace(/<!DOCTYPE html[\s\S]*$/i, '\n\n*Your animation code is in the editor.*\n');
+  next = next.replace(/<html\b[\s\S]*$/i, '\n\n*Your animation code is in the editor.*\n');
+  next = next.replace(/\n{3,}/g, '\n\n');
+  return next.trim();
 }
 
-export function Message({ role, content, streaming, tts }: Props) {
+export function Message({ role, content, thinking = '', showThinking = false, streaming, tts }: Props) {
   const [speaking, setSpeaking] = useState(false);
-  const display = role === 'assistant' ? stripHtmlBlocks(content) : content;
+  const display = role === 'assistant' ? hideHtmlOutput(content) : content;
 
   const handleSpeak = async () => {
     if (!tts) return;
@@ -29,7 +35,7 @@ export function Message({ role, content, streaming, tts }: Props) {
     try {
       await tts.speak(content);
     } catch {
-      // Piper not available — fail silently
+      // Piper not available - fail silently
     } finally {
       setSpeaking(false);
     }
@@ -37,18 +43,28 @@ export function Message({ role, content, streaming, tts }: Props) {
 
   return (
     <div className={`message message-${role}${streaming ? ' message-streaming' : ''}`}>
-      <div className="message-role">{role === 'user' ? 'You' : '✨ Gemma'}</div>
-      <div className="message-content">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
-      </div>
-      {role === 'assistant' && !streaming && tts && (
+      <div className="message-role">{role === 'user' ? 'You' : 'Gemma'}</div>
+      {role === 'assistant' && showThinking && thinking.trim() && (
+        <details className="thinking-bubble" open={streaming}>
+          <summary>{streaming ? 'Thinking...' : 'Thought Process'}</summary>
+          <div className="thinking-content">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{thinking}</ReactMarkdown>
+          </div>
+        </details>
+      )}
+      {display && (
+        <div className="message-content">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
+        </div>
+      )}
+      {role === 'assistant' && !streaming && tts && display && (
         <button
           className={`btn-speaker${speaking ? ' btn-speaker-speaking' : ''}`}
           onClick={handleSpeak}
           aria-label={speaking ? 'Stop reading' : 'Read aloud'}
           title={speaking ? 'Stop' : 'Read aloud'}
         >
-          {speaking ? '⏹' : '🔊'}
+          {speaking ? 'Stop' : 'Read'}
         </button>
       )}
     </div>

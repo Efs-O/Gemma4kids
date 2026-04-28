@@ -1,12 +1,14 @@
 import type { ChatCompletionRequest, StreamChunk, ToolCall } from './types';
 
 export type TokenHandler = (token: string) => void;
+export type ThinkingTokenHandler = (token: string) => void;
 export type DoneHandler = (finishReason: string | null) => void;
 export type ErrorHandler = (err: Error) => void;
 export type ToolCallsHandler = (calls: ToolCall[]) => void;
 
 export interface StreamHandlers {
   onToken: TokenHandler;
+  onThinkingToken?: ThinkingTokenHandler;
   onDone: DoneHandler;
   onError: ErrorHandler;
   /** Fired just before onDone when finish_reason is "tool_calls". */

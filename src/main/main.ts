@@ -29,7 +29,20 @@ function createWindow(): void {
   });
 
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
-  win.webContents.openDevTools({ mode: 'detach' });
+
+  // Dev-only DevTools shortcuts: F12 and Ctrl/Cmd+Shift+I.
+  // Disabled in packaged builds so kids can't open DevTools by accident.
+  if (!app.isPackaged) {
+    win.webContents.on('before-input-event', (_event, input) => {
+      if (input.type !== 'keyDown') return;
+      const isF12 = input.key === 'F12';
+      const isInspect =
+        (input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i';
+      if (isF12 || isInspect) {
+        win.webContents.toggleDevTools();
+      }
+    });
+  }
 }
 
 app.whenReady().then(() => {
