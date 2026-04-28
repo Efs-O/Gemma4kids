@@ -2,15 +2,31 @@
 
 **Offline AI coding teacher for kids aged 6–11, powered by Google Gemma 4.**
 
-No internet. No subscription. No data sent anywhere. Just a kid, a mic, and a coding buddy.
+No Internet. No subscription. No telemetry. Just a kid, local models, and a coding buddy.
 
 ---
 
 ## What it does
 
-A child types or speaks a prompt ("make fireworks explode") and Gemma generates a full HTML animation live on their screen. They see the code, can edit it, save it, and open it in the browser — all without ever touching the cloud.
+A child **types or speaks** a prompt (“make fireworks explode”). **Gemma 4** streams a reply, can **call tools** (save/read/list animations, open in the browser), and full **HTML** lands in the **CodeMirror** editor so they see and edit code. Kids **save**, **reload projects** from the sidebar, **delete** unwanted files, and **open animations in the default browser** (never inside Electron—untrusted HTML stays in the system browser).
 
-Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026) — Future of Education track.
+Optional **“Read”** uses **local Piper speech** when configured (binary + voice ONNX under the app)—no cloud.
+
+Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026)—e.g. **Future of Education** and **Ollama** special tracks.
+
+---
+
+## Feature snapshot
+
+| Area | Behavior |
+|---|---|
+| **Models** | Header **Coding model** lists pulled **Gemma 4 edge** (`gemma4:e4b`…) and/or **26B MoE** (`gemma4:26b`…); default prefers **e4b** when installed (lighter cycle), otherwise **26B** for heavier generation. Pick what fits RAM and quality. |
+| **Voice→text** | **Mic**: WAV → **`gemma4:e4b`** transcription via Ollama (`keep_alive: 0`). Disabled if **e4b** is not pulled. |
+| **Chat** | Markdown answers; optional **Thoughts** (**Think On/Off** + **Show Thoughts**) reflect native thinking from the coding model where supported; **starter prompts** + **quick chips** after replies. Cancel / retry during errors. |
+| **Tools** | Native tool calls **`save_animation`**, **`read_animation`**, **`list_animations`**, **`open_in_browser`**; HTML is audited/fixed lightly before persistence. |
+| **Editor & projects** | Resizable sidebar (**saved animations**) + **chat** widths; **`Documents/KidAnimations/`** `.html` files with collision **`-2`**, **`-3`**, … if names clash. |
+| **Code Runner** | Sidebar mini-game while **Gemma streams** **only when the selected coding model is `gemma4:26b`…** |
+| **TTS (“Read”)** | **Piper** in **main**: optional local read-aloud on assistant bubbles if **`piper`** binary + **`voices`** are present—see **[SETUP.md](SETUP.md)**. |
 
 ---
 
@@ -18,33 +34,37 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026) — Future of
 
 ### 1. Install Ollama
 
-Download from [ollama.com](https://ollama.com) and start it. Then pull the two models:
+Download from [ollama.com](https://ollama.com) and keep it running. Pull what you plan to use:
 
 ```bash
-ollama pull gemma4:e4b   # voice / speech-to-text  (9.6 GB)
-ollama pull gemma4:26b   # code generation          (~17 GB)
+ollama pull gemma4:e4b   # edge: STT + can drive full chat/tools (smaller footprint)
+ollama pull gemma4:26b   # workstation MoE: strongest HTML + tools (much larger load)
 ```
 
-> **Minimum specs:** 8 GB RAM (text-only, uses gemma4:e4b as fallback). 16 GB RAM recommended for the full voice + code experience.
+> **RAM:** 8 GB allows edge-only experimentation; **16 GB+** is realistic for a smooth **26B** + **e4b** setup. GPUs help a lot.
 
 ### 2. Install Gemma4kids
 
-Download the installer for your platform from the [Releases](../../releases) page:
+Installer builds from Releases:
 
-| Platform | File |
+| Platform | Artifact |
 |---|---|
 | Windows | `Gemma4kids-Setup.exe` |
 | macOS | `Gemma4kids.dmg` |
 | Linux | `Gemma4kids.AppImage` |
 
-> **Note:** This is an unsigned indie/hackathon build. On Windows click "More info → Run anyway"; on macOS right-click the app → Open → confirm.
+**Releases:** [github.com/Efs-O/Gemma4kids/releases](https://github.com/Efs-O/Gemma4kids/releases)
+
+> Unsigned hackathon builds: Windows **More info → Run anyway**; macOS **right‑click → Open** the first time.
 
 ### 3. Launch and create
 
-1. Open Gemma4kids
-2. Press the mic button and say *"Make a bouncing ball"*
-3. Watch Gemma write the code live
-4. Press **Save**, then **Open in Browser**
+1. Open Gemma4kids (Ollama must be up).
+2. Choose **Coding model**, **Think** / **Show Thoughts** as you like.
+3. Use the mic (if **e4b** is pulled) or type—then **Save** and **Open in Browser**.
+4. **Read** aloud only appears when Piper voices are wired—see **[SETUP.md](SETUP.md)**.
+
+Developer clone and scripts: **[SETUP.md](SETUP.md)** · **Architecture** below.
 
 ---
 
@@ -52,56 +72,56 @@ Download the installer for your platform from the [Releases](../../releases) pag
 
 ```
 Electron shell
-├── Main process (Node.js)
-│   ├── IPC handlers: save / read / list / open animations
-│   └── Files saved to Documents/KidAnimations/
-└── Renderer process (React + TypeScript)
-    ├── ChatPanel — streaming chat with Gemma 4
-    ├── CodeEditor — CodeMirror 6, HTML+JS highlighting
-    ├── VoiceInput — MediaRecorder → base64 WAV → gemma4:e4b STT
-    ├── llm/ — OpenAIClient.ts (streaming), types.ts, cancellation.ts
-    └── OllamaService — health check, model detection, transcription
+├── Main process
+│   ├── IPC: animations (save / read / list / delete / open in OS browser)
+│   └── Optional Piper TTS: piper/{piper.exe} + voices/*.onnx (+ .json)
+└── Renderer (React + TypeScript + CodeMirror)
+    ├── ChatPanel — Ollama native chat + streaming + tools + retries
+    ├── VoiceInput — MediaRecorder WAV → gemma4:e4b transcription
+    ├── EditorPanel — edits HTML streamed from the model / tools
+    ├── ProjectList — load + delete KidAnimations *.html
+    ├── CodeRunner — mini-runner while streaming (gemma4:26b coding model only)
+    ├── htmlAudit.ts — lightweight repair before accepting saved HTML
+    └── Ollama only at http://127.0.0.1:11434 — CSP enforced in index.html
 ```
 
-**Voice pipeline:**
-```
-Mic → WAV → base64 → gemma4:e4b (keep_alive:0) → text → gemma4:26b → HTML code
-```
+**Typical pipelines**
 
-**Agentic tool calling:** Gemma 4 calls `save_animation`, `read_animation`, `list_animations`, and `open_in_browser` tools natively. When a kid says "save it", Gemma saves the file — no button click needed.
+- Speech: Mic → WAV → **e4b** → text prompt → coding model (**e4b** or **26b** selected in header).
+- Coding: **`streamOllamaNativeChat`** Jinja templating + `tools[]` + thinking payload as configured.
 
 ---
 
 ## Why Gemma 4
 
-- **gemma4:e4b** — native audio encoder accepts base64 WAV in the `images[]` field, enabling zero-dependency speech-to-text without a separate STT model
-- **gemma4:26b** — strong code generation + native tool calling via Ollama's Jinja chat template
-- **VRAM offload** — `keep_alive: 0` on E4B forces immediate GPU unload so 26b can load cleanly
-- **Ollama server-side templating** — Jinja chat template applied automatically; we only pass the `tools[]` array
+- **gemma4:e4b** — multimodal audio in; good for STT **and**, when selected as coding model, the full offline agent loop without a second heavyweight model.
+- **gemma4:26b** — strong HTML + MoE tooling for kids’ animations; unload **e4b** with `keep_alive: 0` after STT so VRAM frees for large weights.
+- **Ollama** — local OpenAI-compat + native **`/api/chat`** for tool calling aligned with competition requirements.
 
 ---
 
 ## Development
 
 ```bash
-git clone https://github.com/Efs-O/Gemma4kids
+git clone https://github.com/Efs-O/Gemma4kids.git
 cd Gemma4kids
 npm install
-npm run dev          # build + open Electron window
-npm run typecheck    # TypeScript strict check
-npm run dist:win     # build Windows installer
+npm run dev          # esbuild + Electron
+npm run typecheck    # strict TypeScript
+npm run build        # bundle main/preload/renderer
+npm run dist:win     # example: Windows installer
 ```
 
-**Stack:** Electron · React · TypeScript · CodeMirror 6 · esbuild · Ollama
+**Stack:** Electron · React 18 · TypeScript · CodeMirror 6 · esbuild · Ollama (localhost only).
 
 ---
 
 ## Competition reference
 
-For **Gemma 4 Good** (Kaggle) judging and contributor context, verbatim copies of the [Kaggle foundational rules](docs/competition/kaggle-foundational-rules.txt) and [hackathon overview](docs/competition/gemma4-good-hackathon-overview.txt) (tracks, submission requirements, deadlines) are in [`docs/competition/`](docs/competition/).
+Verbatim **[Kaggle foundational rules](docs/competition/kaggle-foundational-rules.txt)** and **[Gemma 4 Good overview](docs/competition/gemma4-good-hackathon-overview.txt)** (requirements, tracks, deadlines) live under [`docs/competition/`](docs/competition/).
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT — see [LICENSE](LICENSE).
