@@ -28,6 +28,7 @@ BEFORE YOU FINISH THE CODE, double-check:
 - Every CSS variable used with var(--x) is defined on a rule that matches an element.
 - Looping animations use \`infinite\`, not \`forwards\`.
 - Every :nth-child(N) targets the real position of the element in the HTML.
+- In JavaScript, element.style properties are camelCase, never kebab-case: use element.style.backgroundColor (not background-color), element.style.fontSize (not font-size), element.style.borderRadius (not border-radius). Kebab-case here is a syntax error that breaks the whole script.
 - No duplicate JavaScript tokens (e.g. "window window") and no undefined variables.
 - The animation must be visible on the screen from the very first second - never start an element fully off-screen with translateX(-100vw) or similar.
 

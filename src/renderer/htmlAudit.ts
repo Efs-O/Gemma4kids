@@ -1,6 +1,8 @@
 // Local HTML post-processor for Gemma output.
 // No Ollama, no IPC, no network. See gemma_code_quality_report.md.
 
+import { Parser } from 'acorn';
+
 const TAG_TYPO_MAP: Record<string, string> = {
   candas: 'style',
   canavs: 'canvas',
@@ -21,6 +23,31 @@ const VALID_HTML_TAGS = new Set([
 export interface HtmlAuditResult {
   html: string;
   fixes: string[];
+  scriptParse: 'ok' | 'broken' | 'no-script';
+  scriptError: string | null;
+}
+
+// Parse every <script> block with acorn. Returns 'broken' on the first
+// SyntaxError found (with location info), otherwise 'ok'. Acorn never
+// executes the code, so this is CSP-safe.
+function checkScripts(html: string): {
+  scriptParse: HtmlAuditResult['scriptParse'];
+  scriptError: string | null;
+} {
+  const matches = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
+  if (matches.length === 0) return { scriptParse: 'no-script', scriptError: null };
+
+  for (const m of matches) {
+    const code = m[1].trim();
+    if (!code) continue;
+    try {
+      Parser.parse(code, { ecmaVersion: 'latest', sourceType: 'script' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { scriptParse: 'broken', scriptError: msg };
+    }
+  }
+  return { scriptParse: 'ok', scriptError: null };
 }
 
 export function auditHtml(html: string): HtmlAuditResult {
@@ -52,7 +79,21 @@ export function auditHtml(html: string): HtmlAuditResult {
     }),
   );
 
-  // 4. CSS variable audit — inject defaults for vars used but never defined
+  // 4. JS DOM style assignment must be camelCase inside <script> blocks.
+  //    e.g. el.style.background-color = 'red'  →  el.style.backgroundColor = 'red'
+  //    The kebab-case form is a parse-time SyntaxError that kills the whole script.
+  out = out.replace(/(<script[\s\S]*?<\/script>)/gi, (scriptBlock) =>
+    scriptBlock.replace(
+      /(\.style\.)([a-z]+(?:-[a-z]+)+)(\s*=)/g,
+      (_match, prefix: string, prop: string, suffix: string) => {
+        const camel = prop.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase());
+        fixes.push(`style property: ${prop} → ${camel}`);
+        return `${prefix}${camel}${suffix}`;
+      },
+    ),
+  );
+
+  // 5. CSS variable audit — inject defaults for vars used but never defined
   const styleMatch = out.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   if (styleMatch) {
     const css = styleMatch[1];
@@ -82,5 +123,6 @@ export function auditHtml(html: string): HtmlAuditResult {
     }
   }
 
-  return { html: out, fixes };
+  const scriptCheck = checkScripts(out);
+  return { html: out, fixes, ...scriptCheck };
 }
