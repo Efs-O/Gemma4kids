@@ -19,3 +19,9 @@ assets/icon.icns
 *.md
 !README.md
 !SETUP.md
+
+# Local tooling / artifacts — never commit
+piper/
+voices/
+**/tts-test-output/
+tmp_*.json
