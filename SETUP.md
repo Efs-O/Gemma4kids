@@ -1,7 +1,6 @@
 # Gemma4kids — Setup Guide
 
-**Gemma4kids** is a fully offline AI coding teacher for kids aged 6–11.
-There is no cloud, no subscription, and no internet required after setup.
+Fully **offline-first**: after Ollama and models are installed, the app talks only to **`http://localhost:11434`** (and optional **local Piper** for read-aloud). No cloud subscriptions.
 
 ---
 
@@ -9,93 +8,110 @@ There is no cloud, no subscription, and no internet required after setup.
 
 | | |
 |---|---|
-| OS | Windows 10/11 · macOS 12+ · Ubuntu 20.04+ |
-| RAM | 32 GB recommended (Gemma 26B needs ~17 GB VRAM/RAM) |
-| Disk | ~30 GB free (models + app) |
-| GPU | NVIDIA GPU with 16+ GB VRAM strongly recommended |
+| **OS** | Windows 10/11 · macOS 12+ · Ubuntu 20.04+ |
+| **RAM / VRAM** | **~8 GB RAM** usable for **`gemma4:e4b` only** experiments. **≥16 GB** system RAM—and ideally a **GPU**—for **`gemma4:26b` MoE** + **`gemma4:e4b`** STT comfortably. |
+| **Disk** | ~30 GB free typical (both models + app build). |
+| **Network** | For **setup pulls** only (`ollama pull`). Not required during normal kid use once models exist. |
 
 ---
 
 ## Step 1 — Install Ollama
 
-Download and install **Ollama** (the local AI runtime) for your platform:
-
-- **Windows / macOS / Linux:** https://ollama.com/download
-
-After installing, verify it is running:
+Install from **[ollama.com/download](https://ollama.com/download)**.
 
 ```bash
-ollama list
+ollama list   # confirms the daemon responds
 ```
 
 ---
 
-## Step 2 — Download the Gemma models
+## Step 2 — Pull Gemma 4 variants
 
-Open a terminal and run **both** commands:
+Minimum for **full UX** (“big” coding model **and** microphone STT):
 
 ```bash
-# Required — code generation (≈17 GB download)
-ollama pull gemma4:26b
-
-# Optional — voice input via microphone (≈9.6 GB download)
-ollama pull gemma4:e4b
+ollama pull gemma4:26b   # workstation MoE — primary option for richest HTML/tools
+ollama pull gemma4:e4b   # edge — required for mic transcription; optional as coding model
 ```
 
-> Voice input is disabled automatically if `gemma4:e4b` is not installed.
-> The app still works fully via typed prompts without it.
+- If **`gemma4:e4b` is missing** → **mic stays disabled**; typing still works.
+- If **`gemma4:26b` is missing** but **`e4b` exists** → app can still run chat/tools on **`e4b`** (lighter limits).
+- Header **Coding model** pick order is automatic at first launch: **prefers `gemma4:e4b` when detected** for faster iteration; switch to **`gemma4:26b…`** manually for heavier generation. **Voice STT always uses whichever `gemma4:e4b*` tag Ollama reports.**
 
 ---
 
-## Step 3 — Install Gemma4kids
+## Step 3 — Install the app
 
-### Windows
-Run the `Gemma4kids-Setup-*.exe` installer.
-> ⚠️ **Windows SmartScreen warning:** The app is unsigned. Click **"More info" → "Run anyway"** to proceed. This is safe — the app makes zero network calls except to Ollama on `localhost:11434`.
+### Windows  
+Run **`Gemma4kids-Setup-*.exe`**. Unsigned build: **More info → Run anyway**.
 
-### macOS
-Open the `.dmg`, drag **Gemma4kids** to Applications.
-> ⚠️ **Gatekeeper warning:** Right-click the app → **Open** → **Open** on the first launch.
+### macOS  
+Open the **`.dmg`**, drag **Gemma4kids** to Applications → first launch via **Right‑click → Open**.
 
-### Linux
-Make the AppImage executable and run it:
+### Linux  
 ```bash
-chmod +x Gemma4kids-*.AppImage
-./Gemma4kids-*.AppImage
+chmod +x Gemma4kids-*.AppImage && ./Gemma4kids-*.AppImage
 ```
+
+### From Git (developers)
+
+```bash
+git clone https://github.com/Efs-O/Gemma4kids.git
+cd Gemma4kids
+npm install
+npm run dev           # bundles + Electron window
+npm run build
+npm run typecheck     # strict TS
+```
+
+Installer outputs: **`npm run dist:win`** / **`dist:mac`** / **`dist:linux`** (see `electron-builder.yml`).
 
 ---
 
-## Step 4 — Launch
+## Step 4 — Launch checklist
 
-1. Make sure Ollama is running (it starts automatically on Windows/macOS after install).
-2. Open **Gemma4kids**.
-3. The app checks for Gemma on startup — if it shows a sleeping robot, Ollama isn't running yet.
+1. **Ollama** running (`ollama serve` if needed).
+2. Open **Gemma4kids** — startup probes **`/api/tags`**.
+3. If you see **“Gemma is sleeping!”** → start Ollama, then **Check again**.
+4. If **“Gemma needs a download!”** → run **`ollama pull gemma4:26b`** (and **`gemma4:e4b`** if you want mic + full pairing).
 
 ---
 
-## How it works
+## Optional — Piper read-aloud (“Read”)
 
-```
-Child speaks or types → Gemma generates HTML animation → saved to ~/Documents/KidAnimations/
-                       → code appears in the editor → "Open in Browser" shows it live
-```
+Assistant bubbles can run **local neural TTS** if the **main** process finds:
 
-- All processing is **local** — works with WiFi off.
-- Animations are saved as standalone `.html` files in `~/Documents/KidAnimations/`.
-- Clicking a saved project in the sidebar reloads it into the editor.
+1. **`piper`** executable: `piper/piper.exe` (Windows) or `piper/piper` next to packaged resources, **or** under Electron **`userData/piper/`**.
+2. **`voices/*.onnx`** + matching **`*.onnx.json`** (same folder naming).
+
+The repo **`.gitignore`** excludes large **`piper/`** and **`voices/`** drops; clone from source and add them locally, or use project scripts such as **`npm run download-voices`** / **`scripts/download-voices.mjs`** per your setup. Without Piper/ONNX, **Read** buttons no-op quietly.
+
+---
+
+## How it behaves
+
+| Feature | Detail |
+|---|---|
+| **Saves** | `Documents/KidAnimations/<name>.html` — collisions get **`-2`**, **`-3`**, … suffixes. |
+| **Delete** | Trash icon beside a project → confirm → file removed from disk. |
+| **Browser** | **Open in Browser** uses `file://…` in the **default OS browser** (never an in-app `<iframe>`). |
+| **Thinking** | **Think** toggles reasoning for the **coding** model; STT stays **without** thinking; **Show Thoughts** reveals the model scratchpad when present. |
+| **Code Runner** | Mini-game appears only when the **selected coding model** is a **`gemma4:26b*`** tag **and** a reply is streaming. |
+| **HTML repair** | Small automatic fixes apply on tool saves / post-stream (`htmlAudit.ts`)—not a linter replacement. |
 
 ---
 
 ## Troubleshooting
 
-| Problem | Fix |
+| Symptom | What to try |
 |---|---|
-| "Gemma is sleeping!" on launch | Start Ollama: run `ollama serve` in a terminal |
-| "Gemma needs a download!" on launch | Run `ollama pull gemma4:26b` |
-| Mic button greyed out | Run `ollama pull gemma4:e4b` |
-| App crashes on first voice attempt | Wait 10 seconds and try again (VRAM is clearing) |
-| Slow responses | Normal — Gemma 26B on CPU can take 30–60 s per response |
+| Startup: “Gemma is sleeping!” | Start Ollama; **Check again**. |
+| “Gemma needs a download!” | `ollama pull gemma4:26b` (and `gemma4:e4b` for mic). |
+| Mic disabled / grey | `ollama pull gemma4:e4b` — wait until pull finishes; app rescans tags. |
+| First voice attempt slow / VRAM churn | Expected: **e4b** unloads (`keep_alive: 0`) before **26b** loads; wait ~10–30 s and retry. |
+| Slow text on CPU | **`gemma4:26b`** on CPU may take **tens of seconds** per turn—normal. |
+| **Read** missing or errors | Piper binary/voices absent or path wrong — see **Optional — Piper** above. |
+| App can’t reach Ollama | Only **`127.0.0.1:11434`** is allowed from the renderer (CSP). No VPN/proxy blocking **localhost**. |
 
 ---
 
