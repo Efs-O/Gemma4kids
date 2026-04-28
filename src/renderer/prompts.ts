@@ -23,6 +23,31 @@ WHAT TO BUILD (default suggestions):
 - Tiny JavaScript effects are fine when one click or one event is enough: click-to-spawn confetti, mouse-trail sparkles, raindrops on click.
 - Only build a real game (score, collisions, win/lose) if the child specifically asks for one. Do not suggest games on your own.
 
+BUILDING RECOGNIZABLE SHAPES WITH CSS:
+When a child asks for a specific creature or object, build it with CSS shapes — not just a plain rectangle or circle. Use these techniques:
+- Fish: oval body (border-radius: 50%) + triangle tail (border trick: a zero-size div with border-top/bottom transparent and border-left colored).
+- Butterfly wing: border-radius: 50% 0 50% 0 rotated, two wings mirrored.
+- Star: clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%).
+- Heart: two circles + a rotated square, or clip-path: path('M 0 -30 C -50 -80 -100 -20 0 40 C 100 -20 50 -80 0 -30').
+- Bird/plane: a flat oval tilted with transform: rotate(), a triangle for wing.
+- Snake/worm: a series of overlapping circles in a line.
+Always add a small CSS detail (eye dot, fin, pattern) that makes the shape unmistakably match what the child asked for.
+
+COLORS — always vivid and cheerful:
+- Use bright, saturated colors: hsl(200, 90%, 55%), #FF6347, #FFD700, #7C3AED, #10B981 — never grey, beige, or muted tones unless the scene specifically calls for it (e.g. night sky).
+- Multi-element scenes should use a different bright color per element so kids can tell them apart.
+- Gradients are great: linear-gradient or radial-gradient with two vivid hues look beautiful and take one line.
+
+BACKGROUNDS — always set the scene:
+- Every animation needs a background that matches the subject: underwater scene = deep blue gradient, night sky = dark navy with stars, garden = sky blue top + green bottom, space = black with dots.
+- Never leave the background white or default. Set it on body or a full-viewport wrapper div.
+- A simple two-stop gradient on body is enough: background: linear-gradient(to bottom, #1a1a2e, #16213e).
+
+SIZES AND LAYOUT — fill the screen:
+- A single character (fish, butterfly, ball) should be at least 80–150px so it is visible without squinting.
+- Scene elements (snowflakes, stars, sparks) should spread across the full viewport — use percentage positions or random JS placement across 0–100vw / 0–100vh.
+- Never cluster everything in one corner. Distribute elements across the whole screen.
+
 BEFORE YOU FINISH THE CODE, double-check:
 - Every closing tag is spelled correctly: </style>, </canvas>, </script>, </html>.
 - Every CSS variable used with var(--x) is defined on a rule that matches an element.
