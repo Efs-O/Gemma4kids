@@ -8,9 +8,10 @@
  * Usage: node scripts/test-butterfly-gen.mjs
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from 'fs';
 import { homedir } from 'os';
 import path from 'path';
+import { Parser } from 'acorn';
 
 const OLLAMA  = 'http://localhost:11434';
 const OUT_DIR = path.join(homedir(), 'Documents', 'KidAnimations');
@@ -89,6 +90,19 @@ function auditHtml(html) {
     return fixed;
   });
 
+  // 3b. JS DOM style assignment must be camelCase inside <script> blocks.
+  //     e.g. el.style.background-color = 'red' → SyntaxError that kills the script.
+  out = out.replace(/(<script[\s\S]*?<\/script>)/gi, scriptBlock =>
+    scriptBlock.replace(
+      /(\.style\.)([a-z]+(?:-[a-z]+)+)(\s*=)/g,
+      (_match, prefix, prop, suffix) => {
+        const camel = prop.replace(/-([a-z])/g, (_m, c) => c.toUpperCase());
+        fixes.push(`style property: ${prop} → ${camel}`);
+        return `${prefix}${camel}${suffix}`;
+      },
+    ),
+  );
+
   // 4. CSS variable audit — find var(--x) usages, check each is defined
   const styleMatch = out.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   if (styleMatch) {
@@ -117,6 +131,45 @@ function auditHtml(html) {
   }
 
   return { html: out, fixes };
+}
+
+// ── acorn-based script parse check ────────────────────────────────────────────
+// Parses every <script> block and returns the first SyntaxError it finds.
+// Acorn never executes — pure parse, CSP-safe, ~150 KB.
+function checkScripts(html) {
+  const matches = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
+  if (matches.length === 0) return { status: 'no-script', error: null };
+  for (const m of matches) {
+    const code = m[1].trim();
+    if (!code) continue;
+    try {
+      Parser.parse(code, { ecmaVersion: 'latest', sourceType: 'script' });
+    } catch (e) {
+      return { status: 'broken', error: e.message };
+    }
+  }
+  return { status: 'ok', error: null };
+}
+
+// ── Fixture pre-check ─────────────────────────────────────────────────────────
+// Validate the audit + acorn integration on the actual broken fireworks files
+// the kid produced. Fast, no LLM, runs before the slow generation step.
+function fixturePreCheck(dir) {
+  const fixtures = readdirSync(dir).filter(f => f.startsWith('fireworks') && f.endsWith('.html'));
+  if (fixtures.length === 0) {
+    console.log('  Fixture check: no fireworks-*.html files in', dir);
+    return;
+  }
+
+  console.log(`  Fixture check: ${fixtures.length} fireworks file(s)`);
+  for (const f of fixtures) {
+    const html = readFileSync(path.join(dir, f), 'utf-8');
+    const before = checkScripts(html);
+    const { html: fixed, fixes } = auditHtml(html);
+    const after = checkScripts(fixed);
+    const symbol = after.status === 'ok' ? '✓' : '✗';
+    console.log(`    ${symbol} ${f.padEnd(20)} raw: ${before.status.padEnd(9)} → audited: ${after.status}  (${fixes.length} fix${fixes.length === 1 ? '' : 'es'})`);
+  }
 }
 
 // ── Stream one Ollama chat call ───────────────────────────────────────────────
@@ -174,6 +227,9 @@ async function run({ model, think, label }) {
   writeFileSync(path.join(OUT_DIR, `butterflies-${label}.html`), rawHtml, 'utf-8');
   console.log(`  Raw    → butterflies-${label}.html  (${(rawHtml.length / 1024).toFixed(1)} KB)`);
 
+  const rawParse = checkScripts(rawHtml);
+  console.log(`  Parse  → raw: ${rawParse.status}${rawParse.error ? ` — ${rawParse.error}` : ''}`);
+
   const { html: auditedHtml, fixes } = auditHtml(rawHtml);
   writeFileSync(path.join(OUT_DIR, `butterflies-${label}-audited.html`), auditedHtml, 'utf-8');
 
@@ -184,14 +240,28 @@ async function run({ model, think, label }) {
     fixes.forEach(f => console.log(`           • ${f}`));
   }
 
-  return { genKb: rawHtml.length / 1024, auditKb: auditedHtml.length / 1024, fixes: fixes.length };
+  const auditedParse = checkScripts(auditedHtml);
+  console.log(`  Parse  → audited: ${auditedParse.status}${auditedParse.error ? ` — ${auditedParse.error}` : ''}`);
+
+  return {
+    genKb: rawHtml.length / 1024,
+    auditKb: auditedHtml.length / 1024,
+    fixes: fixes.length,
+    rawParse: rawParse.status,
+    auditedParse: auditedParse.status,
+  };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
 
-console.log('Butterfly benchmark — single pass + local CSS audit');
+console.log('Butterfly benchmark — single pass + local CSS audit + acorn parse-gate');
 console.log(`Output dir: ${OUT_DIR}\n`);
+
+console.log('═'.repeat(60));
+console.log('  Fixture pre-check (no LLM)');
+console.log('═'.repeat(60));
+fixturePreCheck(OUT_DIR);
 
 const results = [];
 for (const cfg of RUNS) {
@@ -206,12 +276,24 @@ for (const cfg of RUNS) {
 console.log('\n' + '═'.repeat(60));
 console.log('  Summary');
 console.log('═'.repeat(60));
-console.log(`  ${'Label'.padEnd(25)} ${'Raw'.padStart(7)} ${'Audited'.padStart(9)} ${'Fixes'.padStart(7)}`);
+console.log(`  ${'Label'.padEnd(22)} ${'Raw'.padStart(6)} ${'Audited'.padStart(8)} ${'Fixes'.padStart(6)} ${'Raw→Parse'.padStart(11)} ${'Audited→Parse'.padStart(15)}`);
 for (const r of results) {
   if (r.error) {
-    console.log(`  ${r.label.padEnd(25)} ERROR: ${r.error}`);
+    console.log(`  ${r.label.padEnd(22)} ERROR: ${r.error}`);
   } else {
-    console.log(`  ${r.label.padEnd(25)} ${(r.genKb.toFixed(1)+' KB').padStart(7)} ${(r.auditKb.toFixed(1)+' KB').padStart(9)} ${String(r.fixes).padStart(7)}`);
+    console.log(
+      `  ${r.label.padEnd(22)} ` +
+      `${(r.genKb.toFixed(1)+'KB').padStart(6)} ` +
+      `${(r.auditKb.toFixed(1)+'KB').padStart(8)} ` +
+      `${String(r.fixes).padStart(6)} ` +
+      `${r.rawParse.padStart(11)} ` +
+      `${r.auditedParse.padStart(15)}`,
+    );
   }
 }
+
+const okBefore = results.filter(r => r.rawParse === 'ok' || r.rawParse === 'no-script').length;
+const okAfter  = results.filter(r => r.auditedParse === 'ok' || r.auditedParse === 'no-script').length;
+const total    = results.filter(r => !r.error).length;
+console.log(`\n  Parse rate: ${okBefore}/${total} raw  →  ${okAfter}/${total} audited  (acorn gate: +${okAfter - okBefore})`);
 console.log('\n✅ Done. Compare *-audited.html vs raw in KidAnimations/');
