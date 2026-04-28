@@ -92,6 +92,28 @@ Electron shell
 
 ---
 
+## Output reliability — what we measured and what we did about it
+
+A child who asks for fireworks and gets a blank screen quits the app. Before shipping, we ran a systematic benchmark: **12 generations** across **3 prompts × 4 model variants** (gemma4:e4b and gemma4:26b, thinking on/off), visually evaluated every output, and found three recurring failure classes in raw model output:
+
+| Failure | Root cause | Effect |
+|---|---|---|
+| `window-innerHeight` | minus sign instead of dot | canvas size = NaN → blank screen |
+| `animation: pulse var(--x) infinite` | CSS var as duration (no time unit) | animation declaration invalid → frozen |
+| `.class:nth-child(1)` offset | other sibling elements precede the target | CSS selectors match nothing → transparent wings |
+
+**What we found:** both `think: off` variants produced at least one blank screen. Both `think: on` variants were visually correct across all prompts. Conclusion: `think: true` is mandatory in production.
+
+**Primary fix — prompt engineering.** We added three targeted constraints to the system prompt (dot notation for `window` properties, literal time values for animation duration, nth-child counting rules). We then reran all three failing prompts with `think: true` and **no post-processing applied**. All three outputs worked correctly in the browser.
+
+**Secondary fix — deterministic audit layer** (`htmlAudit.ts`). Every HTML file passes through a lightweight repair pass before it reaches the child — tag typo correction, `forwards → infinite`, kebab-case `.style` properties → camelCase, undefined CSS variables injected, `window-prop` dot fix, and an Acorn JS parse gate. This runs in under 1 ms with no network calls. When the audit applies a fix, the editor shows a small **"✓ code checked · N fixes applied"** badge so we can observe it during development.
+
+The audit is a safety net, not a crutch. The improved prompt handles the common cases; the audit catches anything that slips through on unusual prompts or edge runs.
+
+All benchmark scripts and results live under [`scripts/`](scripts/) and [`gemma_code_quality_report.md`](gemma_code_quality_report.md).
+
+---
+
 ## Why Gemma 4
 
 - **gemma4:e4b** — multimodal audio in; good for STT **and**, when selected as coding model, the full offline agent loop without a second heavyweight model.

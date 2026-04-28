@@ -2,31 +2,44 @@ import { OLLAMA_TRANSCRIBE_PROFILE } from '../ollamaConstants';
 
 const OLLAMA_BASE = 'http://localhost:11434';
 
-export async function isRunning(): Promise<boolean> {
+interface OllamaTagsResponse {
+  models: Array<{ name: string }>;
+}
+
+function formatOllamaError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+  return new Error(String(error));
+}
+
+async function fetchTags(timeoutMs: number): Promise<OllamaTagsResponse> {
   try {
-    const res = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(3000) });
-    return res.ok;
-  } catch {
-    return false;
+    const res = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) {
+      throw new Error(`Ollama replied with HTTP ${res.status} while checking installed models.`);
+    }
+    return await res.json() as OllamaTagsResponse;
+  } catch (error) {
+    throw formatOllamaError(error);
   }
 }
 
 export async function getModels(): Promise<string[]> {
-  try {
-    const res = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return [];
-    const data = await res.json() as { models: Array<{ name: string }> };
-    return data.models.map(m => m.name);
-  } catch {
-    return [];
-  }
+  const data = await fetchTags(5000);
+  return data.models.map(m => m.name);
+}
+
+export interface EncodedAudioPayload {
+  audioBase64: string;
+  durationSeconds: number;
 }
 
 /**
  * Convert any browser audio blob (WebM/Ogg/etc.) to a 16kHz mono WAV with a
  * proper RIFF header — required by Ollama's Gemma4 audio workaround.
  */
-export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
+export async function audioBlobToWav16k(blob: Blob): Promise<EncodedAudioPayload> {
   const arrayBuf = await blob.arrayBuffer();
   const audioCtx = new AudioContext();
   const decoded = await audioCtx.decodeAudioData(arrayBuf);
@@ -62,7 +75,15 @@ export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
   const bytes = new Uint8Array(wavBuf);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
+  return {
+    audioBase64: btoa(binary),
+    durationSeconds: decoded.duration,
+  };
+}
+
+export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
+  const encoded = await audioBlobToWav16k(blob);
+  return encoded.audioBase64;
 }
 
 /**
@@ -71,7 +92,11 @@ export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
  * Workaround per https://github.com/ollama/ollama/issues/15333:
  *   - images field before text prompt, num_ctx capped at 8192.
  */
-export async function transcribe(audioBase64: string, model: string = 'gemma4:e4b'): Promise<string> {
+export async function transcribe(
+  audioBase64: string,
+  model: string = 'gemma4:e4b',
+  keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+): Promise<string> {
   const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -84,7 +109,7 @@ export async function transcribe(audioBase64: string, model: string = 'gemma4:e4
         content: 'Transcribe the speech in the audio. Output only the transcription text, no newlines. Write numbers as digits.',
       }],
       think: OLLAMA_TRANSCRIBE_PROFILE.think,
-      keep_alive: OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+      keep_alive: keepAlive,
       stream: false,
       options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
     }),

@@ -1,31 +1,35 @@
 import { useState, useEffect, useCallback } from 'react';
-import { isRunning, getModels } from '../services/OllamaService';
+import { getModels } from '../services/OllamaService';
 
 export type OllamaStatus = 'checking' | 'offline' | 'ready';
 
 export interface UseOllamaResult {
   status: OllamaStatus;
   models: string[];
+  errorMsg: string;
   recheck: () => void;
 }
 
 export function useOllama(): UseOllamaResult {
   const [status, setStatus] = useState<OllamaStatus>('checking');
   const [models, setModels] = useState<string[]>([]);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const check = useCallback(async () => {
     setStatus('checking');
-    const running = await isRunning();
-    if (!running) {
+    setErrorMsg('');
+    try {
+      const found = await getModels();
+      setModels(found);
+      setStatus('ready');
+    } catch (error) {
+      setModels([]);
       setStatus('offline');
-      return;
+      setErrorMsg(error instanceof Error ? error.message : String(error));
     }
-    const found = await getModels();
-    setModels(found);
-    setStatus('ready');
   }, []);
 
   useEffect(() => { check(); }, [check]);
 
-  return { status, models, recheck: check };
+  return { status, models, errorMsg, recheck: check };
 }

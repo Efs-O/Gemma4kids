@@ -25,6 +25,7 @@ export interface HtmlAuditResult {
   fixes: string[];
   scriptParse: 'ok' | 'broken' | 'no-script';
   scriptError: string | null;
+  visualWarnings: string[];
 }
 
 // Parse every <script> block with acorn. Returns 'broken' on the first
@@ -123,6 +124,83 @@ export function auditHtml(html: string): HtmlAuditResult {
     }
   }
 
+  // 6. window-PROPERTY typo: window-innerHeight → window.innerHeight
+  //    `window - prop` evaluates to NaN (object minus number), silently breaks canvas sizing.
+  //    The minus sign touching both words is the only realistic form of this mistake.
+  out = out.replace(/(<script[\s\S]*?<\/script>)/gi, (scriptBlock) =>
+    scriptBlock.replace(/\bwindow-([a-zA-Z_$][\w$]*)/g, (_m, prop: string) => {
+      fixes.push(`window-${prop} → window.${prop}`);
+      return `window.${prop}`;
+    }),
+  );
+
   const scriptCheck = checkScripts(out);
-  return { html: out, fixes, ...scriptCheck };
+  return { html: out, fixes, ...scriptCheck, visualWarnings: checkVisualRisks(out) };
+}
+
+// Detects CSS/JS patterns that pass acorn but produce a blank or frozen screen.
+// Returns human-readable warning strings; does not mutate the HTML.
+function checkVisualRisks(html: string): string[] {
+  const warnings: string[] = [];
+  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const css = styleMatch?.[1] ?? '';
+
+  // W1. animation shorthand uses var() where the duration slot should be a <time>.
+  //     e.g. `animation: pulse var(--pulse-scale) infinite` — var resolves to `1.5`
+  //     (no unit), which is an invalid time value; the entire declaration is dropped.
+  for (const m of css.matchAll(/animation\s*:\s*([\w-]+)\s+(var\s*\((--[\w-]+)\))/gi)) {
+    const varName = m[3];
+    const resolvedMatch = css.match(new RegExp(`${varName}\\s*:\\s*([^;\\n]+)`));
+    const resolved = resolvedMatch?.[1]?.trim() ?? '';
+    if (/^\d+(\.\d+)?$/.test(resolved)) {
+      warnings.push(
+        `animation duration: var(${varName}) resolves to '${resolved}' (no 's'/'ms' unit) — animation will not run`,
+      );
+    } else if (!resolved) {
+      warnings.push(
+        `animation duration: var(${varName}) value not found in stylesheet — ensure it resolves to a time value with 's' or 'ms' unit`,
+      );
+    }
+  }
+
+  // W2. :nth-child(1) selector mismatch — the targeted class is not the first child
+  //     in its container, so all :nth-child(N) selectors silently target nothing.
+  //     Detected by checking whether the first element with that class is directly
+  //     preceded (after stripping comments) by a closing tag from a sibling.
+  const nthOneClasses: string[] = [];
+  for (const m of css.matchAll(/\.([\w-]+):nth-child\(1\)/g)) {
+    if (!nthOneClasses.includes(m[1])) nthOneClasses.push(m[1]);
+  }
+  if (nthOneClasses.length > 0) {
+    const htmlNoComments = html.replace(/<!--[\s\S]*?-->/g, '');
+    for (const cls of nthOneClasses) {
+      const elemRe = new RegExp(
+        `<[a-z][a-z0-9]*[^>]*\\bclass\\s*=\\s*["'][^"']*\\b${cls}\\b[^"']*["'][^>]*>`,
+        'i',
+      );
+      const elemMatch = htmlNoComments.match(elemRe);
+      if (!elemMatch) continue;
+
+      const elemIdx = htmlNoComments.indexOf(elemMatch[0]);
+      let i = elemIdx - 1;
+      while (i >= 0 && /\s/.test(htmlNoComments[i])) i--;
+      if (i < 0 || htmlNoComments[i] !== '>') continue;
+
+      const tagEnd = i;
+      while (i >= 0 && htmlNoComments[i] !== '<') i--;
+      if (i < 0) continue;
+
+      const prevTag = htmlNoComments.slice(i, tagEnd + 1);
+      if (/^<\//.test(prevTag)) {
+        const prevName = prevTag.match(/^<\/([\w-]+)/)?.[1] ?? 'element';
+        warnings.push(
+          `:nth-child(1) mismatch: .${cls}:nth-child(1) expects first child, ` +
+            `but first .${cls} is preceded by </${prevName}> — ` +
+            `all .${cls}:nth-child(N) selectors likely target wrong elements`,
+        );
+      }
+    }
+  }
+
+  return warnings;
 }

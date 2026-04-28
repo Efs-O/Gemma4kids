@@ -31,6 +31,9 @@ BEFORE YOU FINISH THE CODE, double-check:
 - In JavaScript, element.style properties are camelCase, never kebab-case: use element.style.backgroundColor (not background-color), element.style.fontSize (not font-size), element.style.borderRadius (not border-radius). Kebab-case here is a syntax error that breaks the whole script.
 - No duplicate JavaScript tokens (e.g. "window window") and no undefined variables.
 - The animation must be visible on the screen from the very first second - never start an element fully off-screen with translateX(-100vw) or similar.
+- Canvas sizing MUST use dot notation: write \`window.innerWidth\` and \`window.innerHeight\`. Writing \`window-innerWidth\` is a subtraction that produces NaN and renders an invisible canvas.
+- CSS animation duration MUST be a literal time value: write \`animation: pulse 2s infinite\`, never \`animation: pulse var(--x) infinite\`. A CSS variable has no time unit and makes the entire animation declaration invalid.
+- When using :nth-child(N), count ALL sibling elements from 1 regardless of their class or tag. If your .butterfly divs follow a .flower-bed div and four .flower divs, the first butterfly is :nth-child(6), not :nth-child(1).
 
 TOOL RULES:
 - Never make empty promises ("I'll update it soon") - write the code block and call the tool in the same reply.

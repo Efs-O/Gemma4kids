@@ -22,6 +22,7 @@ function hideHtmlOutput(text: string): string {
 
 export function Message({ role, content, thinking = '', showThinking = false, streaming, tts }: Props) {
   const [speaking, setSpeaking] = useState(false);
+  const [ttsHint, setTtsHint] = useState('');
   const display = role === 'assistant' ? hideHtmlOutput(content) : content;
 
   const handleSpeak = async () => {
@@ -31,11 +32,13 @@ export function Message({ role, content, thinking = '', showThinking = false, st
       setSpeaking(false);
       return;
     }
+    setTtsHint('');
     setSpeaking(true);
     try {
       await tts.speak(content);
-    } catch {
-      // Piper not available - fail silently
+    } catch (error) {
+      console.error('[Message] Read aloud failed:', error);
+      setTtsHint("Reading voice isn't ready right now.");
     } finally {
       setSpeaking(false);
     }
@@ -58,14 +61,17 @@ export function Message({ role, content, thinking = '', showThinking = false, st
         </div>
       )}
       {role === 'assistant' && !streaming && tts && display && (
-        <button
-          className={`btn-speaker${speaking ? ' btn-speaker-speaking' : ''}`}
-          onClick={handleSpeak}
-          aria-label={speaking ? 'Stop reading' : 'Read aloud'}
-          title={speaking ? 'Stop' : 'Read aloud'}
-        >
-          {speaking ? 'Stop' : 'Read'}
-        </button>
+        <>
+          <button
+            className={`btn-speaker${speaking ? ' btn-speaker-speaking' : ''}`}
+            onClick={handleSpeak}
+            aria-label={speaking ? 'Stop reading' : 'Read aloud'}
+            title={speaking ? 'Stop' : 'Read aloud'}
+          >
+            {speaking ? 'Stop' : 'Read'}
+          </button>
+          {ttsHint && <div className="message-tts-hint">{ttsHint}</div>}
+        </>
       )}
     </div>
   );

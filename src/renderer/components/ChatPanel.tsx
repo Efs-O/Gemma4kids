@@ -35,7 +35,12 @@ const ALL_CHIPS: { label: string; text: string }[] = [
 ];
 
 function pickRandom<T>(arr: T[], n: number): T[] {
-  return [...arr].sort(() => Math.random() - 0.5).slice(0, n);
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, n);
 }
 
 interface Props {
@@ -49,6 +54,7 @@ interface Props {
   onRetry: () => void;
   e4bAvailable: boolean;
   transcribeModel: string;
+  codingModel: string;
   showThinking: boolean;
 }
 
@@ -63,6 +69,7 @@ export function ChatPanel({
   onRetry,
   e4bAvailable,
   transcribeModel,
+  codingModel,
   showThinking,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -148,7 +155,14 @@ export function ChatPanel({
           ))}
         </div>
       )}
-      <InputRow status={status} onSend={onSend} onCancel={onCancel} e4bAvailable={e4bAvailable} transcribeModel={transcribeModel} />
+      <InputRow
+        status={status}
+        onSend={onSend}
+        onCancel={onCancel}
+        e4bAvailable={e4bAvailable}
+        transcribeModel={transcribeModel}
+        codingModel={codingModel}
+      />
     </div>
   );
 }

@@ -7,9 +7,10 @@ interface Props {
   onCancel: () => void;
   e4bAvailable: boolean;
   transcribeModel: string;
+  codingModel: string;
 }
 
-export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeModel }: Props) {
+export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeModel, codingModel }: Props) {
   const [text, setText] = useState('');
 
   function handleSend() {
@@ -41,6 +42,7 @@ export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeMod
         <VoiceInput
           e4bAvailable={e4bAvailable}
           transcribeModel={transcribeModel}
+          codingModel={codingModel}
           onTranscription={onSend}
           disabled={status === 'streaming'}
         />
