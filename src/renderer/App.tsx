@@ -18,6 +18,14 @@ export default function App() {
   const gemmaModels = useMemo(() => models.filter(m => isGemma4EdgeE4b(m) || isGemma426b(m)), [models]);
 
   const [userModel, setUserModel] = useState<string>(() => localStorage.getItem('g4k-coding-model') ?? '');
+  const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem('g4k-chat-think');
+    return stored == null ? true : stored === 'true';
+  });
+  const [showThinking, setShowThinking] = useState<boolean>(() => {
+    const stored = localStorage.getItem('g4k-show-thinking');
+    return stored === 'true';
+  });
   const codingModel = useMemo(() => {
     if (userModel && models.includes(userModel)) return userModel;
     return autoModel;
@@ -28,7 +36,18 @@ export default function App() {
     localStorage.setItem('g4k-coding-model', m);
   }, []);
 
-  const { messages, streamingText, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry } = useChat(codingModel);
+  const handleThinkToggle = useCallback((enabled: boolean) => {
+    setChatThinkEnabled(enabled);
+    localStorage.setItem('g4k-chat-think', String(enabled));
+  }, []);
+
+  const handleShowThinkingToggle = useCallback((enabled: boolean) => {
+    setShowThinking(enabled);
+    localStorage.setItem('g4k-show-thinking', String(enabled));
+  }, []);
+
+  const { messages, streamingText, streamingThinking, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry } =
+    useChat(codingModel, chatThinkEnabled);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const s = localStorage.getItem('g4k-sidebar-width');
@@ -153,16 +172,40 @@ export default function App() {
           <span className="app-title">
             ✨ gemma4kids
           </span>
-          <select
-            className="model-selector"
-            value={codingModel}
-            onChange={e => handleModelChange(e.target.value)}
-            title="Coding model"
-          >
-            {gemmaModels.map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+          <div className="model-controls">
+            <select
+              className="model-selector"
+              value={codingModel}
+              onChange={e => handleModelChange(e.target.value)}
+              title="Coding model"
+            >
+              {gemmaModels.map(m => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <label
+              className="think-toggle"
+              title="Controls thinking for the coding reply model. Voice transcription always keeps thinking off."
+            >
+              <input
+                type="checkbox"
+                checked={chatThinkEnabled}
+                onChange={e => handleThinkToggle(e.target.checked)}
+              />
+              <span>Think {chatThinkEnabled ? 'On' : 'Off'}</span>
+            </label>
+            <label
+              className="think-toggle"
+              title="Show Gemma's reasoning bubble when the reply model returns it."
+            >
+              <input
+                type="checkbox"
+                checked={showThinking}
+                onChange={e => handleShowThinkingToggle(e.target.checked)}
+              />
+              <span>Show Thoughts</span>
+            </label>
+          </div>
           <div className="header-controls">
             <input
               className="filename-input"
@@ -190,6 +233,7 @@ export default function App() {
             <ChatPanel
               messages={messages}
               streamingText={streamingText}
+              streamingThinking={streamingThinking}
               status={status}
               errorMsg={errorMsg}
               onSend={sendMessage}
@@ -197,11 +241,12 @@ export default function App() {
               onRetry={retry}
               e4bAvailable={e4bAvailable}
               transcribeModel={transcribeModel}
+              showThinking={showThinking}
             />
           </div>
         </div>
 
-        <CodeRunner model={codingModel} streaming={status === 'streaming'} />
+        <CodeRunner streaming={status === 'streaming'} enabled={isGemma426b(codingModel)} />
       </div>
     </ErrorBoundary>
   );

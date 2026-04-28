@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { transcribe } from '../services/OllamaService';
+import { audioBlobToWav16kBase64, transcribe } from '../services/OllamaService';
 
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
 
@@ -19,12 +19,7 @@ export function VoiceInput({ e4bAvailable, transcribeModel, onTranscription, dis
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceState('transcribing');
     try {
-      const buffer = await blob.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      const base64 = btoa(binary);
-
+      const base64 = await audioBlobToWav16kBase64(blob);
       const text = await transcribe(base64, transcribeModel);
       setVoiceState('idle');
       // ~2s delay lets VRAM clear before the coding model picks up.
@@ -91,7 +86,7 @@ export function VoiceInput({ e4bAvailable, transcribeModel, onTranscription, dis
 
   if (voiceState === 'transcribing') {
     return (
-      <button className="btn-mic btn-mic-transcribing" disabled title="Thinking...">
+      <button className="btn-mic btn-mic-transcribing" disabled title="Converting speech to text...">
         ⏳
       </button>
     );

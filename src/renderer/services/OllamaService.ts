@@ -1,4 +1,4 @@
-import { OLLAMA_NUM_CTX } from '../ollamaConstants';
+import { OLLAMA_TRANSCRIBE_PROFILE } from '../ollamaConstants';
 
 const OLLAMA_BASE = 'http://localhost:11434';
 
@@ -83,9 +83,10 @@ export async function transcribe(audioBase64: string, model: string = 'gemma4:e4
         images: [audioBase64],
         content: 'Transcribe the speech in the audio. Output only the transcription text, no newlines. Write numbers as digits.',
       }],
-      keep_alive: 0,
+      think: OLLAMA_TRANSCRIBE_PROFILE.think,
+      keep_alive: OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
       stream: false,
-      options: { num_ctx: 8192 },
+      options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
     }),
   });
 
