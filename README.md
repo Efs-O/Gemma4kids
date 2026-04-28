@@ -129,6 +129,7 @@ Thank you to the teams behind the tools Gemma4kids depends on:
 - **[Google Gemma](https://ai.google.dev/gemma)** — Gemma 4 model family (edge and workstation weights) run locally via Ollama.
 - **[Ollama](https://ollama.com)** — local inference, OpenAI-compatible chat, and painless model pulls.
 - **[Piper](https://github.com/rhasspy/piper)** (Rhasspy) — optional neural text-to-speech in the Electron main process when `piper` and voice ONNX bundles are installed.
+- **[Acorn](https://github.com/acornjs/acorn)** — small JavaScript parser used in **`htmlAudit.ts`** to parse `<script>` bodies and catch broken inline JS in model output before save.
 - **Open-source stack shipped in this app**: [Electron](https://www.electronjs.org/) (bundles Chromium for the desktop shell), [React](https://react.dev/), [CodeMirror](https://codemirror.net/) (`@codemirror/lang-html`, `@codemirror/theme-one-dark`), [esbuild](https://esbuild.github.io/), [TypeScript](https://www.typescriptlang.org/), [react-markdown](https://github.com/remarkjs/react-markdown) with [remark-gfm](https://github.com/remarkjs/remark-gfm), [electron-builder](https://www.electron.build/). Exact versions are in **`package-lock.json`**.
 
 These projects make an offline-first teaching tool practical; residual bugs and UX are ours alone.
