@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, shell, Menu, session } from 'electron';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { pathToFileURL } from 'url';
 
 function getAnimationsDir(): string {
   return path.join(app.getPath('documents'), 'KidAnimations');
@@ -12,6 +13,33 @@ function ensureAnimationsDir(): void {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
+}
+
+function normalizeAnimationFilename(filename: string): string {
+  const trimmed = filename.trim();
+  if (!trimmed) {
+    throw new Error('Animation name cannot be empty');
+  }
+
+  const normalized = trimmed.endsWith('.html') ? trimmed : `${trimmed}.html`;
+  if (path.basename(normalized) !== normalized) {
+    throw new Error('Animation name cannot include folders');
+  }
+
+  return normalized;
+}
+
+function resolveAnimationPath(filename: string): { filename: string; fullPath: string } {
+  const animationsDir = getAnimationsDir();
+  const normalized = normalizeAnimationFilename(filename);
+  const fullPath = path.resolve(animationsDir, normalized);
+  const relative = path.relative(animationsDir, fullPath);
+
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Animation name must stay inside the animations folder');
+  }
+
+  return { filename: normalized, fullPath };
 }
 
 function createWindow(): void {
@@ -62,22 +90,22 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// --- IPC handlers (stubs for Day 2 — wired fully on Day 7) ---
+// --- Animation IPC handlers ---
 
 ipcMain.handle('save-animation', async (_event, { filename, html_content }: { filename: string; html_content: string }) => {
   try {
     ensureAnimationsDir();
-    let target = filename.endsWith('.html') ? filename : `${filename}.html`;
-    let fullPath = path.join(getAnimationsDir(), target);
+    let { filename: target, fullPath } = resolveAnimationPath(filename);
     // Collision: if content differs, append -2, -3, ...
     if (fs.existsSync(fullPath)) {
       const existing = fs.readFileSync(fullPath, 'utf-8');
       if (existing !== html_content) {
         const base = target.replace(/\.html$/, '');
         let n = 2;
-        while (fs.existsSync(path.join(getAnimationsDir(), `${base}-${n}.html`))) n++;
-        target = `${base}-${n}.html`;
-        fullPath = path.join(getAnimationsDir(), target);
+        do {
+          ({ filename: target, fullPath } = resolveAnimationPath(`${base}-${n}.html`));
+          n++;
+        } while (fs.existsSync(fullPath));
       }
     }
     fs.writeFileSync(fullPath, html_content, 'utf-8');
@@ -89,8 +117,7 @@ ipcMain.handle('save-animation', async (_event, { filename, html_content }: { fi
 
 ipcMain.handle('read-animation', async (_event, { filename }: { filename: string }) => {
   try {
-    const name = filename.endsWith('.html') ? filename : `${filename}.html`;
-    const fullPath = path.join(getAnimationsDir(), name);
+    const { fullPath } = resolveAnimationPath(filename);
     const content = fs.readFileSync(fullPath, 'utf-8');
     return { success: true, content };
   } catch (err) {
@@ -110,8 +137,7 @@ ipcMain.handle('list-animations', async () => {
 
 ipcMain.handle('delete-animation', async (_event, { filename }: { filename: string }) => {
   try {
-    const name = filename.endsWith('.html') ? filename : `${filename}.html`;
-    const fullPath = path.join(getAnimationsDir(), name);
+    const { fullPath } = resolveAnimationPath(filename);
     fs.unlinkSync(fullPath);
     return { success: true };
   } catch (err) {
@@ -121,9 +147,8 @@ ipcMain.handle('delete-animation', async (_event, { filename }: { filename: stri
 
 ipcMain.handle('open-in-browser', async (_event, { filename }: { filename: string }) => {
   try {
-    const name = filename.endsWith('.html') ? filename : `${filename}.html`;
-    const fullPath = path.join(getAnimationsDir(), name);
-    await shell.openExternal(`file://${fullPath}`);
+    const { fullPath } = resolveAnimationPath(filename);
+    await shell.openExternal(pathToFileURL(fullPath).toString());
     return { success: true };
   } catch (err) {
     return { success: false, error: String(err) };
@@ -221,3 +246,4 @@ ipcMain.handle('tts-speak', async (_event, text: string, lang?: string): Promise
 ipcMain.handle('tts-list-voices', async () => {
   return scanVoices().map(({ model: _m, sampleRate, name, lang }) => ({ name, lang, sampleRate }));
 });
+

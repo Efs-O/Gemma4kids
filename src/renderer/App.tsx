@@ -9,13 +9,12 @@ import { useOllama } from './hooks/useOllama';
 import { isGemma4EdgeE4b, isGemma426b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
 
 export default function App() {
-  const { status: ollamaStatus, models, recheck } = useOllama();
+  const { status: ollamaStatus, models, errorMsg: ollamaErrorMsg, recheck } = useOllama();
 
-  // Derive synchronously from /api/tags so useChat never lags one frame behind (effect + setState used to pick 26B early).
   const autoModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
-  const gemmaModels = useMemo(() => models.filter(m => isGemma4EdgeE4b(m) || isGemma426b(m)), [models]);
+  const gemmaModels = useMemo(() => models.filter((m) => isGemma4EdgeE4b(m) || isGemma426b(m)), [models]);
 
   const [userModel, setUserModel] = useState<string>(() => localStorage.getItem('g4k-coding-model') ?? '');
   const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
@@ -31,9 +30,9 @@ export default function App() {
     return autoModel;
   }, [userModel, models, autoModel]);
 
-  const handleModelChange = useCallback((m: string) => {
-    setUserModel(m);
-    localStorage.setItem('g4k-coding-model', m);
+  const handleModelChange = useCallback((modelName: string) => {
+    setUserModel(modelName);
+    localStorage.setItem('g4k-coding-model', modelName);
   }, []);
 
   const handleThinkToggle = useCallback((enabled: boolean) => {
@@ -46,55 +45,75 @@ export default function App() {
     localStorage.setItem('g4k-show-thinking', String(enabled));
   }, []);
 
-  const { messages, streamingText, streamingThinking, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry } =
-    useChat(codingModel, chatThinkEnabled);
+  const {
+    messages,
+    streamingText,
+    streamingThinking,
+    latestCode,
+    lastSaved,
+    lastAudit,
+    status,
+    errorMsg,
+    sendMessage,
+    cancel,
+    retry,
+  } = useChat(codingModel, chatThinkEnabled);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const s = localStorage.getItem('g4k-sidebar-width');
-    const v = s ? parseInt(s, 10) : 196;
-    return isNaN(v) || v < 80 || v > 400 ? 196 : v;
+    const stored = localStorage.getItem('g4k-sidebar-width');
+    const value = stored ? parseInt(stored, 10) : 196;
+    return Number.isNaN(value) || value < 80 || value > 400 ? 196 : value;
   });
   const [chatWidth, setChatWidth] = useState(() => {
-    const s = localStorage.getItem('g4k-chat-width');
-    const v = s ? parseInt(s, 10) : 390;
-    return isNaN(v) || v < 200 || v > 700 ? 390 : v;
+    const stored = localStorage.getItem('g4k-chat-width');
+    const value = stored ? parseInt(stored, 10) : 390;
+    return Number.isNaN(value) || value < 200 || value > 700 ? 390 : value;
   });
 
-  // Persist widths whenever they change
-  useEffect(() => { localStorage.setItem('g4k-sidebar-width', String(sidebarWidth)); }, [sidebarWidth]);
-  useEffect(() => { localStorage.setItem('g4k-chat-width', String(chatWidth)); }, [chatWidth]);
+  useEffect(() => {
+    localStorage.setItem('g4k-sidebar-width', String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    localStorage.setItem('g4k-chat-width', String(chatWidth));
+  }, [chatWidth]);
 
   const draggingTarget = useRef<'sidebar' | 'chat' | null>(null);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
 
-  const onSidebarDividerMouseDown = useCallback((e: React.MouseEvent) => {
+  const onSidebarDividerMouseDown = useCallback((event: React.MouseEvent) => {
     draggingTarget.current = 'sidebar';
-    dragStartX.current = e.clientX;
+    dragStartX.current = event.clientX;
     dragStartWidth.current = sidebarWidth;
-    e.preventDefault();
+    event.preventDefault();
   }, [sidebarWidth]);
 
-  const onChatDividerMouseDown = useCallback((e: React.MouseEvent) => {
+  const onChatDividerMouseDown = useCallback((event: React.MouseEvent) => {
     draggingTarget.current = 'chat';
-    dragStartX.current = e.clientX;
+    dragStartX.current = event.clientX;
     dragStartWidth.current = chatWidth;
-    e.preventDefault();
+    event.preventDefault();
   }, [chatWidth]);
 
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
+    const onMouseMove = (event: MouseEvent) => {
       if (!draggingTarget.current) return;
       if (draggingTarget.current === 'sidebar') {
-        const delta = e.clientX - dragStartX.current;
+        const delta = event.clientX - dragStartX.current;
         setSidebarWidth(Math.max(80, Math.min(500, dragStartWidth.current + delta)));
-      } else {
-        const delta = dragStartX.current - e.clientX;
-        const maxChat = window.innerWidth - 350;
-        setChatWidth(Math.max(0, Math.min(maxChat, dragStartWidth.current + delta)));
+        return;
       }
+
+      const delta = dragStartX.current - event.clientX;
+      const maxChat = window.innerWidth - 350;
+      setChatWidth(Math.max(0, Math.min(maxChat, dragStartWidth.current + delta)));
     };
-    const onMouseUp = () => { draggingTarget.current = null; };
+
+    const onMouseUp = () => {
+      draggingTarget.current = null;
+    };
+
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => {
@@ -104,33 +123,62 @@ export default function App() {
   }, []);
 
   const [displayCode, setDisplayCode] = useState('');
-  useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
+  useEffect(() => {
+    if (latestCode) setDisplayCode(latestCode);
+  }, [latestCode]);
 
   const [filename, setFilename] = useState('my-animation');
-  const [manualSaved, setManualSaved] = useState('');
+  const [currentProjectFilename, setCurrentProjectFilename] = useState('');
+  const [uiError, setUiError] = useState('');
+
+  const baseFilename = useCallback((name: string) => name.replace(/\.html$/, ''), []);
+
+  useEffect(() => {
+    if (!lastSaved) return;
+    setCurrentProjectFilename(lastSaved);
+    setFilename(baseFilename(lastSaved));
+  }, [baseFilename, lastSaved]);
 
   const handleSave = useCallback(async () => {
     if (!displayCode) return;
     const result = await window.electronAPI.saveAnimation(filename, displayCode);
-    if (result.success) setManualSaved(result.filename);
-  }, [displayCode, filename]);
+    if (result.success) {
+      setCurrentProjectFilename(result.filename);
+      setFilename(baseFilename(result.filename));
+      setUiError('');
+      return;
+    }
+    setUiError(`I couldn't save that animation. ${result.error ?? 'Please try again.'}`);
+  }, [baseFilename, displayCode, filename]);
 
-  const openTarget = lastSaved ?? manualSaved;
   const handleOpenBrowser = useCallback(async () => {
-    if (!openTarget) return;
-    await window.electronAPI.openInBrowser(openTarget);
-  }, [openTarget]);
+    if (!currentProjectFilename) return;
+    const result = await window.electronAPI.openInBrowser(currentProjectFilename);
+    if (result.success) {
+      setUiError('');
+      return;
+    }
+    setUiError(`I couldn't open that animation in the browser. ${result.error ?? 'Please try again.'}`);
+  }, [currentProjectFilename]);
 
-  const handleLoadProject = useCallback((_name: string, content: string) => {
+  const handleLoadProject = useCallback((name: string, content: string) => {
     setDisplayCode(content);
-  }, []);
+    setCurrentProjectFilename(name);
+    setFilename(baseFilename(name));
+    setUiError('');
+  }, [baseFilename]);
 
-  // ── Startup screens ──────────────────────────────────────────────────────
+  const handleDeleteProject = useCallback((deletedFilename: string) => {
+    if (deletedFilename === currentProjectFilename) {
+      setCurrentProjectFilename('');
+    }
+    setUiError('');
+  }, [currentProjectFilename]);
 
   if (ollamaStatus === 'checking') {
     return (
       <div className="startup-screen">
-        <div style={{ fontSize: 64 }}>🤖</div>
+        <div style={{ fontSize: 64 }}>Robot</div>
         <div className="startup-title">Looking for Gemma...</div>
       </div>
     );
@@ -139,48 +187,48 @@ export default function App() {
   if (ollamaStatus === 'offline') {
     return (
       <div className="startup-screen">
-        <div style={{ fontSize: 64 }}>😴</div>
+        <div style={{ fontSize: 64 }}>Sleep</div>
         <div className="startup-title">Gemma is sleeping!</div>
         <div className="startup-msg">Ask a grown-up to start Ollama, then press the button below.</div>
-        <button className="btn-recheck" onClick={recheck}>🔄 Check Again</button>
+        {ollamaErrorMsg && (
+          <div className="startup-msg" style={{ fontSize: '0.9rem' }}>
+            For a grown-up: {ollamaErrorMsg}
+          </div>
+        )}
+        <button className="btn-recheck" onClick={recheck}>Check Again</button>
       </div>
     );
   }
 
-  // Ollama is running but no Gemma model installed.
-  if (!models.some(m => m.toLowerCase().includes('gemma'))) {
+  if (!models.some((m) => m.toLowerCase().includes('gemma'))) {
     return (
       <div className="startup-screen">
-        <div style={{ fontSize: 64 }}>📦</div>
+        <div style={{ fontSize: 64 }}>Download</div>
         <div className="startup-title">Gemma needs a download!</div>
         <div className="startup-msg">Ask a grown-up to open a terminal and type:</div>
         <div className="startup-code">ollama pull gemma4:26b</div>
         <div className="startup-msg" style={{ fontSize: '0.9rem', marginTop: 4 }}>
           (Optional voice input: <code style={{ fontSize: '0.85em' }}>ollama pull gemma4:e4b</code>)
         </div>
-        <button className="btn-recheck" onClick={recheck}>🔄 Check Again</button>
+        <button className="btn-recheck" onClick={recheck}>Check Again</button>
       </div>
     );
   }
-
-  // ── Main UI ───────────────────────────────────────────────────────────────
 
   return (
     <ErrorBoundary>
       <div className="app">
         <header className="app-header">
-          <span className="app-title">
-            ✨ gemma4kids
-          </span>
+          <span className="app-title">gemma4kids</span>
           <div className="model-controls">
             <select
               className="model-selector"
               value={codingModel}
-              onChange={e => handleModelChange(e.target.value)}
+              onChange={(event) => handleModelChange(event.target.value)}
               title="Coding model"
             >
-              {gemmaModels.map(m => (
-                <option key={m} value={m}>{m}</option>
+              {gemmaModels.map((modelName) => (
+                <option key={modelName} value={modelName}>{modelName}</option>
               ))}
             </select>
             <label
@@ -190,7 +238,7 @@ export default function App() {
               <input
                 type="checkbox"
                 checked={chatThinkEnabled}
-                onChange={e => handleThinkToggle(e.target.checked)}
+                onChange={(event) => handleThinkToggle(event.target.checked)}
               />
               <span>Think {chatThinkEnabled ? 'On' : 'Off'}</span>
             </label>
@@ -201,7 +249,7 @@ export default function App() {
               <input
                 type="checkbox"
                 checked={showThinking}
-                onChange={e => handleShowThinkingToggle(e.target.checked)}
+                onChange={(event) => handleShowThinkingToggle(event.target.checked)}
               />
               <span>Show Thoughts</span>
             </label>
@@ -210,22 +258,37 @@ export default function App() {
             <input
               className="filename-input"
               value={filename}
-              onChange={e => setFilename(e.target.value)}
+              onChange={(event) => {
+                setFilename(event.target.value);
+                setUiError('');
+              }}
               placeholder="animation name"
             />
-            <button className="btn-save" onClick={handleSave} disabled={!displayCode}>💾 Save</button>
-            <button className="btn-preview" onClick={handleOpenBrowser} disabled={!openTarget}>🌐 Open in Browser</button>
+            <button className="btn-save" onClick={handleSave} disabled={!displayCode}>Save</button>
+            <button className="btn-preview" onClick={handleOpenBrowser} disabled={!currentProjectFilename}>Open in Browser</button>
           </div>
         </header>
 
+        {uiError && (
+          <div className="error-msg" role="status">
+            <div>Oops! Something went wrong.</div>
+            <pre className="error-detail">{uiError}</pre>
+          </div>
+        )}
+
         <div className="app-body">
           <div className="sidebar" style={{ width: sidebarWidth }}>
-            <ProjectList onLoad={handleLoadProject} refreshTrigger={lastSaved} />
+            <ProjectList
+              onLoad={handleLoadProject}
+              onDelete={handleDeleteProject}
+              onError={setUiError}
+              refreshTrigger={currentProjectFilename}
+            />
           </div>
 
           <div className="resize-divider" onMouseDown={onSidebarDividerMouseDown} />
 
-          <EditorPanel code={displayCode} onChange={setDisplayCode} />
+          <EditorPanel code={displayCode} onChange={setDisplayCode} auditResult={lastAudit} />
 
           <div className="resize-divider" onMouseDown={onChatDividerMouseDown} />
 
@@ -241,6 +304,7 @@ export default function App() {
               onRetry={retry}
               e4bAvailable={e4bAvailable}
               transcribeModel={transcribeModel}
+              codingModel={codingModel}
               showThinking={showThinking}
             />
           </div>

@@ -26,10 +26,41 @@ function extractPartialHtml(text: string): string | null {
   return html.trim() || null;
 }
 
-/** Keep system + last 24 non-system messages to avoid context blowout. */
+type ToolArgs =
+  | { filename: string; html_content: string }
+  | { filename: string }
+  | Record<string, never>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parseToolArgs(raw: string): ToolArgs {
+  const parsed = JSON.parse(raw) as unknown;
+  if (!isRecord(parsed)) {
+    throw new Error('Tool arguments must be a JSON object');
+  }
+
+  const filename = parsed.filename;
+  const htmlContent = parsed.html_content;
+
+  if (filename !== undefined && typeof filename !== 'string') {
+    throw new Error('Tool argument "filename" must be a string');
+  }
+  if (htmlContent !== undefined && typeof htmlContent !== 'string') {
+    throw new Error('Tool argument "html_content" must be a string');
+  }
+
+  return parsed as ToolArgs;
+}
+
+/** Keep system prompt + last 10 user/assistant pairs + last 4 tool results. */
 function buildRequestMessages(history: ChatMessage[]): ChatMessage[] {
-  const nonSystem = history.filter(m => m.role !== 'system');
-  const kept = nonSystem.length > 24 ? nonSystem.slice(-24) : nonSystem;
+  const toolMessages = history.filter((m) => m.role === 'tool');
+  const conversationMessages = history.filter((m) => m.role === 'user' || m.role === 'assistant');
+  const keptConversation = conversationMessages.slice(-20);
+  const keptTools = toolMessages.slice(-4);
+  const kept = history.filter((m) => keptConversation.includes(m) || keptTools.includes(m));
   return [{ role: 'system', content: SYSTEM_PROMPT }, ...kept];
 }
 
@@ -90,12 +121,18 @@ function parseInlineExecuteTool(text: string): ToolCall[] | null {
   }];
 }
 
+export interface AuditSummary {
+  fixes: string[];
+  visualWarnings: string[];
+}
+
 export interface UseChatResult {
   messages: ChatMessage[];
   streamingText: string;
   streamingThinking: string;
   latestCode: string | null;
   lastSaved: string | null;
+  lastAudit: AuditSummary | null;
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
   sendMessage: (text: string) => void;
@@ -109,6 +146,7 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
   const [streamingThinking, setStreamingThinking] = useState('');
   const [latestCode, setLatestCode] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [lastAudit, setLastAudit] = useState<AuditSummary | null>(null);
   const [status, setStatus] = useState<'idle' | 'streaming' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -211,17 +249,20 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
         for (const call of calls) {
           let result: unknown;
           try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- args are dynamic by design
-            const args = JSON.parse(call.function.arguments) as Record<string, any>;
+            const args = parseToolArgs(call.function.arguments);
 
             switch (call.function.name) {
               case 'save_animation': {
-                const audited = auditHtml(args.html_content as string);
+                if (!('filename' in args) || !('html_content' in args)) {
+                  throw new Error('save_animation requires filename and html_content');
+                }
+                const audited = auditHtml(args.html_content);
+                setLastAudit({ fixes: audited.fixes, visualWarnings: audited.visualWarnings });
                 if (audited.fixes.length > 0) {
                   console.info('[htmlAudit] save_animation fixes:', audited.fixes);
                 }
                 const res = await window.electronAPI.saveAnimation(
-                  args.filename as string,
+                  args.filename,
                   audited.html,
                 );
                 result = res;
@@ -232,13 +273,19 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
                 break;
               }
               case 'read_animation':
-                result = await window.electronAPI.readAnimation(args.filename as string);
+                if (!('filename' in args)) {
+                  throw new Error('read_animation requires filename');
+                }
+                result = await window.electronAPI.readAnimation(args.filename);
                 break;
               case 'list_animations':
                 result = await window.electronAPI.listAnimations();
                 break;
               case 'open_in_browser':
-                result = await window.electronAPI.openInBrowser(args.filename as string);
+                if (!('filename' in args)) {
+                  throw new Error('open_in_browser requires filename');
+                }
+                result = await window.electronAPI.openInBrowser(args.filename);
                 break;
               default:
                 result = { error: `Unknown tool: ${call.function.name}` };
@@ -284,6 +331,7 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
       const extracted = extractHtml(assembled);
       if (extracted) {
         const audited = auditHtml(extracted);
+        setLastAudit({ fixes: audited.fixes, visualWarnings: audited.visualWarnings });
         if (audited.fixes.length > 0) {
           console.info('[htmlAudit] post-stream fixes:', audited.fixes);
         }
@@ -327,5 +375,5 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
     runLoop(historyRef.current, token);
   }, [runLoop]);
 
-  return { messages, streamingText, streamingThinking, latestCode, lastSaved, status, errorMsg, sendMessage, cancel, retry };
+  return { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, sendMessage, cancel, retry };
 }
