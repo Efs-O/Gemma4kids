@@ -96,6 +96,12 @@ npm run dist:win     # build Windows installer
 
 ---
 
+## Competition reference
+
+For **Gemma 4 Good** (Kaggle) judging and contributor context, verbatim copies of the [Kaggle foundational rules](docs/competition/kaggle-foundational-rules.txt) and [hackathon overview](docs/competition/gemma4-good-hackathon-overview.txt) (tracks, submission requirements, deadlines) are in [`docs/competition/`](docs/competition/).
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE)
