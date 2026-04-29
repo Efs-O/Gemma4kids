@@ -193,7 +193,7 @@ export default function App() {
   const handleSave = useCallback(async () => {
     if (!displayCode) return;
     const audited = auditHtml(displayCode);
-    const result = await window.electronAPI.saveAnimation(filename, audited.html);
+    const result = await window.electronAPI.saveAnimation(filename, audited.html, 'kid');
     if (result.success) {
       setCurrentProjectFilename(result.filename);
       setFilename(baseFilename(result.filename));

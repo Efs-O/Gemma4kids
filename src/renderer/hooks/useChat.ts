@@ -288,6 +288,7 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
                 const res = await window.electronAPI.saveAnimation(
                   args.filename,
                   audited.html,
+                  'gemma',
                 );
                 result = res;
                 if (res.success) {
