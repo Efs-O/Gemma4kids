@@ -143,6 +143,7 @@ export interface UseChatResult {
   cancel: () => void;
   retry: () => void;
   clearContext: () => void;
+  injectContext: (text: string) => void;
 }
 
 export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
@@ -420,5 +421,18 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
     setErrorMsg('');
   }, []);
 
-  return { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext };
+  // Silently inject a context note (e.g. project loaded from sidebar) into
+  // history without triggering generation. Replaces any previous injection
+  // so loading project B after A doesn't stack two context messages.
+  const injectContext = useCallback((text: string) => {
+    const filtered = historyRef.current.filter(
+      m => !(m.role === 'user' && typeof m.content === 'string' && m.content.startsWith('[Context:'))
+    );
+    const msg: ChatMessage = { role: 'user', content: text };
+    const updated = [...filtered, msg];
+    historyRef.current = updated;
+    setMessages(updated);
+  }, []);
+
+  return { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext, injectContext };
 }
