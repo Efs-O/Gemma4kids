@@ -29,6 +29,7 @@ export function HelpPanel({ onClose }: Props) {
             <h3>Your Code editor</h3>
             <p>When Gemma finishes, the animation code appears in the middle panel. You can <strong>edit it yourself</strong> — change colours, sizes, speeds, anything you like!</p>
             <p>Made a mistake? Press <strong>↩ Gemma's version</strong> (top-right of the editor) to undo all your edits and go back to exactly what Gemma wrote.</p>
+            <p>You can also type or paste your own code, save it, then ask Gemma to explain it! Or click any saved project in the left sidebar to load it into the editor — then ask Gemma to review it.</p>
           </section>
 
           <section className="help-section">
