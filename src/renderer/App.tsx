@@ -202,7 +202,7 @@ export default function App() {
     setCurrentProjectFilename(name);
     setFilename(baseFilename(name));
     setUiError('');
-    injectContext(`[Context: the child just loaded "${name}" from their saved projects into the editor. Before answering any questions about this code, call read_animation("${baseFilename(name)}") to read the current version first.]`);
+    injectContext(`[Context: the child loaded "${name}" from the sidebar. You MUST call read_animation("${baseFilename(name)}") before responding to any message about this code. Do not comment on, review, or fix this code without reading it first with the tool.]`);
   }, [baseFilename, injectContext]);
 
   const handleDeleteProject = useCallback((deletedFilename: string) => {
