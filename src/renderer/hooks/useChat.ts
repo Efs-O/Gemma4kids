@@ -168,6 +168,14 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
     const numCtx = (isGemma4EdgeE2b(model) || isGemma431b(model)) ? CTX_64K : OLLAMA_CHAT_PROFILE.numCtx;
 
     while (true) {
+      // Guard re-entry: abort may have fired during a tool dispatch IPC round-trip.
+      if (token.signal.aborted) {
+        setStreamingText('');
+        setStreamingThinking('');
+        setStatus('idle');
+        return;
+      }
+
       let assembled = '';
       let thinking = '';
       let firedToolCalls: ToolCall[] | null = null;
@@ -328,6 +336,13 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
           return;
         }
         // No text yet — re-enter so Gemma can confirm the action.
+        // But honour a Stop that arrived during the IPC round-trip.
+        if (token.signal.aborted) {
+          setStreamingText('');
+          setStreamingThinking('');
+          setStatus('idle');
+          return;
+        }
         continue;
       }
 
