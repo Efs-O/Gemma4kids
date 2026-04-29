@@ -182,6 +182,7 @@ export default function App() {
       setCurrentProjectFilename(result.filename);
       setFilename(baseFilename(result.filename));
       setUiError('');
+      injectContext(`[Context: the child just saved "${result.filename}" to the editor. You MUST call read_animation("${baseFilename(result.filename)}") before answering any questions about this code. Do not comment on, review, or fix this code without reading it first with the tool.]`);
       return;
     }
     setUiError(`I couldn't save that animation. ${result.error ?? 'Please try again.'}`);
