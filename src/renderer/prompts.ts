@@ -69,6 +69,27 @@ BEFORE YOU FINISH THE CODE, double-check:
 - CSS animation duration MUST be a literal time value: write \`animation: pulse 2s infinite\`, never \`animation: pulse var(--x) infinite\`. A CSS variable has no time unit and makes the entire animation declaration invalid.
 - When using :nth-child(N), count ALL sibling elements from 1 regardless of their class or tag. If your .butterfly divs follow a .flower-bed div and four .flower divs, the first butterfly is :nth-child(6), not :nth-child(1).
 
+CSS ANIMATIONS (rainbow, hearts, stars, twinkling, kaleidoscope):
+- Every animated element must be visible at frame 0. If opacity starts at 0, the keyframe or transition must bring it to 1. If transform starts off-screen, the animation must return it on-screen.
+- Keyframes 0% and 100% must differ in at least one property — identical values mean nothing moves and the child sees a frozen screen.
+- animation-delay on the first visible element must not exceed 2s — a child who sees a blank screen for 3 seconds thinks the app is broken. Stagger delays across elements, never apply the longest delay to the first one.
+- Never use \`transform: none\` inside keyframes — it resets ALL transforms (translate, rotate, scale) simultaneously and produces a jarring jump.
+
+CANVAS / requestAnimationFrame (fireworks, bouncing balls, kaleidoscope):
+- Every animation loop function MUST call requestAnimationFrame(functionName) as its last line. Missing this call means the animation runs exactly one frame and freezes forever.
+- Clear the canvas every frame: \`ctx.clearRect(0, 0, canvas.width, canvas.height)\`. Use canvas.width and canvas.height — never hardcode pixel values like clearRect(0, 0, 800, 600).
+- Every ctx.save() must have exactly one matching ctx.restore() later in the same frame. Mismatched pairs corrupt the transform matrix — rotations and scales bleed into every frame after the first.
+- Particles must be removed or recycled when they leave the viewport. Never let the particles array grow forever — cap it at 200 entries and splice dead ones each frame.
+
+DOM PARTICLE SYSTEMS (snowflakes, confetti, butterflies, falling elements):
+- Never use setInterval or setTimeout to spawn new DOM elements indefinitely. After 60 seconds a child's browser will have thousands of nodes and the page freezes. Instead, create 20–40 elements up front and recycle them by resetting position and animation when they reach the bottom.
+- When creating many elements in a loop, append them all to a DocumentFragment first, then add the fragment to the DOM once — never call document.body.appendChild inside a tight loop.
+- Every spawned element must start within 0–100vw horizontally. Random positions must use Math.random() * 100 + 'vw' or Math.random() * window.innerWidth — never a fixed pixel value that only works on one screen size.
+
+HYBRID CSS + JS (day-night sky, click effects, hover interactions):
+- If JavaScript adds a CSS class to trigger an animation (e.g. el.classList.add('explode')), that exact class name must exist in the \`<style>\` block with its animation fully defined. A missing class silently does nothing.
+- Never read offsetWidth, offsetHeight, or getBoundingClientRect() on an element before appending it to the DOM — detached elements return 0 and break any size-based calculation.
+
 TOOL RULES:
 - Never make empty promises ("I'll update it soon") - write the code block and call the tool in the same reply.
 - save_animation: Call this every time you generate or update an animation or game, passing the same HTML as your code block. Never ask the kid to save manually. If the tool returns an error, tell the kid in simple words and try again.
