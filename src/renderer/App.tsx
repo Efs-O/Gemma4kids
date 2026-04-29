@@ -128,6 +128,7 @@ export default function App() {
   }, []);
 
   const [displayCode, setDisplayCode] = useState('');
+  const [savedCode, setSavedCode] = useState('');
   useEffect(() => {
     if (latestCode) setDisplayCode(latestCode);
   }, [latestCode]);
@@ -143,7 +144,8 @@ export default function App() {
     if (!lastSaved) return;
     setCurrentProjectFilename(lastSaved);
     setFilename(baseFilename(lastSaved));
-  }, [baseFilename, lastSaved]);
+    if (latestCode) setSavedCode(latestCode);
+  }, [baseFilename, lastSaved, latestCode]);
 
   // Auto-save when Gemma generates code but forgets to call save_animation.
   // Tracks lastSaved at streaming start; if it hasn't changed by the time
@@ -170,6 +172,7 @@ export default function App() {
       if (result.success) {
         setCurrentProjectFilename(result.filename);
         setFilename(baseFilename(result.filename));
+        setSavedCode(audited.html);
       }
     })();
   }, [status, latestCode, lastSaved, baseFilename]);
@@ -181,6 +184,7 @@ export default function App() {
     if (result.success) {
       setCurrentProjectFilename(result.filename);
       setFilename(baseFilename(result.filename));
+      setSavedCode(audited.html);
       setUiError('');
       injectContext(`[Context: the child just saved "${result.filename}" to the editor. You MUST call read_animation("${baseFilename(result.filename)}") before answering any questions about this code. Do not comment on, review, or fix this code without reading it first with the tool.]`);
       return;
@@ -200,6 +204,7 @@ export default function App() {
 
   const handleLoadProject = useCallback((name: string, content: string) => {
     setDisplayCode(content);
+    setSavedCode(content);
     setCurrentProjectFilename(name);
     setFilename(baseFilename(name));
     setUiError('');
@@ -336,7 +341,7 @@ export default function App() {
 
           <div className="resize-divider" onMouseDown={onSidebarDividerMouseDown} />
 
-          <EditorPanel code={displayCode} onChange={setDisplayCode} auditResult={lastAudit} isStreaming={status === 'streaming'} />
+          <EditorPanel code={displayCode} onChange={setDisplayCode} auditResult={lastAudit} isStreaming={status === 'streaming'} hasUnsavedChanges={!!displayCode && displayCode !== savedCode} />
 
           <div className="resize-divider" onMouseDown={onChatDividerMouseDown} />
 

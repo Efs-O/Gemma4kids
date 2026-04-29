@@ -231,6 +231,14 @@ body {
   flex-shrink: 0;
 }
 
+.unsaved-dot {
+  color: #f59e0b;
+  font-size: 0.65rem;
+  line-height: 1;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
 .audit-badge {
   font-size: 0.72rem;
   font-weight: 600;
