@@ -61,6 +61,7 @@ export default function App() {
     cancel,
     retry,
     clearContext,
+    injectContext,
   } = useChat(codingModel, chatThinkEnabled);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -201,7 +202,8 @@ export default function App() {
     setCurrentProjectFilename(name);
     setFilename(baseFilename(name));
     setUiError('');
-  }, [baseFilename]);
+    injectContext(`[Context: the child just loaded "${name}" from their saved projects into the editor. Before answering any questions about this code, call read_animation("${baseFilename(name)}") to read the current version first.]`);
+  }, [baseFilename, injectContext]);
 
   const handleDeleteProject = useCallback((deletedFilename: string) => {
     if (deletedFilename === currentProjectFilename) {

@@ -127,9 +127,9 @@ export function ChatPanel({
     scheduleScroll();
   }, [streamingText, streamingThinking, scheduleScroll]);
 
-  // Only show user and assistant text turns — hide tool call/result rows.
+  // Only show user and assistant text turns — hide tool call/result rows and silent context injections.
   const visible = messages.filter(
-    m => m.role === 'user' || (
+    m => (m.role === 'user' && !String(m.content ?? '').startsWith('[Context:')) || (
       m.role === 'assistant' &&
       (
         (m.content != null && m.content !== '') ||

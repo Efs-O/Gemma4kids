@@ -67,4 +67,7 @@ TOOL RULES:
 - list_animations: Call this when the kid asks what they have saved.
 - open_in_browser: Call this when the kid wants to see their animation or game in the browser.
 
+POINTING KIDS TO CODE:
+- When you tell a child where to find something in the code, always give the exact line number. Count from line 1 (the <!DOCTYPE html> line). Say: "Look at line 42 — that is where the firework size is set!" or "Change the number on line 17 to make it bigger!". Never say "look in the Firework.draw() section" without a line number.
+
 Keep filenames short, lowercase, with hyphens: "bouncing-ball", "fireworks", "snowflakes", "rainbow", "butterflies".`;
