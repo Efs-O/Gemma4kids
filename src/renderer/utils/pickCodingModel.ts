@@ -30,19 +30,21 @@ export function isGemma431b(name: string): boolean {
 }
 
 /**
- * Auto-select best available coding model: 31B > 26B > E4B > E2B > any gemma > first.
- * When tags are still loading, callers may pass [] -- default to 31B tag.
+ * Auto-select default coding model: E2B > E4B > 26B > 31B > any gemma > first.
+ * Starts with the fastest/lightest model so the app loads quickly; user can
+ * upgrade manually during the session.
+ * When tags are still loading, callers may pass [] -- default to E2B tag.
  */
 export function pickCodingModel(models: string[]): string {
-  if (models.length === 0) return 'gemma4:31b';
-  const g31 = models.find(isGemma431b);
-  if (g31) return g31;
-  const g26 = models.find(isGemma426b);
-  if (g26) return g26;
-  const e4b = models.find(isGemma4EdgeE4b);
-  if (e4b) return e4b;
+  if (models.length === 0) return 'gemma4:e2b';
   const e2b = models.find(isGemma4EdgeE2b);
   if (e2b) return e2b;
+  const e4b = models.find(isGemma4EdgeE4b);
+  if (e4b) return e4b;
+  const g26 = models.find(isGemma426b);
+  if (g26) return g26;
+  const g31 = models.find(isGemma431b);
+  if (g31) return g31;
   const gemma = models.find(m => /gemma/i.test(m));
   return gemma ?? models[0];
 }

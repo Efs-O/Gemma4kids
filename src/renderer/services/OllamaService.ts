@@ -30,6 +30,20 @@ export async function getModels(): Promise<string[]> {
   return data.models.map(m => m.name);
 }
 
+/** Fire-and-forget: loads the coding model into VRAM so the first prompt is instant. */
+export function warmupCodingModel(model: string): void {
+  fetch(`${OLLAMA_BASE}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: 'hi' }],
+      stream: false,
+      options: { num_predict: 1 },
+    }),
+  }).catch(() => { /* silent — warmup is best-effort */ });
+}
+
 export interface EncodedAudioPayload {
   audioBase64: string;
   durationSeconds: number;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getModels } from '../services/OllamaService';
+import { getModels, warmupCodingModel } from '../services/OllamaService';
+import { pickCodingModel } from '../utils/pickCodingModel';
 
 export type OllamaStatus = 'checking' | 'offline' | 'ready';
 
@@ -22,6 +23,7 @@ export function useOllama(): UseOllamaResult {
       const found = await getModels();
       setModels(found);
       setStatus('ready');
+      warmupCodingModel(pickCodingModel(found));
     } catch (error) {
       setModels([]);
       setStatus('offline');
