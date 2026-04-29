@@ -20,12 +20,12 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026)—e.g. **Futu
 
 | Area | Behavior |
 |---|---|
-| **Models** | Header **Coding model** lists pulled **Gemma 4 edge** (`gemma4:e4b`…) and/or **26B MoE** (`gemma4:26b`…); default prefers **e4b** when installed (lighter cycle), otherwise **26B** for heavier generation. Pick what fits RAM and quality. |
+| **Models** | Header **Coding model** lists pulled Gemma 4 variants; auto-selects best available: **31B** (`gemma4:31b`) → **26B** (`gemma4:26b`) → **edge** (`gemma4:e4b`) → **e2b**. Pick what fits your VRAM. |
 | **Voice→text** | **Mic**: WAV → **`gemma4:e4b`** transcription via Ollama (`keep_alive: 0`). Disabled if **e4b** is not pulled. |
 | **Chat** | Markdown answers; optional **Thoughts** (**Think On/Off** + **Show Thoughts**) reflect native thinking from the coding model where supported; **starter prompts** + **quick chips** after replies. Cancel / retry during errors. |
 | **Tools** | Native tool calls **`save_animation`**, **`read_animation`**, **`list_animations`**, **`open_in_browser`**; HTML is audited/fixed lightly before persistence. |
 | **Editor & projects** | Resizable sidebar (**saved animations**) + **chat** widths; **`Documents/KidAnimations/`** `.html` files with collision **`-2`**, **`-3`**, … if names clash. |
-| **Code Runner** | Sidebar mini-game while **Gemma streams** **only when the selected coding model is `gemma4:26b`…** |
+| **Code Runner** | Sidebar mini-game while **Gemma streams**, active when coding model is **`gemma4:26b`** or **`gemma4:31b`**. |
 | **TTS (“Read”)** | **Piper** in **main**: optional local read-aloud on assistant bubbles if **`piper`** binary + **`voices`** are present—see **[SETUP.md](SETUP.md)**. |
 
 ---
@@ -37,11 +37,12 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026)—e.g. **Futu
 Download from [ollama.com](https://ollama.com) and keep it running. Pull what you plan to use:
 
 ```bash
-ollama pull gemma4:e4b   # edge: STT + can drive full chat/tools (smaller footprint)
-ollama pull gemma4:26b   # workstation MoE: strongest HTML + tools (much larger load)
+ollama pull gemma4:31b   # highest quality — 64 k context, ~20 GB (24 GB VRAM)
+ollama pull gemma4:26b   # excellent quality — ~17 GB (20 GB VRAM)
+ollama pull gemma4:e4b   # edge: STT + full chat/tools on smaller GPUs (~6 GB)
 ```
 
-> **RAM:** 8 GB allows edge-only experimentation; **16 GB+** is realistic for a smooth **26B** + **e4b** setup. GPUs help a lot.
+> **RAM:** 8 GB allows edge-only use; **20 GB+ VRAM** runs 26b smoothly; **24 GB+ VRAM** for 31b. GPUs help a lot.
 
 ### 2. Install Gemma4kids
 
@@ -118,6 +119,7 @@ All benchmark scripts and results live under [`scripts/`](scripts/) and [`gemma_
 
 - **gemma4:e4b** — multimodal audio in; good for STT **and**, when selected as coding model, the full offline agent loop without a second heavyweight model.
 - **gemma4:26b** — strong HTML + MoE tooling for kids’ animations; unload **e4b** with `keep_alive: 0` after STT so VRAM frees for large weights.
+- **gemma4:31b** — highest quality coding model in the family; runs at **64 k context** (vs 98 k for 26b) to fit within 24 GB VRAM without sacrificing meaningful context for kids’ animations.
 - **Ollama** — local OpenAI-compat + native **`/api/chat`** for tool calling aligned with competition requirements.
 
 ---

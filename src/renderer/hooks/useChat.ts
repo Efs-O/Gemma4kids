@@ -6,9 +6,9 @@ import { KIDS_TOOLS } from '../tools';
 import { SYSTEM_PROMPT } from '../prompts';
 import { OLLAMA_CHAT_PROFILE } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
-import { isGemma4EdgeE2b } from '../utils/pickCodingModel';
+import { isGemma4EdgeE2b, isGemma431b } from '../utils/pickCodingModel';
 
-const E2B_NUM_CTX = 65536;
+const CTX_64K = 65536; // e2b (low VRAM) and 31b (VRAM savings at 64k)
 
 const OLLAMA_BASE = 'http://localhost:11434';
 const INLINE_TOOL_QUOTE = '<|"|>';
@@ -165,7 +165,7 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
   const runLoop = useCallback(async (startHistory: ChatMessage[], token: CancellationToken) => {
     const myClearId = clearIdRef.current;
     let history = startHistory;
-    const numCtx = isGemma4EdgeE2b(model) ? E2B_NUM_CTX : OLLAMA_CHAT_PROFILE.numCtx;
+    const numCtx = (isGemma4EdgeE2b(model) || isGemma431b(model)) ? CTX_64K : OLLAMA_CHAT_PROFILE.numCtx;
 
     while (true) {
       let assembled = '';
