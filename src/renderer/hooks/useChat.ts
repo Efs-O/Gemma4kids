@@ -3,7 +3,7 @@ import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
-import { SYSTEM_PROMPT } from '../prompts';
+import { CREATE_SYSTEM_PROMPT, EDIT_SYSTEM_PROMPT } from '../prompts';
 import { OLLAMA_CHAT_PROFILE } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
 import { isGemma4EdgeE2b, isGemma431b } from '../utils/pickCodingModel';
@@ -57,6 +57,24 @@ function parseToolArgs(raw: string): ToolArgs {
   return parsed as ToolArgs;
 }
 
+function getLatestUserText(history: ChatMessage[]): string {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const msg = history[i];
+    if (msg.role === 'user' && typeof msg.content === 'string') return msg.content;
+  }
+  return '';
+}
+
+function isEditIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  if (lower.startsWith('[context:')) return true;
+  return [
+    'fix', 'bug', 'broken', 'check', 'review', 'debug', 'read', 'update',
+    'change', 'edit', 'continue', 'improve', 'make it', 'add more',
+    'faster', 'slower', 'color', 'bigger', 'smaller', 'wrong',
+  ].some((term) => lower.includes(term));
+}
+
 /** Keep system prompt + last 10 user/assistant pairs + last 4 tool results. */
 function buildRequestMessages(history: ChatMessage[]): ChatMessage[] {
   const toolMessages = history.filter((m) => m.role === 'tool');
@@ -64,7 +82,10 @@ function buildRequestMessages(history: ChatMessage[]): ChatMessage[] {
   const keptConversation = conversationMessages.slice(-20);
   const keptTools = toolMessages.slice(-4);
   const kept = history.filter((m) => keptConversation.includes(m) || keptTools.includes(m));
-  return [{ role: 'system', content: SYSTEM_PROMPT }, ...kept];
+  const systemPrompt = isEditIntent(getLatestUserText(history))
+    ? EDIT_SYSTEM_PROMPT
+    : CREATE_SYSTEM_PROMPT;
+  return [{ role: 'system', content: systemPrompt }, ...kept];
 }
 
 function parseInlineExecuteTool(text: string): ToolCall[] | null {
@@ -382,6 +403,7 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
     setErrorMsg('');
     setStreamingText('');
     setStreamingThinking('');
+    setLatestCode(null);
 
     const userMsg: ChatMessage = { role: 'user', content: text };
     const updated = [...historyRef.current, userMsg];

@@ -7,8 +7,22 @@ import { CodeRunner } from './components/CodeRunner';
 import { HelpPanel } from './components/HelpPanel';
 import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
-import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
+import {
+  isGemma4EdgeE4b,
+  isGemma4EdgeE2b,
+  isGemma426b,
+  isGemma431b,
+  pickCodingModel,
+  pickTranscribeModel,
+  sortGemma4CodingModelsSmallestFirst,
+} from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
+
+function titleToFilename(html: string, fallback: string): string {
+  const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  if (!m) return fallback;
+  return m[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || fallback;
+}
 
 export default function App() {
   const { status: ollamaStatus, models, errorMsg: ollamaErrorMsg, recheck } = useOllama();
@@ -16,7 +30,13 @@ export default function App() {
   const autoModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
-  const gemmaModels = useMemo(() => models.filter((m) => isGemma431b(m) || isGemma426b(m) || isGemma4EdgeE4b(m) || isGemma4EdgeE2b(m)), [models]);
+  const gemmaModels = useMemo(
+    () =>
+      sortGemma4CodingModelsSmallestFirst(
+        models.filter((m) => isGemma431b(m) || isGemma426b(m) || isGemma4EdgeE4b(m) || isGemma4EdgeE2b(m)),
+      ),
+    [models],
+  );
 
   const [userModel, setUserModel] = useState<string>('');
   const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
@@ -178,10 +198,10 @@ export default function App() {
     pendingAutoSave.current = false;
     if (lastSaved !== streamStartSaved.current) return; // tool already saved
     const code = latestCode;
-    const name = filenameRef.current;
+    const name = titleToFilename(code, filenameRef.current);
     void (async () => {
       const audited = auditHtml(code);
-      const result = await window.electronAPI.saveAnimation(name, audited.html);
+      const result = await window.electronAPI.saveAnimation(name, audited.html, 'gemma');
       if (result.success) {
         setCurrentProjectFilename(result.filename);
         setFilename(baseFilename(result.filename));
@@ -199,7 +219,7 @@ export default function App() {
       setFilename(baseFilename(result.filename));
       flashSaved(audited.html);
       setUiError('');
-      injectContext(`[Context: the child just saved "${result.filename}" to the editor. You MUST call read_animation("${baseFilename(result.filename)}") before answering any questions about this code. Do not comment on, review, or fix this code without reading it first with the tool.]`);
+      injectContext(`[Context: the child just manually saved their edits as "${result.filename}". If they ask you to review, fix, or change this file, call read_animation("${baseFilename(result.filename)}") first to get their edited version.]`);
       return;
     }
     setUiError(`I couldn't save that animation. ${result.error ?? 'Please try again.'}`);

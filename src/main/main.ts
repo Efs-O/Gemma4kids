@@ -42,6 +42,25 @@ function resolveAnimationPath(filename: string): { filename: string; fullPath: s
   return { filename: normalized, fullPath };
 }
 
+function sanitizeHtmlForSave(input: string): string {
+  let html = input.trim();
+  html = html.replace(/^```(?:html)?\s*/i, '').replace(/\s*```$/, '');
+
+  const doctypeMatch = /<!DOCTYPE html>/i.exec(html);
+  const htmlMatch = /<html\b/i.exec(html);
+  const start = doctypeMatch?.index ?? htmlMatch?.index ?? -1;
+  const endRegex = /<\/html>/gi;
+  let end = -1;
+  let match: RegExpExecArray | null;
+  while ((match = endRegex.exec(html)) !== null) {
+    end = match.index + match[0].length;
+  }
+
+  if (start !== -1 && end !== -1 && end > start) return html.slice(start, end).trim();
+  if (start !== -1) return html.slice(start).trim();
+  return html;
+}
+
 function createWindow(): void {
   const win = new BrowserWindow({
     width: 1200,
@@ -95,12 +114,13 @@ app.on('window-all-closed', () => {
 ipcMain.handle('save-animation', async (_event, { filename, html_content, source }: { filename: string; html_content: string; source?: 'gemma' | 'kid' }) => {
   try {
     ensureAnimationsDir();
+    const sanitizedHtml = sanitizeHtmlForSave(html_content);
     let { filename: target, fullPath } = resolveAnimationPath(filename);
     // Collision: if content differs, append -N (Gemma) or N (kid) — strip any
     // existing numeric suffix first so we never get hearts-2-2 or hearts2-2.
     if (fs.existsSync(fullPath)) {
       const existing = fs.readFileSync(fullPath, 'utf-8');
-      if (existing !== html_content) {
+      if (existing !== sanitizedHtml) {
         const base = target.replace(/\.html$/, '').replace(/[-]?\d+$/, '');
         let n = 2;
         if (source === 'kid') {
@@ -116,7 +136,7 @@ ipcMain.handle('save-animation', async (_event, { filename, html_content, source
         }
       }
     }
-    fs.writeFileSync(fullPath, html_content, 'utf-8');
+    fs.writeFileSync(fullPath, sanitizedHtml, 'utf-8');
     return { success: true, filename: target, path: fullPath };
   } catch (err) {
     return { success: false, error: String(err) };
@@ -254,4 +274,3 @@ ipcMain.handle('tts-speak', async (_event, text: string, lang?: string): Promise
 ipcMain.handle('tts-list-voices', async () => {
   return scanVoices().map(({ model: _m, sampleRate, name, lang }) => ({ name, lang, sampleRate }));
 });
-
