@@ -92,20 +92,28 @@ app.on('window-all-closed', () => {
 
 // --- Animation IPC handlers ---
 
-ipcMain.handle('save-animation', async (_event, { filename, html_content }: { filename: string; html_content: string }) => {
+ipcMain.handle('save-animation', async (_event, { filename, html_content, source }: { filename: string; html_content: string; source?: 'gemma' | 'kid' }) => {
   try {
     ensureAnimationsDir();
     let { filename: target, fullPath } = resolveAnimationPath(filename);
-    // Collision: if content differs, append -2, -3, ...
+    // Collision: if content differs, append -N (Gemma) or N (kid) — strip any
+    // existing numeric suffix first so we never get hearts-2-2 or hearts2-2.
     if (fs.existsSync(fullPath)) {
       const existing = fs.readFileSync(fullPath, 'utf-8');
       if (existing !== html_content) {
-        const base = target.replace(/\.html$/, '');
+        const base = target.replace(/\.html$/, '').replace(/[-]?\d+$/, '');
         let n = 2;
-        do {
-          ({ filename: target, fullPath } = resolveAnimationPath(`${base}-${n}.html`));
-          n++;
-        } while (fs.existsSync(fullPath));
+        if (source === 'kid') {
+          do {
+            ({ filename: target, fullPath } = resolveAnimationPath(`${base}${n}.html`));
+            n++;
+          } while (fs.existsSync(fullPath));
+        } else {
+          do {
+            ({ filename: target, fullPath } = resolveAnimationPath(`${base}-${n}.html`));
+            n++;
+          } while (fs.existsSync(fullPath));
+        }
       }
     }
     fs.writeFileSync(fullPath, html_content, 'utf-8');
