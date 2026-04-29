@@ -65,6 +65,8 @@ interface NativeStreamEvent {
   done?: boolean;
   done_reason?: string;
   error?: string;
+  prompt_eval_count?: number;
+  eval_count?: number;
 }
 
 function toolCallsFromAccum(
@@ -114,6 +116,7 @@ export async function streamOllamaNativeChat(
   },
   handlers: StreamHandlers,
   signal?: AbortSignal,
+  onContextUsage?: (promptTokens: number, evalTokens: number) => void,
 ): Promise<void> {
   const root = baseUrl.replace(/\/$/, '');
   const body = {
@@ -200,6 +203,8 @@ export async function streamOllamaNativeChat(
     }
 
     if (evt.done) {
+      onContextUsage?.(evt.prompt_eval_count ?? 0, evt.eval_count ?? 0);
+
       let calls: ToolCall[] | null = null;
       if (msg?.tool_calls?.length) {
         calls = mergeFinalToolCalls(msg.tool_calls);

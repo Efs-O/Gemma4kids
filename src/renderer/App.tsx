@@ -4,9 +4,11 @@ import { EditorPanel } from './components/EditorPanel';
 import { ProjectList } from './components/ProjectList';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CodeRunner } from './components/CodeRunner';
+import { HelpPanel } from './components/HelpPanel';
 import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
-import { isGemma4EdgeE4b, isGemma426b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
+import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
+import { auditHtml } from './htmlAudit';
 
 export default function App() {
   const { status: ollamaStatus, models, errorMsg: ollamaErrorMsg, recheck } = useOllama();
@@ -14,7 +16,7 @@ export default function App() {
   const autoModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
-  const gemmaModels = useMemo(() => models.filter((m) => isGemma4EdgeE4b(m) || isGemma426b(m)), [models]);
+  const gemmaModels = useMemo(() => models.filter((m) => isGemma426b(m) || isGemma4EdgeE4b(m) || isGemma4EdgeE2b(m)), [models]);
 
   const [userModel, setUserModel] = useState<string>(() => localStorage.getItem('g4k-coding-model') ?? '');
   const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
@@ -54,9 +56,11 @@ export default function App() {
     lastAudit,
     status,
     errorMsg,
+    ctxUsedPct,
     sendMessage,
     cancel,
     retry,
+    clearContext,
   } = useChat(codingModel, chatThinkEnabled);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -130,6 +134,7 @@ export default function App() {
   const [filename, setFilename] = useState('my-animation');
   const [currentProjectFilename, setCurrentProjectFilename] = useState('');
   const [uiError, setUiError] = useState('');
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const baseFilename = useCallback((name: string) => name.replace(/\.html$/, ''), []);
 
@@ -139,9 +144,39 @@ export default function App() {
     setFilename(baseFilename(lastSaved));
   }, [baseFilename, lastSaved]);
 
+  // Auto-save when Gemma generates code but forgets to call save_animation.
+  // Tracks lastSaved at streaming start; if it hasn't changed by the time
+  // streaming ends but latestCode exists, Gemma skipped the tool call.
+  const pendingAutoSave = useRef(false);
+  const streamStartSaved = useRef<string | null>(null);
+  const filenameRef = useRef(filename);
+  useEffect(() => { filenameRef.current = filename; }, [filename]);
+
+  useEffect(() => {
+    if (status === 'streaming') {
+      pendingAutoSave.current = true;
+      streamStartSaved.current = lastSaved;
+      return;
+    }
+    if (status !== 'idle' || !pendingAutoSave.current || !latestCode) return;
+    pendingAutoSave.current = false;
+    if (lastSaved !== streamStartSaved.current) return; // tool already saved
+    const code = latestCode;
+    const name = filenameRef.current;
+    void (async () => {
+      const audited = auditHtml(code);
+      const result = await window.electronAPI.saveAnimation(name, audited.html);
+      if (result.success) {
+        setCurrentProjectFilename(result.filename);
+        setFilename(baseFilename(result.filename));
+      }
+    })();
+  }, [status, latestCode, lastSaved, baseFilename]);
+
   const handleSave = useCallback(async () => {
     if (!displayCode) return;
-    const result = await window.electronAPI.saveAnimation(filename, displayCode);
+    const audited = auditHtml(displayCode);
+    const result = await window.electronAPI.saveAnimation(filename, audited.html);
     if (result.success) {
       setCurrentProjectFilename(result.filename);
       setFilename(baseFilename(result.filename));
@@ -175,10 +210,18 @@ export default function App() {
     setUiError('');
   }, [currentProjectFilename]);
 
+  const handleClearContext = useCallback(() => {
+    clearContext();
+    setDisplayCode('');
+    setCurrentProjectFilename('');
+    setFilename('my-animation');
+    setUiError('');
+  }, [clearContext]);
+
   if (ollamaStatus === 'checking') {
     return (
       <div className="startup-screen">
-        <div style={{ fontSize: 64 }}>Robot</div>
+        <div style={{ fontSize: 64 }}>🤖</div>
         <div className="startup-title">Looking for Gemma...</div>
       </div>
     );
@@ -187,7 +230,7 @@ export default function App() {
   if (ollamaStatus === 'offline') {
     return (
       <div className="startup-screen">
-        <div style={{ fontSize: 64 }}>Sleep</div>
+        <div style={{ fontSize: 64 }}>😴</div>
         <div className="startup-title">Gemma is sleeping!</div>
         <div className="startup-msg">Ask a grown-up to start Ollama, then press the button below.</div>
         {ollamaErrorMsg && (
@@ -203,7 +246,7 @@ export default function App() {
   if (!models.some((m) => m.toLowerCase().includes('gemma'))) {
     return (
       <div className="startup-screen">
-        <div style={{ fontSize: 64 }}>Download</div>
+        <div style={{ fontSize: 64 }}>📥</div>
         <div className="startup-title">Gemma needs a download!</div>
         <div className="startup-msg">Ask a grown-up to open a terminal and type:</div>
         <div className="startup-code">ollama pull gemma4:26b</div>
@@ -265,9 +308,11 @@ export default function App() {
               placeholder="animation name"
             />
             <button className="btn-save" onClick={handleSave} disabled={!displayCode}>Save</button>
-            <button className="btn-preview" onClick={handleOpenBrowser} disabled={!currentProjectFilename}>Open in Browser</button>
+            <button className="btn-preview" onClick={handleOpenBrowser} disabled={!currentProjectFilename || status === 'streaming'}>Open in Browser</button>
+            <button className="btn-help" onClick={() => setHelpOpen(v => !v)} aria-label="Help" title="How to use Gemma4kids">?</button>
           </div>
         </header>
+        {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
 
         {uiError && (
           <div className="error-msg" role="status">
@@ -288,7 +333,7 @@ export default function App() {
 
           <div className="resize-divider" onMouseDown={onSidebarDividerMouseDown} />
 
-          <EditorPanel code={displayCode} onChange={setDisplayCode} auditResult={lastAudit} />
+          <EditorPanel code={displayCode} onChange={setDisplayCode} auditResult={lastAudit} isStreaming={status === 'streaming'} />
 
           <div className="resize-divider" onMouseDown={onChatDividerMouseDown} />
 
@@ -299,6 +344,7 @@ export default function App() {
               streamingThinking={streamingThinking}
               status={status}
               errorMsg={errorMsg}
+              hasCode={!!displayCode}
               onSend={sendMessage}
               onCancel={cancel}
               onRetry={retry}
@@ -306,6 +352,8 @@ export default function App() {
               transcribeModel={transcribeModel}
               codingModel={codingModel}
               showThinking={showThinking}
+              ctxUsedPct={ctxUsedPct}
+              onClearContext={handleClearContext}
             />
           </div>
         </div>
