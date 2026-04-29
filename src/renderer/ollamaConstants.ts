@@ -34,7 +34,7 @@ export const OLLAMA_SAMPLING: OllamaSamplingProfile = {
  */
 export const OLLAMA_CHAT_PROFILE: OllamaChatProfile = {
   think: true,
-  numCtx: 98304,
+  numCtx: 65536,
   numPredict: 32768,
   ...OLLAMA_SAMPLING,
 };

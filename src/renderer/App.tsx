@@ -18,7 +18,7 @@ export default function App() {
   const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
   const gemmaModels = useMemo(() => models.filter((m) => isGemma431b(m) || isGemma426b(m) || isGemma4EdgeE4b(m) || isGemma4EdgeE2b(m)), [models]);
 
-  const [userModel, setUserModel] = useState<string>(() => localStorage.getItem('g4k-coding-model') ?? '');
+  const [userModel, setUserModel] = useState<string>('');
   const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
     const stored = localStorage.getItem('g4k-chat-think');
     return stored == null ? true : stored === 'true';
@@ -34,7 +34,6 @@ export default function App() {
 
   const handleModelChange = useCallback((modelName: string) => {
     setUserModel(modelName);
-    localStorage.setItem('g4k-coding-model', modelName);
   }, []);
 
   const handleThinkToggle = useCallback((enabled: boolean) => {

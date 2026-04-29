@@ -134,6 +134,32 @@ export function auditHtml(html: string): HtmlAuditResult {
     }),
   );
 
+  // 7. Sanitise the <html> opening tag — strip garbage tokens, normalise lang.
+  //    Gemma occasionally emits <html lang="FDGFen"EDSFS> with junk mixed in.
+  out = out.replace(/<html([^>]*)>/i, (_match, attrs: string) => {
+    const validAttrs: string[] = [];
+    const attrRe = /\b([a-zA-Z][a-zA-Z0-9_:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+    for (const m of attrs.matchAll(attrRe)) {
+      const [, name, dq, sq] = m;
+      const value = dq ?? sq ?? '';
+      const lname = name.toLowerCase();
+      if (lname === 'lang') {
+        const lettersOnly = value.replace(/[^a-zA-Z-]/g, '');
+        const code = lettersOnly.match(/([a-z]{2,3})(?:-[a-zA-Z]{2,4})?$/i)?.[0]?.toLowerCase() ?? 'en';
+        if (code !== value.toLowerCase()) fixes.push(`html lang: "${value}" → "${code}"`);
+        validAttrs.push(`lang="${code}"`);
+      } else if (['dir', 'xmlns', 'class', 'id'].includes(lname)) {
+        validAttrs.push(`${lname}="${value}"`);
+      }
+    }
+    const newAttrs = validAttrs.length > 0 ? ' ' + validAttrs.join(' ') : '';
+    const origNorm = attrs.replace(/\s+/g, ' ').trim();
+    if (origNorm !== newAttrs.trim() && !fixes.some(f => f.startsWith('html lang'))) {
+      fixes.push('html tag: garbage text removed');
+    }
+    return `<html${newAttrs}>`;
+  });
+
   const scriptCheck = checkScripts(out);
   return { html: out, fixes, ...scriptCheck, visualWarnings: checkVisualRisks(out) };
 }
