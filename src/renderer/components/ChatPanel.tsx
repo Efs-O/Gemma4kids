@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Message } from './Message';
 import { InputRow } from './InputRow';
 import type { ChatMessage } from '../llm/types';
@@ -34,6 +34,8 @@ const ALL_CHIPS: { label: string; text: string }[] = [
   { label: '🎉 Add confetti', text: 'Add falling confetti in many colors' },
 ];
 
+const NEW_ANIMATION_CHIP = { label: '🎨 Make something new', text: 'Make me a completely new animation' };
+
 function pickRandom<T>(arr: T[], n: number): T[] {
   const shuffled = [...arr];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -49,6 +51,7 @@ interface Props {
   streamingThinking: string;
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
+  hasCode: boolean;
   onSend: (text: string) => void;
   onCancel: () => void;
   onRetry: () => void;
@@ -56,6 +59,8 @@ interface Props {
   transcribeModel: string;
   codingModel: string;
   showThinking: boolean;
+  ctxUsedPct?: number;
+  onClearContext?: () => void;
 }
 
 export function ChatPanel({
@@ -64,6 +69,7 @@ export function ChatPanel({
   streamingThinking,
   status,
   errorMsg,
+  hasCode,
   onSend,
   onCancel,
   onRetry,
@@ -71,35 +77,89 @@ export function ChatPanel({
   transcribeModel,
   codingModel,
   showThinking,
+  ctxUsedPct,
+  onClearContext,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const userScrolledUpRef = useRef(false);
+  const scrollRafRef = useRef<number | null>(null);
   const tts = useMemo(() => createTTSService(), []);
 
   // Picked once at mount; reshuffled after each assistant reply (messages.length changes).
   const starters = useMemo(() => pickRandom(ALL_STARTERS, 3), []);
   const chips = useMemo(() => pickRandom(ALL_CHIPS, 3), [messages.length]);
 
+  const handleScroll = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    userScrolledUpRef.current = !nearBottom;
+  }, []);
+
+  // Smoothly animate scrollTop toward scrollHeight using rAF so rapid
+  // chunk updates never cancel each other — one frame per tick, silky.
+  const scheduleScroll = useCallback(() => {
+    if (scrollRafRef.current !== null) return; // already scheduled
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const el = listRef.current;
+      if (!el || userScrolledUpRef.current) return;
+      const target = el.scrollHeight - el.clientHeight;
+      const diff = target - el.scrollTop;
+      if (diff <= 0) return;
+      // Ease toward target: jump most of the gap each frame.
+      el.scrollTop += diff * 0.3;
+      // If still not there, keep animating.
+      if (diff > 2) scheduleScroll();
+    });
+  }, []);
+
+  // New message turn → always scroll to bottom and re-enable auto-scroll.
   useEffect(() => {
+    userScrolledUpRef.current = false;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, streamingText, streamingThinking]);
+  }, [messages.length]);
+
+  // During streaming → smooth rAF-based scroll that survives rapid chunks.
+  useEffect(() => {
+    if (userScrolledUpRef.current) return;
+    scheduleScroll();
+  }, [streamingText, streamingThinking, scheduleScroll]);
 
   // Only show user and assistant text turns — hide tool call/result rows.
   const visible = messages.filter(
     m => m.role === 'user' || (
       m.role === 'assistant' &&
-      ((m.content != null && m.content !== '') || (showThinking && !!m.thinking))
+      (
+        (m.content != null && m.content !== '') ||
+        (!m.tool_calls && showThinking && !!m.thinking)
+      )
     ),
   );
 
   const hasStreamingMessage = !!streamingText || (showThinking && !!streamingThinking);
-  const showStarters = visible.length === 0 && !hasStreamingMessage && status === 'idle';
   const lastIsAssistant = visible.length > 0 && visible[visible.length - 1].role === 'assistant';
-  const showChips = status === 'idle' && lastIsAssistant && !errorMsg;
+  // Show starters when no animation exists yet (no code generated), regardless of message count.
+  const showStarters = !hasCode && !hasStreamingMessage && status === 'idle';
+  // Show modification chips only when an animation exists; always append the "make new" escape chip.
+  const showChips = status === 'idle' && lastIsAssistant && !errorMsg && hasCode;
+
+  // When chips appear they shrink message-list height; snap to new bottom
+  // using its own rAF so it never races with the streaming scroll chain.
+  useEffect(() => {
+    if (!showChips) return;
+    userScrolledUpRef.current = false;
+    requestAnimationFrame(() => {
+      const el = listRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  }, [showChips]);
 
   return (
     <div className="chat-panel">
       <div className="chat-label">💬 Chat with Gemma</div>
-      <div className="message-list">
+      <div className="message-list" ref={listRef} onScroll={handleScroll}>
         {visible.length === 0 && !hasStreamingMessage && (
           <div className="chat-empty">
             Hi! I'm Gemma, your coding buddy! 🎉<br />
@@ -153,6 +213,9 @@ export function ChatPanel({
               {c.label}
             </button>
           ))}
+          <button className="chip chip--new" onClick={() => onSend(NEW_ANIMATION_CHIP.text)}>
+            {NEW_ANIMATION_CHIP.label}
+          </button>
         </div>
       )}
       <InputRow
@@ -162,6 +225,8 @@ export function ChatPanel({
         e4bAvailable={e4bAvailable}
         transcribeModel={transcribeModel}
         codingModel={codingModel}
+        ctxUsedPct={ctxUsedPct}
+        onClearContext={onClearContext}
       />
     </div>
   );
