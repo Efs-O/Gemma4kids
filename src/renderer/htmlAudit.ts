@@ -28,9 +28,6 @@ export interface HtmlAuditResult {
   visualWarnings: string[];
 }
 
-// Parse every <script> block with acorn. Returns 'broken' on the first
-// SyntaxError found (with location info), otherwise 'ok'. Acorn never
-// executes the code, so this is CSP-safe.
 function checkScripts(html: string): {
   scriptParse: HtmlAuditResult['scriptParse'];
   scriptError: string | null;
@@ -55,46 +52,36 @@ export function auditHtml(html: string): HtmlAuditResult {
   const fixes: string[] = [];
   let out = html;
 
-  // 1. Mistyped closing tags  </candas> → </style>
+  // 1. Mistyped closing tags. High-confidence repair only.
   out = out.replace(/<\/([a-zA-Z][a-zA-Z0-9]*)>/g, (match, tag: string) => {
     const lower = tag.toLowerCase();
     if (VALID_HTML_TAGS.has(lower)) return match;
     const corrected = TAG_TYPO_MAP[lower];
     if (corrected) {
-      fixes.push(`tag typo: </${tag}> → </${corrected}>`);
+      fixes.push(`tag typo: </${tag}> -> </${corrected}>`);
       return `</${corrected}>`;
     }
     return match;
   });
 
-  // 2. Duplicate adjacent "window" token  e.g. "window        window.addEventListener"
+  // 2. Duplicate adjacent "window" token.
   const dupBefore = out;
   out = out.replace(/\bwindow(\s{2,})window\b/g, 'window');
   if (out !== dupBefore) fixes.push('duplicate window token removed');
 
-  // 3. `forwards` → `infinite` inside <style> blocks only (avoids touching prose)
-  out = out.replace(/(<style[\s\S]*?<\/style>)/gi, (styleBlock) =>
-    styleBlock.replace(/\bforwards\b/g, () => {
-      fixes.push('animation: forwards → infinite');
-      return 'infinite';
-    }),
-  );
-
-  // 4. JS DOM style assignment must be camelCase inside <script> blocks.
-  //    e.g. el.style.background-color = 'red'  →  el.style.backgroundColor = 'red'
-  //    The kebab-case form is a parse-time SyntaxError that kills the whole script.
+  // 3. JS DOM style assignment must be camelCase inside <script> blocks.
   out = out.replace(/(<script[\s\S]*?<\/script>)/gi, (scriptBlock) =>
     scriptBlock.replace(
       /(\.style\.)([a-z]+(?:-[a-z]+)+)(\s*=)/g,
       (_match, prefix: string, prop: string, suffix: string) => {
         const camel = prop.replace(/-([a-z])/g, (_m, c: string) => c.toUpperCase());
-        fixes.push(`style property: ${prop} → ${camel}`);
+        fixes.push(`style property: ${prop} -> ${camel}`);
         return `${prefix}${camel}${suffix}`;
       },
     ),
   );
 
-  // 5. CSS variable audit — inject defaults for vars used but never defined
+  // 4. Detect missing CSS vars, but do not guess values.
   const styleMatch = out.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   if (styleMatch) {
     const css = styleMatch[1];
@@ -105,37 +92,18 @@ export function auditHtml(html: string): HtmlAuditResult {
       [...css.matchAll(/--([^:;\s]+)\s*:/g)].map((m) => m[1]),
     );
     const missing = [...usedVars].filter((v) => !definedVars.has(v));
-
-    if (missing.length > 0) {
-      const defaults = missing
-        .map((v) => {
-          if (/x|left|right|width/i.test(v)) return `  --${v}: 0vw`;
-          if (/y|top|bottom|height/i.test(v)) return `  --${v}: 0vh`;
-          if (/offset|shift|delta/i.test(v)) return `  --${v}: 0`;
-          if (/speed|duration/i.test(v)) return `  --${v}: 1`;
-          if (/color/i.test(v)) return `  --${v}: #ff69b4`;
-          return `  --${v}: 0`;
-        })
-        .join(';\n');
-
-      const rootBlock = `:root {\n${defaults};\n}`;
-      out = out.replace(/<style([^>]*)>/, `<style$1>\n${rootBlock}\n`);
-      fixes.push(`undefined CSS vars injected: ${missing.join(', ')}`);
-    }
+    if (missing.length > 0) fixes.push(`undefined CSS vars detected: ${missing.join(', ')}`);
   }
 
-  // 6. window-PROPERTY typo: window-innerHeight → window.innerHeight
-  //    `window - prop` evaluates to NaN (object minus number), silently breaks canvas sizing.
-  //    The minus sign touching both words is the only realistic form of this mistake.
+  // 5. window-PROPERTY typo.
   out = out.replace(/(<script[\s\S]*?<\/script>)/gi, (scriptBlock) =>
     scriptBlock.replace(/\bwindow-([a-zA-Z_$][\w$]*)/g, (_m, prop: string) => {
-      fixes.push(`window-${prop} → window.${prop}`);
+      fixes.push(`window-${prop} -> window.${prop}`);
       return `window.${prop}`;
     }),
   );
 
-  // 7. Sanitise the <html> opening tag — strip garbage tokens, normalise lang.
-  //    Gemma occasionally emits <html lang="FDGFen"EDSFS> with junk mixed in.
+  // 6. Sanitise the <html> opening tag - strip garbage tokens, normalise lang.
   out = out.replace(/<html([^>]*)>/i, (_match, attrs: string) => {
     const validAttrs: string[] = [];
     const attrRe = /\b([a-zA-Z][a-zA-Z0-9_:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
@@ -146,7 +114,7 @@ export function auditHtml(html: string): HtmlAuditResult {
       if (lname === 'lang') {
         const lettersOnly = value.replace(/[^a-zA-Z-]/g, '');
         const code = lettersOnly.match(/([a-z]{2,3})(?:-[a-zA-Z]{2,4})?$/i)?.[0]?.toLowerCase() ?? 'en';
-        if (code !== value.toLowerCase()) fixes.push(`html lang: "${value}" → "${code}"`);
+        if (code !== value.toLowerCase()) fixes.push(`html lang: "${value}" -> "${code}"`);
         validAttrs.push(`lang="${code}"`);
       } else if (['dir', 'xmlns', 'class', 'id'].includes(lname)) {
         validAttrs.push(`${lname}="${value}"`);
@@ -154,7 +122,7 @@ export function auditHtml(html: string): HtmlAuditResult {
     }
     const newAttrs = validAttrs.length > 0 ? ' ' + validAttrs.join(' ') : '';
     const origNorm = attrs.replace(/\s+/g, ' ').trim();
-    if (origNorm !== newAttrs.trim() && !fixes.some(f => f.startsWith('html lang'))) {
+    if (origNorm !== newAttrs.trim() && !fixes.some((f) => f.startsWith('html lang'))) {
       fixes.push('html tag: garbage text removed');
     }
     return `<html${newAttrs}>`;
@@ -164,35 +132,30 @@ export function auditHtml(html: string): HtmlAuditResult {
   return { html: out, fixes, ...scriptCheck, visualWarnings: checkVisualRisks(out) };
 }
 
-// Detects CSS/JS patterns that pass acorn but produce a blank or frozen screen.
-// Returns human-readable warning strings; does not mutate the HTML.
+// Detect patterns that can produce a blank or frozen screen.
+// Returns warnings only; does not mutate the HTML.
 function checkVisualRisks(html: string): string[] {
   const warnings: string[] = [];
   const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
   const css = styleMatch?.[1] ?? '';
 
   // W1. animation shorthand uses var() where the duration slot should be a <time>.
-  //     e.g. `animation: pulse var(--pulse-scale) infinite` — var resolves to `1.5`
-  //     (no unit), which is an invalid time value; the entire declaration is dropped.
   for (const m of css.matchAll(/animation\s*:\s*([\w-]+)\s+(var\s*\((--[\w-]+)\))/gi)) {
     const varName = m[3];
     const resolvedMatch = css.match(new RegExp(`${varName}\\s*:\\s*([^;\\n]+)`));
     const resolved = resolvedMatch?.[1]?.trim() ?? '';
     if (/^\d+(\.\d+)?$/.test(resolved)) {
       warnings.push(
-        `animation duration: var(${varName}) resolves to '${resolved}' (no 's'/'ms' unit) — animation will not run`,
+        `animation duration: var(${varName}) resolves to '${resolved}' (no 's'/'ms' unit) - animation will not run`,
       );
     } else if (!resolved) {
       warnings.push(
-        `animation duration: var(${varName}) value not found in stylesheet — ensure it resolves to a time value with 's' or 'ms' unit`,
+        `animation duration: var(${varName}) value not found in stylesheet - ensure it resolves to a time value with 's' or 'ms' unit`,
       );
     }
   }
 
-  // W2. :nth-child(1) selector mismatch — the targeted class is not the first child
-  //     in its container, so all :nth-child(N) selectors silently target nothing.
-  //     Detected by checking whether the first element with that class is directly
-  //     preceded (after stripping comments) by a closing tag from a sibling.
+  // W2. :nth-child(1) selector mismatch.
   const nthOneClasses: string[] = [];
   for (const m of css.matchAll(/\.([\w-]+):nth-child\(1\)/g)) {
     if (!nthOneClasses.includes(m[1])) nthOneClasses.push(m[1]);
@@ -221,7 +184,7 @@ function checkVisualRisks(html: string): string[] {
         const prevName = prevTag.match(/^<\/([\w-]+)/)?.[1] ?? 'element';
         warnings.push(
           `:nth-child(1) mismatch: .${cls}:nth-child(1) expects first child, ` +
-            `but first .${cls} is preceded by </${prevName}> — ` +
+            `but first .${cls} is preceded by </${prevName}> - ` +
             `all .${cls}:nth-child(N) selectors likely target wrong elements`,
         );
       }

@@ -29,6 +29,26 @@ export function isGemma431b(name: string): boolean {
   return /^gemma4:31b(?:$|[-.])/i.test(n);
 }
 
+/** Sort key for Gemma 4 coding tags: smallest (E2B) → largest (31B). */
+function gemma4CodingModelSizeRank(name: string): number {
+  if (isGemma4EdgeE2b(name)) return 0;
+  if (isGemma4EdgeE4b(name)) return 1;
+  if (isGemma426b(name)) return 2;
+  if (isGemma431b(name)) return 3;
+  return 99;
+}
+
+/** Drop-down order: E2B, E4B, 26B, 31B; same tier sorted by tag string. */
+export function sortGemma4CodingModelsSmallestFirst(names: string[]): string[] {
+  return [...names].sort((a, b) => {
+    const d = gemma4CodingModelSizeRank(a) - gemma4CodingModelSizeRank(b);
+    if (d !== 0) return d;
+    return normalizeOllamaModelRef(a).localeCompare(normalizeOllamaModelRef(b), undefined, {
+      sensitivity: 'base',
+    });
+  });
+}
+
 /**
  * Auto-select default coding model: E2B > E4B > 26B > 31B > any gemma > first.
  * Starts with the fastest/lightest model so the app loads quickly; user can
