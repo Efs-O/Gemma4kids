@@ -7,7 +7,7 @@ import { CodeRunner } from './components/CodeRunner';
 import { HelpPanel } from './components/HelpPanel';
 import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
-import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
+import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, pickCodingModel, pickTranscribeModel } from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
 
 export default function App() {
@@ -16,7 +16,7 @@ export default function App() {
   const autoModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
-  const gemmaModels = useMemo(() => models.filter((m) => isGemma426b(m) || isGemma4EdgeE4b(m) || isGemma4EdgeE2b(m)), [models]);
+  const gemmaModels = useMemo(() => models.filter((m) => isGemma431b(m) || isGemma426b(m) || isGemma4EdgeE4b(m) || isGemma4EdgeE2b(m)), [models]);
 
   const [userModel, setUserModel] = useState<string>(() => localStorage.getItem('g4k-coding-model') ?? '');
   const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
@@ -249,9 +249,9 @@ export default function App() {
         <div style={{ fontSize: 64 }}>📥</div>
         <div className="startup-title">Gemma needs a download!</div>
         <div className="startup-msg">Ask a grown-up to open a terminal and type:</div>
-        <div className="startup-code">ollama pull gemma4:26b</div>
+        <div className="startup-code">ollama pull gemma4:31b</div>
         <div className="startup-msg" style={{ fontSize: '0.9rem', marginTop: 4 }}>
-          (Optional voice input: <code style={{ fontSize: '0.85em' }}>ollama pull gemma4:e4b</code>)
+          (Or <code style={{ fontSize: '0.85em' }}>ollama pull gemma4:26b</code> · Optional voice: <code style={{ fontSize: '0.85em' }}>ollama pull gemma4:e4b</code>)
         </div>
         <button className="btn-recheck" onClick={recheck}>Check Again</button>
       </div>
@@ -358,7 +358,7 @@ export default function App() {
           </div>
         </div>
 
-        <CodeRunner streaming={status === 'streaming'} enabled={isGemma426b(codingModel)} />
+        <CodeRunner streaming={status === 'streaming'} enabled={isGemma426b(codingModel) || isGemma431b(codingModel)} />
       </div>
     </ErrorBoundary>
   );

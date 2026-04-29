@@ -21,7 +21,8 @@ Gemma4kids lets you choose which Gemma model generates animations. Pick based on
 
 | Model | Size | Minimum GPU VRAM | Minimum RAM (CPU mode) | Best for |
 |---|---|---|---|---|
-| `gemma4:26b` | ~17 GB | 20 GB VRAM | Not recommended | Workstation / gaming GPU — best animation quality |
+| `gemma4:31b` | ~20 GB | 24 GB VRAM | Not recommended | High-end workstation — highest quality animations (64 k context) |
+| `gemma4:26b` | ~17 GB | 20 GB VRAM | Not recommended | Workstation / gaming GPU — excellent animation quality |
 | `gemma4:e4b` | ~6 GB | 8 GB VRAM | 16 GB RAM | Most modern laptops with a dedicated GPU |
 | `gemma4:e2b` | ~2.5 GB | 4 GB VRAM | 8 GB RAM | **Older laptops, school computers, integrated graphics** |
 
@@ -33,7 +34,7 @@ Ollama will use your CPU instead. It still works — animations will just take *
 - Your computer fan runs at full speed and the system slows down
 - Generation never finishes
 
-**Solution:** Switch to a lighter model in the model selector (e2b → e4b → 26b, lightest first), or close other apps to free RAM before generating.
+**Solution:** Switch to a lighter model in the model selector (e2b → e4b → 26b → 31b, lightest first), or close other apps to free RAM before generating.
 
 ### Voice transcription (mic button)
 The mic button always uses `gemma4:e4b` regardless of which coding model is selected. On machines with less than 8 GB VRAM, Ollama may need to unload the coding model first, then load e4b — this causes a 10–30 second pause before transcription starts. This is normal.
@@ -54,9 +55,15 @@ ollama list   # confirms the daemon responds
 
 ## Step 2 — Pull Gemma 4 variants
 
-### Best experience (workstation with a good GPU)
+### Best experience (high-end workstation, 24 GB+ VRAM)
 ```bash
-ollama pull gemma4:26b   # main coding model — richest animations
+ollama pull gemma4:31b   # highest quality — 64 k context, saves VRAM vs 98 k
+ollama pull gemma4:e4b   # required for mic / voice input
+```
+
+### Good workstation (20 GB VRAM)
+```bash
+ollama pull gemma4:26b   # excellent quality — richest animations
 ollama pull gemma4:e4b   # required for mic / voice input
 ```
 
@@ -73,7 +80,7 @@ ollama pull gemma4:e4b   # add this too if you also want mic input
 
 **Notes:**
 - If **`gemma4:e4b` is missing** → mic button stays disabled; typing always works.
-- The **Coding model** selector in the header auto-picks the best available model at launch: prefers `gemma4:26b` → `gemma4:e4b` → `gemma4:e2b` → any other Gemma variant → first model found.
+- The **Coding model** selector in the header auto-picks the best available model at launch: prefers `gemma4:31b` → `gemma4:26b` → `gemma4:e4b` → `gemma4:e2b` → any other Gemma variant → first model found.
 - Voice STT always uses `gemma4:e4b` regardless of which coding model is selected.
 
 ---
@@ -135,7 +142,7 @@ The repo **`.gitignore`** excludes large **`piper/`** and **`voices/`** drops; c
 | **Browser** | **Open in Browser** uses `file://…` in the **default OS browser** (never an in-app `<iframe>`). |
 | **Thinking** | **Think** toggles reasoning for the **coding** model; STT stays **without** thinking; **Show Thoughts** reveals the model scratchpad when present. |
 | **Read aloud** | Every assistant bubble has a **Read** button — plays the reply through local Piper TTS (requires optional Piper setup below). |
-| **Code Runner** | Mini-game appears only when the **selected coding model** is a **`gemma4:26b*`** tag **and** a reply is streaming. Space to jump; high score saved locally. |
+| **Code Runner** | Mini-game appears only when the **selected coding model** is a **`gemma4:26b*`** or **`gemma4:31b*`** tag **and** a reply is streaming. Space to jump; high score saved locally. |
 | **HTML repair** | Small automatic fixes apply on tool saves / post-stream (`htmlAudit.ts`)—not a linter replacement. |
 | **Help** | **?** button in the header opens a kid-friendly guide covering all features: mic, editor, save, browser, sidebar, model selector, thinking, read aloud, Code Runner. |
 
@@ -146,10 +153,10 @@ The repo **`.gitignore`** excludes large **`piper/`** and **`voices/`** drops; c
 | Symptom | What to try |
 |---|---|
 | Startup: “Gemma is sleeping!” | Start Ollama; **Check again**. |
-| “Gemma needs a download!” | `ollama pull gemma4:26b` (and `gemma4:e4b` for mic). |
+| “Gemma needs a download!” | `ollama pull gemma4:31b` (or `gemma4:26b`) and `gemma4:e4b` for mic. |
 | Mic disabled / grey | `ollama pull gemma4:e4b` — wait until pull finishes; app rescans tags. |
-| First voice attempt slow / VRAM churn | Expected: **e4b** unloads (`keep_alive: 0`) before **26b** loads; wait ~10–30 s and retry. |
-| Slow text on CPU | Switch to `gemma4:e2b` or `gemma4:e4b` — lighter models are much faster on CPU. `gemma4:26b` on CPU may take **tens of seconds** per turn. |
+| First voice attempt slow / VRAM churn | Expected: **e4b** unloads (`keep_alive: 0`) before the coding model loads; wait ~10–30 s and retry. |
+| Slow text on CPU | Switch to `gemma4:e2b` or `gemma4:e4b` — lighter models are much faster on CPU. `gemma4:26b` and `gemma4:31b` on CPU may take **tens of seconds** per turn. |
 | Out of memory / crash during generation | Switch to a lighter model (`gemma4:e2b` recommended for older machines), close other apps, and try again. |
 | **Read** missing or errors | Piper binary/voices absent or path wrong — see **Optional — Piper** above. |
 | App can’t reach Ollama | Only **`127.0.0.1:11434`** is allowed from the renderer (CSP). No VPN/proxy blocking **localhost**. |

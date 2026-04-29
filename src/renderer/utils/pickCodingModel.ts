@@ -23,12 +23,20 @@ export function isGemma426b(name: string): boolean {
   return /^gemma4:26b(?:$|[-.])/i.test(n);
 }
 
+/** True for Gemma 4 31B tags (gemma4:31b, gemma4:31b-it-...). */
+export function isGemma431b(name: string): boolean {
+  const n = normalizeOllamaModelRef(name);
+  return /^gemma4:31b(?:$|[-.])/i.test(n);
+}
+
 /**
- * Auto-select best available coding model: 26B > E4B > E2B > any gemma > first.
- * When tags are still loading, callers may pass [] -- default to 26B tag.
+ * Auto-select best available coding model: 31B > 26B > E4B > E2B > any gemma > first.
+ * When tags are still loading, callers may pass [] -- default to 31B tag.
  */
 export function pickCodingModel(models: string[]): string {
-  if (models.length === 0) return 'gemma4:26b';
+  if (models.length === 0) return 'gemma4:31b';
+  const g31 = models.find(isGemma431b);
+  if (g31) return g31;
   const g26 = models.find(isGemma426b);
   if (g26) return g26;
   const e4b = models.find(isGemma4EdgeE4b);
