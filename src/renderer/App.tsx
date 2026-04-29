@@ -129,9 +129,16 @@ export default function App() {
 
   const [displayCode, setDisplayCode] = useState('');
   const [savedCode, setSavedCode] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'unsaved' | 'saved' | null>(null);
+  const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (latestCode) setDisplayCode(latestCode);
   }, [latestCode]);
+
+  useEffect(() => {
+    if (!displayCode || !savedCode) return;
+    if (displayCode !== savedCode) setSaveStatus('unsaved');
+  }, [displayCode, savedCode]);
 
   const [filename, setFilename] = useState('my-animation');
   const [currentProjectFilename, setCurrentProjectFilename] = useState('');
@@ -140,11 +147,18 @@ export default function App() {
 
   const baseFilename = useCallback((name: string) => name.replace(/\.html$/, ''), []);
 
+  const flashSaved = useCallback((code: string) => {
+    setSavedCode(code);
+    setSaveStatus('saved');
+    if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
+    saveStatusTimerRef.current = setTimeout(() => setSaveStatus(null), 2000);
+  }, []);
+
   useEffect(() => {
     if (!lastSaved) return;
     setCurrentProjectFilename(lastSaved);
     setFilename(baseFilename(lastSaved));
-    if (latestCode) setSavedCode(latestCode);
+    if (latestCode) flashSaved(latestCode);
   }, [baseFilename, lastSaved, latestCode]);
 
   // Auto-save when Gemma generates code but forgets to call save_animation.
@@ -172,7 +186,7 @@ export default function App() {
       if (result.success) {
         setCurrentProjectFilename(result.filename);
         setFilename(baseFilename(result.filename));
-        setSavedCode(audited.html);
+        flashSaved(audited.html);
       }
     })();
   }, [status, latestCode, lastSaved, baseFilename]);
@@ -184,7 +198,7 @@ export default function App() {
     if (result.success) {
       setCurrentProjectFilename(result.filename);
       setFilename(baseFilename(result.filename));
-      setSavedCode(audited.html);
+      flashSaved(audited.html);
       setUiError('');
       injectContext(`[Context: the child just saved "${result.filename}" to the editor. You MUST call read_animation("${baseFilename(result.filename)}") before answering any questions about this code. Do not comment on, review, or fix this code without reading it first with the tool.]`);
       return;
@@ -205,6 +219,7 @@ export default function App() {
   const handleLoadProject = useCallback((name: string, content: string) => {
     setDisplayCode(content);
     setSavedCode(content);
+    setSaveStatus(null);
     setCurrentProjectFilename(name);
     setFilename(baseFilename(name));
     setUiError('');
@@ -341,7 +356,7 @@ export default function App() {
 
           <div className="resize-divider" onMouseDown={onSidebarDividerMouseDown} />
 
-          <EditorPanel code={displayCode} onChange={setDisplayCode} auditResult={lastAudit} isStreaming={status === 'streaming'} hasUnsavedChanges={!!displayCode && displayCode !== savedCode} />
+          <EditorPanel code={displayCode} onChange={setDisplayCode} auditResult={lastAudit} isStreaming={status === 'streaming'} saveStatus={saveStatus} />
 
           <div className="resize-divider" onMouseDown={onChatDividerMouseDown} />
 

@@ -231,13 +231,14 @@ body {
   flex-shrink: 0;
 }
 
-.unsaved-dot {
-  color: #f59e0b;
-  font-size: 0.65rem;
+.save-dot {
+  font-size: 1rem;
   line-height: 1;
-  margin-left: 2px;
+  margin-left: 4px;
   vertical-align: middle;
 }
+.save-dot--unsaved { color: #ef4444; }
+.save-dot--saved   { color: #22c55e; }
 
 .audit-badge {
   font-size: 0.72rem;
