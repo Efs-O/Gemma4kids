@@ -9,10 +9,10 @@ interface Props {
   onChange: (code: string) => void;
   auditResult?: AuditSummary | null;
   isStreaming: boolean;
-  hasUnsavedChanges?: boolean;
+  saveStatus?: 'unsaved' | 'saved' | null;
 }
 
-export function EditorPanel({ code, onChange, auditResult, isStreaming, hasUnsavedChanges }: Props) {
+export function EditorPanel({ code, onChange, auditResult, isStreaming, saveStatus }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -89,7 +89,8 @@ export function EditorPanel({ code, onChange, auditResult, isStreaming, hasUnsav
     <div className="editor-panel">
       <div className="editor-label">
         ✏️ Your Code
-        {hasUnsavedChanges && <span className="unsaved-dot" title="Unsaved changes — press Save before asking Gemma to review">●</span>}
+        {saveStatus === 'unsaved' && <span className="save-dot save-dot--unsaved" title="Unsaved changes — press Save before asking Gemma to review">●</span>}
+        {saveStatus === 'saved' && <span className="save-dot save-dot--saved" title="Saved!">●</span>}
         {badgeText && <span className="audit-badge">{badgeText}</span>}
         <button
           className="btn-revert"
