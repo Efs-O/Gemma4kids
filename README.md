@@ -24,7 +24,7 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026)—e.g. **Futu
 | **Voice→text** | **Mic**: WAV → **`gemma4:e4b`** transcription via Ollama (`keep_alive: 0`). Disabled if **e4b** is not pulled. |
 | **Chat** | Markdown answers; optional **Thoughts** (**Think On/Off** + **Show Thoughts**) reflect native thinking from the coding model where supported; **starter prompts** + **quick chips** after replies. Cancel / retry during errors. |
 | **Tools** | Native tool calls **`save_animation`**, **`read_animation`**, **`list_animations`**, **`open_in_browser`**; HTML is audited/fixed lightly before persistence. |
-| **Editor & projects** | Resizable sidebar (**saved animations**) + **chat** widths; **`Documents/KidAnimations/`** `.html` files with collision **`-2`**, **`-3`**, … if names clash. |
+| **Editor & projects** | Resizable sidebar (**saved animations**) + **chat** widths; **`Documents/KidAnimations/`** `.html` files with collision **`-2`**, **`-3`**, … if names clash. Kids can paste or type their own HTML into the editor, save it, then ask Gemma to explain or improve it. Clicking a sidebar project loads it and automatically tells Gemma which file is active so it can review it on request. |
 | **Code Runner** | Sidebar mini-game while **Gemma streams**, active when coding model is **`gemma4:26b`** or **`gemma4:31b`**. |
 | **TTS (“Read”)** | **Piper** in **main**: optional local read-aloud on assistant bubbles if **`piper`** binary + **`voices`** are present—see **[SETUP.md](SETUP.md)**. |
 
