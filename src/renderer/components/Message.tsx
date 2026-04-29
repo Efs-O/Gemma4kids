@@ -12,6 +12,17 @@ interface Props {
   tts?: TTSService;
 }
 
+function hasStartedCodeStream(text: string): boolean {
+  return /```(?:html)?\n/i.test(text) || /<!DOCTYPE html/i.test(text) || /<html\b/i.test(text);
+}
+
+function getSpeakableText(text: string): string {
+  return text
+    .replace(/\*Your animation code is in the editor\.\*/gi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function hideHtmlOutput(text: string): string {
   let next = text.replace(/```(?:html)?\n[\s\S]*?(?:```|$)/gi, '\n\n*Your animation code is in the editor.*\n\n');
   next = next.replace(/<!DOCTYPE html[\s\S]*$/i, '\n\n*Your animation code is in the editor.*\n');
@@ -24,6 +35,9 @@ export function Message({ role, content, thinking = '', showThinking = false, st
   const [speaking, setSpeaking] = useState(false);
   const [ttsHint, setTtsHint] = useState('');
   const display = role === 'assistant' ? hideHtmlOutput(content) : content;
+  const speakableText = role === 'assistant' ? getSpeakableText(display) : display;
+  const canSpeakWhileStreaming = role === 'assistant' && !!speakableText && (hasStartedCodeStream(content) || !!display);
+  const showSpeakButton = role === 'assistant' && !!tts && !!display && (!streaming || canSpeakWhileStreaming);
 
   const handleSpeak = async () => {
     if (!tts) return;
@@ -35,7 +49,7 @@ export function Message({ role, content, thinking = '', showThinking = false, st
     setTtsHint('');
     setSpeaking(true);
     try {
-      await tts.speak(content);
+      await tts.speak(speakableText || display);
     } catch (error) {
       console.error('[Message] Read aloud failed:', error);
       setTtsHint("Reading voice isn't ready right now.");
@@ -60,18 +74,18 @@ export function Message({ role, content, thinking = '', showThinking = false, st
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
         </div>
       )}
-      {role === 'assistant' && !streaming && tts && display && (
-        <>
+      {showSpeakButton && (
+        <div className="message-actions">
           <button
             className={`btn-speaker${speaking ? ' btn-speaker-speaking' : ''}`}
             onClick={handleSpeak}
-            aria-label={speaking ? 'Stop reading' : 'Read aloud'}
-            title={speaking ? 'Stop' : 'Read aloud'}
+            aria-label={speaking ? 'Stop speaking' : 'Speak aloud'}
+            title={speaking ? 'Stop speaking' : 'Speak aloud'}
           >
-            {speaking ? 'Stop' : 'Read'}
+            {speaking ? 'Stop' : 'Speak'}
           </button>
           {ttsHint && <div className="message-tts-hint">{ttsHint}</div>}
-        </>
+        </div>
       )}
     </div>
   );

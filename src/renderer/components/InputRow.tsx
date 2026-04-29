@@ -8,9 +8,11 @@ interface Props {
   e4bAvailable: boolean;
   transcribeModel: string;
   codingModel: string;
+  ctxUsedPct?: number;
+  onClearContext?: () => void;
 }
 
-export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeModel, codingModel }: Props) {
+export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeModel, codingModel, ctxUsedPct = 0, onClearContext }: Props) {
   const [text, setText] = useState('');
 
   function handleSend() {
@@ -27,6 +29,14 @@ export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeMod
     }
   }
 
+  const remaining = 100 - ctxUsedPct;
+  const meterClass = remaining > 50 ? 'ctx-meter ctx-meter-green'
+    : remaining > 20 ? 'ctx-meter ctx-meter-orange'
+    : 'ctx-meter ctx-meter-red';
+  const meterTitle = remaining > 50 ? "We're good — plenty of space!"
+    : remaining > 20 ? "Context is filling up — think about starting fresh soon"
+    : "Almost full — click to start a fresh chat!";
+
   return (
     <div className="input-row">
       <textarea
@@ -39,6 +49,15 @@ export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeMod
         disabled={status === 'streaming'}
       />
       <div className="input-buttons">
+        {ctxUsedPct > 0 && (
+          <button
+            className={meterClass}
+            onClick={onClearContext}
+            title={meterTitle}
+          >
+            {remaining}%
+          </button>
+        )}
         <VoiceInput
           e4bAvailable={e4bAvailable}
           transcribeModel={transcribeModel}

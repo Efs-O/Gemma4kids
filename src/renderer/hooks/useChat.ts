@@ -6,6 +6,9 @@ import { KIDS_TOOLS } from '../tools';
 import { SYSTEM_PROMPT } from '../prompts';
 import { OLLAMA_CHAT_PROFILE } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
+import { isGemma4EdgeE2b } from '../utils/pickCodingModel';
+
+const E2B_NUM_CTX = 65536;
 
 const OLLAMA_BASE = 'http://localhost:11434';
 const INLINE_TOOL_QUOTE = '<|"|>';
@@ -135,9 +138,11 @@ export interface UseChatResult {
   lastAudit: AuditSummary | null;
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
+  ctxUsedPct: number;
   sendMessage: (text: string) => void;
   cancel: () => void;
   retry: () => void;
+  clearContext: () => void;
 }
 
 export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
@@ -149,13 +154,18 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
   const [lastAudit, setLastAudit] = useState<AuditSummary | null>(null);
   const [status, setStatus] = useState<'idle' | 'streaming' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [ctxUsedPct, setCtxUsedPct] = useState(0);
 
   // Canonical message history — updated synchronously, avoids stale closure in runLoop.
   const historyRef = useRef<ChatMessage[]>([]);
   const cancelRef = useRef<CancellationToken | null>(null);
+  // Incremented on clearContext so an in-flight runLoop knows not to write stale history.
+  const clearIdRef = useRef(0);
 
   const runLoop = useCallback(async (startHistory: ChatMessage[], token: CancellationToken) => {
+    const myClearId = clearIdRef.current;
     let history = startHistory;
+    const numCtx = isGemma4EdgeE2b(model) ? E2B_NUM_CTX : OLLAMA_CHAT_PROFILE.numCtx;
 
     while (true) {
       let assembled = '';
@@ -174,7 +184,7 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
             topP: OLLAMA_CHAT_PROFILE.topP,
             topK: OLLAMA_CHAT_PROFILE.topK,
             tools: KIDS_TOOLS,
-            numCtx: OLLAMA_CHAT_PROFILE.numCtx,
+            numCtx,
             numPredict: OLLAMA_CHAT_PROFILE.numPredict,
           },
           {
@@ -193,11 +203,16 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
             onError: (err) => { loopError = err; resolve(); },
           },
           token.signal,
+          (promptTokens, evalTokens) => {
+            if (clearIdRef.current !== myClearId) return;
+            const used = promptTokens + evalTokens;
+            setCtxUsedPct(Math.min(100, Math.round((used / numCtx) * 10) * 10));
+          },
         );
       });
 
       if (token.signal.aborted) {
-        if (assembled || thinking) {
+        if (clearIdRef.current === myClearId && (assembled || thinking)) {
           const msg: ChatMessage = {
             role: 'assistant',
             content: assembled || null,
@@ -375,5 +390,20 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
     runLoop(historyRef.current, token);
   }, [runLoop]);
 
-  return { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, sendMessage, cancel, retry };
+  const clearContext = useCallback(() => {
+    ++clearIdRef.current;
+    cancelRef.current?.cancel();
+    historyRef.current = [];
+    setMessages([]);
+    setStreamingText('');
+    setStreamingThinking('');
+    setLatestCode(null);
+    setLastSaved(null);
+    setLastAudit(null);
+    setCtxUsedPct(0);
+    setStatus('idle');
+    setErrorMsg('');
+  }, []);
+
+  return { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext };
 }
