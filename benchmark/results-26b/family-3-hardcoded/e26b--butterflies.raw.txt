@@ -1,0 +1,270 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butterfly Meadow Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #ff9a9e 0%, #fad0c4 50%, #a1c4fd 100%);
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Meadow Floor */
+        .meadow {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30vh;
+            background: linear-gradient(to top, #2d5a27, #4caf50);
+            z-index: 1;
+        }
+
+        /* Flower Styles */
+        .flower {
+            position: absolute;
+            bottom: 20vh;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: sway 4s ease-in-out infinite alternate;
+            transform-origin: bottom center;
+        }
+
+        .petal {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 0 50%;
+            transform: rotate(45deg);
+        }
+
+        .petal:nth-child(1) { transform: rotate(0deg); }
+        .petal:nth-child(2) { transform: rotate(72deg); }
+        .petal:nth-child(3) { transform: rotate(144deg); }
+        .petal:nth-child(4) { transform: rotate(216deg); }
+        .petal:nth-child(5) { transform: rotate(288deg); }
+
+        .flower-center {
+            width: 25px;
+            height: 25px;
+            background-color: #feca57;
+            border-radius: 50%;
+            z-index: 3;
+        }
+
+        .stem {
+            width: 6px;
+            height: 80px;
+            background-color: #2e7d32;
+            z-index: 1;
+        }
+
+        @keyframes sway {
+            from { transform: rotate(-3deg); }
+            to { transform: rotate(3deg); }
+        }
+
+        /* Butterfly Styles */
+        .butterfly-container {
+            position: absolute;
+            z-index: 10;
+            width: 50px;
+            height: 50px;
+            pointer-events: none;
+            animation: fly-path 15s linear infinite;
+        }
+
+        .butterfly {
+            position: relative;
+            width: 40px;
+            height: 30px;
+            transform-style: preserve-3d;
+        }
+
+        .wing {
+            position: absolute;
+            width: 25px;
+            height: 35px;
+            border-radius: 50% 50% 20% 50%;
+            opacity: 0.9;
+        }
+
+        .wing-left {
+            left: 0;
+            transform-origin: right center;
+            animation: flap-left 0.3s ease-in-out infinite alternate;
+        }
+
+        .wing-right {
+            right: 0;
+            transform-origin: left center;
+            border-radius: 50% 50% 50% 20%;
+            animation: flap-right 0.3s ease-in-out infinite alternate;
+        }
+
+        .body {
+            position: absolute;
+            top: 10px;
+            left: 18px;
+            width: 4px;
+            height: 15px;
+            background-color: #333;
+            border-radius: 5px;
+            z-index: 5;
+        }
+
+        @keyframes flap-left {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(70deg); }
+        }
+
+        @keyframes flap-right {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(-70deg); }
+        }
+
+        @keyframes fly-path {
+            0% { transform: translate(-10vw, 80vh) rotate(0deg); }
+            25% { transform: translate(25vw, 40vh) rotate(20deg); }
+            50% { transform: translate(50vw, 60vh) rotate(-20deg); }
+            75% { transform: translate(75vw, 30vh) rotate(10deg); }
+            100% { transform: translate(110vw, 50vh) rotate(0deg); }
+        }
+
+        /* Sunlight particles */
+        .sunlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sunlight"></div>
+<div class="meadow" id="meadow"></div>
+<div id="butterfly-layer"></div>
+
+<script>
+    const meadow = document.getElementById('meadow');
+    const butterflyLayer = document.getElementById('butterfly-layer');
+
+    const colors = ['#FF007F', '#FF5733', '#C70039', '#900C3F', '#FFC300', '#DAF7A6', '#33FF57'];
+
+    // Create Flowers
+    function createFlowers() {
+        const flowerCount = 15;
+        for (let i = 0; i < flowerCount; i++) {
+            const flower = document.createElement('div');
+            flower.className = 'flower';
+            
+            const xPos = Math.random() * 90;
+            const yPos = Math.random() * 20; // Spread across width
+            const petalColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            flower.style.left = `${xPos}vw`;
+            flower.style.bottom = `${yPos + 10}vh`;
+            flower.style.animationDelay = `${Math.random() * 2}s`;
+
+            const stem = document.createElement('div');
+            stem.className = 'stem';
+            
+            const center = document.createElement('div');
+            center.className = 'flower-center';
+
+            flower.appendChild(stem);
+            flower.appendChild(center);
+
+            // Create petals
+            for (let j = 0; j < 5; j++) {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.style.backgroundColor = petalColor;
+                flower.appendChild(petal);
+            }
+
+            meadow.appendChild(flower);
+        }
+    }
+
+    // Create Butterflies
+    function createButterflies() {
+        const butterflyCount = 8;
+        for (let i = 0; i < butterflyCount; i++) {
+            const container = document.createElement('div');
+            container.className = 'butterfly-container';
+            
+            // Randomize flight path
+            const duration = 10 + Math.random() * 15;
+            const delay = Math.random() * -20;
+            const startX = Math.random() * -20;
+            
+            container.style.animationDuration = `${duration}s`;
+            container.style.animationDelay = `${delay}s`;
+            
+            const butterfly = document.createElement('div');
+            butterfly.className = 'butterfly';
+
+            const wingLeft = document.createElement('div');
+            wingLeft.className = 'wing wing-left';
+            const wingRight = document.createElement('div');
+            wing                className = 'wing wing-right';
+            const body = document.createElement('div');
+            body.className = 'body';
+
+            const wingColor = colors[Math.floor(Math.random() * colors.length)];
+            wingLeft.style.backgroundColor = wingColor;
+            wingRight.style.backgroundColor = wingColor;
+
+            butterfly.appendChild(wingLeft);
+            butterfly.appendChild(wingRight);
+            butterfly.appendChild(body);
+            container.appendChild(butterfly);
+            butterflyLayer.appendChild(container);
+        }
+    }
+
+    // Initialize
+    createFlowers();
+    createButterflies();
+
+    // Add some extra "pollen" or sparkles
+    function createSparkles() {
+        for(let i=0; i<30; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.style.position = 'absolute';
+            sparkle.style.width = '4px';
+            sparkle.style.height = '4px';
+            sparkle.style.backgroundColor = 'white';
+            sparkle.style.borderRadius = '50%';
+            sparkle.style.left = Math.random() * 100 + 'vw';
+            sparkle.style.top = Math.random() * 100 + 'vh';
+            sparkle.style.opacity = Math.random();
+            sparkle.style.zIndex = '5';
+            sparkle.style.pointerEvents = 'none';
+            document.body.appendChild(sparkle);
+            
+            // Random twinkling
+            setInterval(() => {
+                sparkle.style.opacity = Math.random();
+            }, 500 + Math.random() * 1000);
+        }
+    }
+    createSparkles();
+
+</script>
+</body>
+</html>
+```

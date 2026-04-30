@@ -1,0 +1,152 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Falling Snowflakes</title>
+    <style>
+        /* Reset and full viewport setup */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000b1a; /* Deep dark night sky */
+        }
+
+        /* A vibrant, colorful gradient background representing an aurora effect */
+        canvas {
+            display: block;
+            background: radial-gradient(circle at bottom, #1a0033 0%, #000b1a 70%, #001a33 100%);
+        }
+
+        /* Overlaying a subtle glow effect */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay"></div>
+    <canvas id="snowCanvas"></canvas>
+
+    <script>
+        /**
+         * Configuration
+         */
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const snowflakeCount = 150;
+        const snowflakes = [];
+        const colors = [
+            '#FFFFFF', // White
+            '#E0F7FA', // Light Cyan
+            '#FCE4EC', // Light Pink
+            '#E1F5FE', // Light Blue
+            '#FFF9C4'  // Soft Yellow
+        ];
+
+        let width, height;
+
+        /**
+         * Snowflake Class
+         */
+        class Snowflake {
+            constructor() {
+                this.init();
+                // Start snowflakes at random heights so they don't all appear at once
+                this.y = Math.random() * height;
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = -10; // Start just above the screen
+                this.radius = Math.random() * 3 + 1; // Size between 1 and 4
+                this.speedY = Math.random() * 1 + 0.5; // Vertical falling speed
+                this.speedX = Math.random() * 0.5 - 0.25; // Slight horizontal drift
+                this.opacity = Math.random() * 0.5 + 0.5; // Transparency
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                // For a swaying effect
+                this.swing = Math.random() * 2;
+                this.swingSpeed = Math.random() * 0.02 + 0.01;
+                this.angle = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += Math.sin(this.angle) * 0.5; // Swaying motion
+                this.angle += this.swingSpeed;
+
+                // If snowflake falls off bottom, reset to top
+                if (this.y > height) {
+                    this.init();
+                    this.y = -10; 
+                }
+
+                // If snowflake drifts too far left or right, wrap it
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        /**
+         * Resize Handler
+         */
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Re-initialize snowflakes on resize to fill the new screen area
+            snowflakes.length = 0;
+            for (let i = 0; i < snowflakeCount; i++) {
+                snowflakes.push(new Snowflake());
+            }
+        }
+
+        /**
+         * Animation Loop
+         */
+        function animate() {
+            // Clear canvas with a slight trail effect (change 1 to lower for longer trails)
+            ctx.clearRect(0, 0, width, height);
+
+            snowflakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Event Listeners
+        window.addEventListener('resize', resize);
+
+        // Start the application
+        resize();
+        animate();
+
+    </script>
+</body>
+</html>
+```

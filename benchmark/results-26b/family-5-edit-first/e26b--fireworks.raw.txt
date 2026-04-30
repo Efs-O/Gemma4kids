@@ -1,0 +1,224 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Night Fireworks</title>
+    <style>
+        /* Reset styles to ensure full viewport coverage */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000; /* Deep black background */
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Subtle overlay for a night-sky texture effect */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay"></div>
+    <canvas id="fireworksCanvas"></canvas>
+
+    <script>
+        /**
+         * FIREWORKS ANIMATION SCRIPT
+         * Uses HTML5 Canvas for high-performance particle rendering.
+         */
+
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        const fireworks = [];
+        const particles = [];
+        
+        // Configuration
+        const FIREWORK_CHANCE = 0.05; // Probability of a new firework spawning per frame
+        const COLORS = [
+            '#FF10F0', // Neon Pink
+            '#FFD700', // Gold
+            '#00FFFF', // Cyan
+            '#7FFF00', // Chartreuse
+            '#FF4500', // Orange Red
+            '#FFFFFF', // White
+            '#FF00FF', // Magenta
+            '#00FF7F'  // Spring Green
+        ];
+
+        /**
+         * Resize handler to ensure canvas fills the viewport
+         */
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window
+            .addEventListener('resize', resize);
+        
+        // Initial setup
+        resize();
+
+        /**
+         * Represents a single rising rocket
+         */
+        class Firework {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = height;
+                this.targetY = Math.random() * (height * 0.5); // Explode in top half
+                this.speed = Math.random() * 3 + 5;
+                this.angle = Math.atan2(this.targetY - height, (width / 2) - this.x);
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 2,
+                    y: -this.speed
+                };
+                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                this.dead = false;
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+
+                // If reached peak height
+                if (this.y <= this.targetY) {
+                    this.explode();
+                    this.dead = true;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            explode() {
+                const particleCount = 60 + Math.floor(Math.random() * 40);
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle(this.x, this.runnableY ?? this.y, this.color));
+                }
+            }
+        }
+
+        /**
+         * Represents the explosion fragments
+         */
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                
+                // Random explosion trajectory
+                const angle = Math.random() * Math.PI * 2;
+                const force = Math.random() * 6 + 2;
+                
+                this.velocity = {
+                    x: Math.cos(angle) * force,
+                    y: Math.sin(angle) * force
+                };
+                
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.015;
+                this.gravity = 0.12;
+                this.friction = 0.96;
+            }
+
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity << 0; // Integer math optimization
+                this.y += this.velocity.y;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                // Add glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        /**
+         * Main Animation Loop
+         */
+        function animate() {
+            // Create trail effect by not fully clearing the canvas
+            // We draw a semi-transparent rectangle over the previous frame
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Randomly spawn new fireworks
+            if (Math.random() < FIREWORK_CHANCE) {
+                fireworks.push(new Firework());
+            }
+
+            // Update and draw fireworks (the rockets)
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                fireworks[i].update();
+                fireworks[i].draw();
+                if (fireworks[i].dead) {
+                    fireworks.splice(i, 1);
+                }
+            }
+
+            // Update and draw particles (the explosion)
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start the show
+        animate();
+
+        // Add interaction: click to explode
+        window.addEventListener('mousedown', (e) => {
+            const clickFirework = new Firework();
+            clickFirework.x = e.clientX;
+            clickFirework.y = e.clientY;
+            clickFirework.targetY = e.clientY; // Instant explosion at click height
+            fireworks.push(clickFirework);
+        });
+
+    </script>
+</body>
+</html>
+```

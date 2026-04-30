@@ -1,0 +1,244 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-16">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Fireworks Display</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000005;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Background overlay for depth and atmosphere */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
+            animation: pulseAtmosphere 8s infinite ease-in-out;
+        }
+
+        /* Subtle pulsing animation for the night sky atmosphere */
+        @keyframes pulseAtmosphere {
+            0% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.7;
+            }
+        }
+
+        /* A decorative glowing moon in the background */
+        #moon {
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            width: 80px;
+            height: 80px;
+            background: #fdfbd3;
+            border-radius: 50%;
+            box-shadow: 0 0 40px 10px rgba(253, 251, 211, 0.3);
+            z-index: -1;
+            animation: moonGlow 4s infinite alternate ease-in-out;
+        }
+
+        @keyframes moonGlow {
+            from {
+                box-shadow: 0 0 30px 5px rgba(253, 251, 211, 0.2);
+            }
+            to {
+                box-shadow: 0 0 60px 15px rgba(253, 251, 211, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="moon"></div>
+    <div id="overlay"></div>
+    <canvas id="fireworksCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let fireworks = [];
+        let particles = [];
+        let stars = [];
+
+        // Handle window resizing
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            initStars();
+        }
+
+        // Initialize background stars
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5,
+                    opacity: Math.random(),
+                    speed: 0.005 + Math.random() * 0.01
+                });
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Particle class for explosions
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 2 + 1;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 12,
+                    y: (Math.random() - 0.5) * 12
+                };
+                this.friction = 0.96;
+                this.gravity = 0.15;
+                this.alpha = 1;
+                this.decay = 0.012 + Math.random() * 0.015;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= this.decay;
+            }
+        }
+
+        // Firework class for the ascending rocket
+        class Firework {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = height;
+                this.targetY = Math.random() * (height * 0.5);
+                this.color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 2,
+                    y: -Math.random() * 4 - 8
+                };
+                this.alive = true;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.velocity.y += 0.05; // Gravity on the rocket
+
+                if (this.velocity.y >= 0 || this.y <= this.targetY) {
+                    this.explode();
+                    this.alive = false;
+                }
+            }
+
+            explode() {
+                const particleCount = 80 + Math.floor(Math.random() * 50);
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle(this.x, this.y, this.color));
+                }
+            }
+        }
+
+        function animate() {
+            // Create trail effect by not clearing fully
+            ctx.fillStyle = 'rgba(0, 0, 5, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Stars (Background Layer)
+            stars.forEach(star => {
+                star.opacity += star.speed;
+                if (star.opacity > 1 || star.opacity < 0.2) star.speed *= -1;
+                
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(star.opacity)})`;
+                ctx.fill();
+            });
+
+            // Randomly launch fireworks (Midground Layer)
+            if (Math.random() < 0.04) {
+                fireworks.push(new Firework());
+            }
+
+            // Update and Draw Fireworks
+            firewidth: for (let i = fireworks.length - 1; i >= 0; i--) {
+                fireworks[i].update();
+                fireworks[i].draw();
+                if (!fireworks[i].alive) {
+                    fireworks.splice(i, 1);
+                }
+            }
+
+            // Update and Draw Particles (Foreground Layer)
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+
+        // Interaction: Click to launch a firework
+        window.addEventListener('mousedown', (event) => {
+            const f = new Firework();
+            f.x = event.clientX;
+            f.targetY = event.clientY;
+            fireworks.push(f);
+        });
+    </script>
+</body>
+</html>
+```

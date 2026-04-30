@@ -39,6 +39,10 @@ export const OLLAMA_CHAT_PROFILE: OllamaChatProfile = {
   ...OLLAMA_SAMPLING,
 };
 
+/** 26B / 31B only: wider ctx + reply cap (more KV-cache VRAM than edge models). */
+export const OLLAMA_CHAT_WORKSTATION_CTX = 122880;
+export const OLLAMA_CHAT_WORKSTATION_PREDICT = 65536;
+
 /**
  * Audio transcription profile for Gemma 4 E4B.
  * This stays smaller than coding chat on purpose: short prompt, no tools,

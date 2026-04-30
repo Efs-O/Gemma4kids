@@ -41,7 +41,7 @@ const STARTERS = [
 ];
 
 const CHIP_MATRIX = {
-  'bouncing-ball': ['Make it faster', 'Make everything bigger', 'Change the main color to red'],
+  'bouncing-ball': ['Make it faster', 'Make everything bigger', 'Change the main color'],
   'snowflakes':    ['Make it slower', 'Add more bright rainbow colors'],
   'fireworks':     ['Add more bright rainbow colors', 'Add falling confetti in many colors', 'Add twinkling stars in the background'],
   'rainbow':       ['Add more bright rainbow colors', 'Make it slower'],
@@ -50,8 +50,8 @@ const CHIP_MATRIX = {
   'ocean-waves':   ['Add splashing water or bubbles', 'Make it slower'],
   'carousel':      ['Add a spinning or rotating effect', 'Make everything bigger'],
   'night-sky':     ['Add twinkling stars in the background', 'Add more bright rainbow colors'],
-  'fish':          ['Add splashing water or bubbles', 'Change the main color to red'],
-  'autumn-leaves': ['Make it slower', 'Change the main color to red'],
+  'fish':          ['Add splashing water or bubbles', 'Change the main color'],
+  'autumn-leaves': ['Make it slower', 'Change the main color'],
   'clown':         ['Make it faster', 'Make everything bigger'],
 };
 

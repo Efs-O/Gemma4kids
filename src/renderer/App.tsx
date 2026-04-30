@@ -15,6 +15,7 @@ import {
   pickCodingModel,
   pickTranscribeModel,
   sortGemma4CodingModelsSmallestFirst,
+  getModelTier,
 } from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
 
@@ -52,6 +53,8 @@ export default function App() {
     return autoModel;
   }, [userModel, models, autoModel]);
 
+  const modelTier = useMemo(() => getModelTier(codingModel), [codingModel]);
+
   const handleModelChange = useCallback((modelName: string) => {
     setUserModel(modelName);
   }, []);
@@ -81,7 +84,7 @@ export default function App() {
     retry,
     clearContext,
     injectContext,
-  } = useChat(codingModel, chatThinkEnabled);
+  } = useChat(codingModel, chatThinkEnabled, modelTier);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const stored = localStorage.getItem('g4k-sidebar-width');
@@ -396,6 +399,7 @@ export default function App() {
               showThinking={showThinking}
               ctxUsedPct={ctxUsedPct}
               onClearContext={handleClearContext}
+              modelTier={modelTier}
             />
           </div>
         </div>

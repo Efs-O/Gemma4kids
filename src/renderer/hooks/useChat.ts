@@ -3,15 +3,43 @@ import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
-import { CREATE_SYSTEM_PROMPT, EDIT_SYSTEM_PROMPT } from '../prompts';
-import { OLLAMA_CHAT_PROFILE } from '../ollamaConstants';
+import { CREATE_SYSTEM_PROMPT, EDIT_SYSTEM_PROMPT, SIMPLE_SYSTEM_PROMPT, SISTER_MESSAGE } from '../prompts';
+import type { ModelTier } from '../utils/pickCodingModel';
+import {
+  OLLAMA_CHAT_PROFILE,
+  OLLAMA_CHAT_WORKSTATION_CTX,
+  OLLAMA_CHAT_WORKSTATION_PREDICT,
+} from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
-import { isGemma4EdgeE2b, isGemma431b } from '../utils/pickCodingModel';
-
-const CTX_64K = 65536; // e2b (low VRAM) and 31b (VRAM savings at 64k)
+import { isGemma426b, isGemma431b } from '../utils/pickCodingModel';
 
 const OLLAMA_BASE = 'http://localhost:11434';
 const INLINE_TOOL_QUOTE = '<|"|>';
+
+const SIMPLE_MOTION_KEYWORDS = [
+  'bounce', 'bouncing', 'fall', 'falling', 'spin', 'spinning',
+  'rotate', 'rotating', 'move', 'moving', 'float', 'floating',
+  'fly', 'flying', 'animate', 'animation', 'animated',
+  'firework', 'fireworks', 'explode', 'explosion', 'confetti',
+  'particle', 'sparkle', 'twinkle', 'twinkling',
+  'wave', 'waves', 'meteor', 'shooting star', 'carousel',
+  'launch', 'juggle', 'juggling', 'dancing', 'dance',
+  'game', 'score', 'collision', 'shoot', 'jump',
+  'swim', 'swimming', 'appear', 'appearing',
+  'κινούμενο', 'κίνηση', 'πέφτει', 'αναπηδά', 'περιστρέφεται',
+  'animiert', 'bewegt', 'fallen', 'springen', 'drehen', 'rotieren',
+];
+
+function isSimpleMotionKeyword(text: string): boolean {
+  const lower = text.toLowerCase();
+  return SIMPLE_MOTION_KEYWORDS.some(kw => lower.includes(kw));
+}
+
+function detectLang(text: string): 'en' | 'de' | 'el' {
+  if (/[Ͱ-Ͽἀ-῿]/.test(text)) return 'el';
+  if (/[äöüßÄÖÜ]/.test(text)) return 'de';
+  return 'en';
+}
 
 function extractHtml(text: string): string | null {
   const match = text.match(/```(?:html)?\n([\s\S]*?)```/i);
@@ -76,15 +104,18 @@ function isEditIntent(text: string): boolean {
 }
 
 /** Keep system prompt + last 10 user/assistant pairs + last 4 tool results. */
-function buildRequestMessages(history: ChatMessage[]): ChatMessage[] {
+function buildRequestMessages(history: ChatMessage[], tier: ModelTier): ChatMessage[] {
   const toolMessages = history.filter((m) => m.role === 'tool');
   const conversationMessages = history.filter((m) => m.role === 'user' || m.role === 'assistant');
   const keptConversation = conversationMessages.slice(-20);
   const keptTools = toolMessages.slice(-4);
   const kept = history.filter((m) => keptConversation.includes(m) || keptTools.includes(m));
-  const systemPrompt = isEditIntent(getLatestUserText(history))
-    ? EDIT_SYSTEM_PROMPT
-    : CREATE_SYSTEM_PROMPT;
+  let systemPrompt: string;
+  if (tier === 'simple') {
+    systemPrompt = SIMPLE_SYSTEM_PROMPT;
+  } else {
+    systemPrompt = isEditIntent(getLatestUserText(history)) ? EDIT_SYSTEM_PROMPT : CREATE_SYSTEM_PROMPT;
+  }
   return [{ role: 'system', content: systemPrompt }, ...kept];
 }
 
@@ -167,7 +198,7 @@ export interface UseChatResult {
   injectContext: (text: string) => void;
 }
 
-export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
+export function useChat(model: string, thinkEnabled: boolean, modelTier: ModelTier = 'full'): UseChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingText, setStreamingText] = useState('');
   const [streamingThinking, setStreamingThinking] = useState('');
@@ -187,7 +218,9 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
   const runLoop = useCallback(async (startHistory: ChatMessage[], token: CancellationToken) => {
     const myClearId = clearIdRef.current;
     let history = startHistory;
-    const numCtx = (isGemma4EdgeE2b(model) || isGemma431b(model)) ? CTX_64K : OLLAMA_CHAT_PROFILE.numCtx;
+    const workstationLarge = isGemma426b(model) || isGemma431b(model);
+    const numCtx = workstationLarge ? OLLAMA_CHAT_WORKSTATION_CTX : OLLAMA_CHAT_PROFILE.numCtx;
+    const numPredict = workstationLarge ? OLLAMA_CHAT_WORKSTATION_PREDICT : OLLAMA_CHAT_PROFILE.numPredict;
 
     while (true) {
       // Guard re-entry: abort may have fired during a tool dispatch IPC round-trip.
@@ -208,14 +241,14 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
           OLLAMA_BASE,
           {
             model,
-            messages: buildRequestMessages(history),
+            messages: buildRequestMessages(history, modelTier),
             think: thinkEnabled,
             temperature: OLLAMA_CHAT_PROFILE.temperature,
             topP: OLLAMA_CHAT_PROFILE.topP,
             topK: OLLAMA_CHAT_PROFILE.topK,
             tools: KIDS_TOOLS,
             numCtx,
-            numPredict: OLLAMA_CHAT_PROFILE.numPredict,
+            numPredict,
           },
           {
             onToken: (t) => {
@@ -370,9 +403,14 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
       }
 
       // Plain text final response — loop ends.
+      // Layer 2: sentinel swap — replace __TOOBIG__ with the sister message.
+      let finalContent = assembled || null;
+      if (modelTier === 'simple' && assembled.trim() === '__TOOBIG__') {
+        finalContent = SISTER_MESSAGE[detectLang(getLatestUserText(history))];
+      }
       const finalMsg: ChatMessage = {
         role: 'assistant',
-        content: assembled || null,
+        content: finalContent,
         thinking: thinking || null,
       };
       history = [...history, finalMsg];
@@ -394,9 +432,19 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
       setStatus('idle');
       return;
     }
-  }, [model, thinkEnabled]);
+  }, [model, thinkEnabled, modelTier]);
 
   const sendMessage = useCallback((text: string) => {
+    // Layer 1: instant keyword block — no model call, no streaming.
+    if (modelTier === 'simple' && isSimpleMotionKeyword(text)) {
+      const userMsg: ChatMessage = { role: 'user', content: text };
+      const sisterMsg: ChatMessage = { role: 'assistant', content: SISTER_MESSAGE[detectLang(text)] };
+      const updated = [...historyRef.current, userMsg, sisterMsg];
+      historyRef.current = updated;
+      setMessages(updated);
+      return;
+    }
+
     const token = new CancellationToken();
     cancelRef.current = token;
     setStatus('streaming');
@@ -410,7 +458,7 @@ export function useChat(model: string, thinkEnabled: boolean): UseChatResult {
     historyRef.current = updated;
     setMessages(updated);
     runLoop(updated, token);
-  }, [runLoop]);
+  }, [runLoop, modelTier]);
 
   const cancel = useCallback(() => {
     cancelRef.current?.cancel();

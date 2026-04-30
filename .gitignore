@@ -25,3 +25,4 @@ piper/
 voices/
 **/tts-test-output/
 tmp_*.json
+benchmark/results-simple/

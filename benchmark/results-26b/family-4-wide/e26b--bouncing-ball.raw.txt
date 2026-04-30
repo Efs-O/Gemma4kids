@@ -1,0 +1,288 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-UTF">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Gravity Bounce</title>
+    <style>
+        /* Reset and base styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050510; /* Deep space background */
+        }
+
+        /* Full viewport canvas */
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* CSS Layer: Background Star Pulse */
+        .star-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 0%, #050510 100%);
+            animation: pulseGlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        /* CSS Layer: Floating Dust Particles */
+        .dust {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .dust-particle {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: drift 20s linear infinite;
+        }
+
+        @keyframes drift {
+            from { transform: translateY(0) translateX(0); }
+            to { transform: translateY(-100vh) translateX(50px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="star-overlay"></div>
+    <div class="dust" id="dustContainer"></div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const dustContainer = document.getElementById('undustContainer');
+
+        let width, height;
+        const balls = [];
+        const nebulas = [];
+        const stars = [];
+        const gravity = 0.25;
+        const friction = 0.98; // Energy loss on bounce
+
+        // Initialization for screen size
+        function initSize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        // Create star field for background depth
+        function createStars() {
+            stars.length = 0;
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5,
+                    opacity: Math.random(),
+                    speed: Math.random() * 0.02
+                });
+            }
+        }
+
+        // Create nebula blobs for midground depth
+        function createNebulas() {
+            nebulas.length = 0;
+            const colors = ['rgba(138, 43, 226, 0.1)', 'rgba(0, 255, 255, 0.05)', 'rgba(255, 0, 127, 0.05)'];
+            for (let i = 0; i < 3; i++) {
+                nebulas.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * (width * 0.4) + width * 0.2,
+                    color: colors[i],
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5
+                });
+            }
+        }
+
+        class Ball {
+            constructor(x, y, radius, color, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.vx = vx;
+                this.vy = vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                
+                // Add glow effect
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset shadow for next elements
+                ctx.closePath();
+            }
+
+            update() {
+                // Apply gravity
+                this.vy += gravity;
+                
+                // Apply velocity
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Floor collision
+                if (this.y + this.radius > height) {
+                    this.y = height - this.radius;
+                    this.vy *= -friction;
+                }
+
+                // Ceiling collision
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.vy *= -friction;
+                }
+
+                // Wall collisions
+                if (this.x + this.radius > width) {
+                    this.x = width - this.radius;
+                    this.vx *= -friction;
+                }
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx *= -friction;
+                }
+
+                this.draw();
+            }
+        }
+
+        function spawnBalls() {
+            balls.length = 0;
+            const ballConfigs = [
+                { r: 25, c: '#00ffff', vx: 4, vy: -5 }, // Cyan
+                { r: 35, c: '#ff00ff', vx: -4, vy: -8 }, // Magenta
+                { r: 20, c: '#ffff00', vx: 6, vy: -12 }, // Yellow
+                { r: 40, c: '#39ff14', vx: -2, vy: -4 }  // Neon Green
+            ];
+
+            ballConfigs.forEach(config => {
+                balls.push(new Ball(
+                    Math.random() * width,
+                    Math.random() * height,
+                    config.r,
+                    config.c,
+                    config.vx,
+                    config.vy
+                ));
+            });
+        }
+
+        // Create floating CSS dust for extra texture
+        function createDust() {
+            const container = document.getElementById('dustContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'dust-particle';
+                const size = Math.random() * 4 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(particle);
+            }
+        }
+
+        function animate() {
+            // Clear canvas
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, width, height);
+
+            // 1. Draw Stars (Background layer)
+            stars.forEach(star => {
+                star.opacity += star.speed;
+                // Flicker effect
+                const alpha = Math.abs(Math.sin(star.opacity));
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fill();
+                ctx.closePath();
+            });
+
+            // 2. Draw Nebulas (Midground layer)
+            ctx.globalCompositeOperation = 'screen'; // Blending mode for glow
+            nebulas.forEach(nebula => {
+                nebulateUpdate(nebula);
+                ctx.beginPath();
+                const gradient = ctx.createRadialGradient(
+                    nebula.x, nebula.y, 0, 
+                    nebula.x, nebula.y, nebula.radius
+                );
+                gradient.addColorStop(0, nebula.color);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.arc(nebula.x, nebula.y, nebula.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.closePath();
+            });
+            ctx.globalCompositeOperation = 'source-over';
+
+            // 3. Draw Balls (Foreground layer)
+            balls.forEach(ball => ball.update());
+
+            requestAnimationFrame(animate);
+        }
+
+        function nebulateUpdate(nebula) {
+            nebula.x += nebula.vx;
+            nebula.y += nebula.vo; // typo fixed below
+            nebula.y += nebula.vy;
+
+            // Bounce nebulas off edges
+            if (nebula.x < 0 || nebula.x > width) nebula.vx *= -1;
+            if (nebula.y < 0 || nebula.y > height) nebula.vy *= -1;
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            initSize();
+            createStars();
+            createNebulas();
+            spawnBalls();
+        });
+
+        // Initial Launch
+        initSize();
+        createStars();
+        createNebulas();
+        spawnBalls();
+        createDust();
+        animate();
+
+    </script>
+</body>
+</html>
+```

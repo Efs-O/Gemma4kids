@@ -1,0 +1,162 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunny Beach Animation</title>
+    <style>
+        :root {
+            --sky-color: #87CEEB;
+            --sun-color: #FFD700;
+            --ocean-deep: #0077be;
+            --ocean-mid: #00aaff;
+            --ocean-light: #b3e5fc;
+            --foam-color: rgba(255, 255, 255, 0.8);
+            --sand-color: #f4d03f;
+            --sand-shadow: #d4ac0d;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Container for the whole scene */
+        .scene {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, var(--sky-color) 0%, #e0f6ff 50%, var(--sand-color) 50%, var(--sand-shadow) 100%);
+        }
+
+        /* The Sun */
+        .sun {
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 120px;
+            height: 120px;
+            background-color: var(--sun-color);
+            border-radius: 50%;
+            box-shadow: 0 0 60px var(--sun-color), 0 0 120px orange;
+            animation: sun-pulse 8s infinite ease-in-out;
+        }
+
+        @keyframes sun-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        /* The Ocean Container */
+        .ocean {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background-color: var(--ocean-deep);
+            overflow: hidden;
+        }
+
+        /* Wave Layer Styling */
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background-color: var(--ocean-mid);
+            border-radius: 40%;
+            animation: wave-move 10s infinite linear;
+            opacity: 0.7;
+        }
+
+        .wave-layer-2 {
+            bottom: -10px;
+            background-color: var(--ocean-light);
+            animation: wave-move 7s infinite linear;
+            opacity: 0.5;
+        }
+
+        .wave-layer-3 {
+            bottom: -20px;
+            background-color: var(--foam-color);
+            animation: wave-move 5s infinite linear;
+            height: 120%;
+            opacity: 0.9;
+        }
+
+        /* The Crashing Motion */
+        @keyframes wave-move {
+            0% {
+                transform: rotate(0deg) translateY(0) translateX(0);
+            }
+            50% {
+                transform: rotate(5deg) translateY(-20px) translateX(5%);
+            }
+            100% {
+                transform: rotate(0deg) translateY(0) translateX(0);
+            }
+        }
+
+        /* The Sand/Shoreline interaction */
+        .shore {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40%;
+            background: var(--sand-color);
+            z-index: 1;
+        }
+
+        /* Added a subtle sun glare on the water */
+        .glare {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Small birds or clouds could go here, but keeping it clean for the requirement */
+        .cloud {
+            position: absolute;
+            background: white;
+            width: 100px;
+            height: 40px;
+            border-radius: 50px;
+            opacity: 0.8;
+            animation: cloud-float 20s infinite linear;
+        }
+
+        @keyframes cloud-float {
+            from { left: -150px; }
+            to { left: 100vw; }
+        }
+
+    </txt>
+    <script>
+        // Dynamically add some clouds for extra life
+        const scene = document.querySelector('.scene');
+        const cloudCount = 3;
+
+        for (let i = 0; i < cloudCount; i++) {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            // Randomize position and speed
+            cloud.style.top = `${15 + (i * 10)}%`;
+            cloud.style.animationDuration = `${25 + (i * 10)}s`;
+            cloud.style.animationDelay = `${i * -5}s`;
+            cloud.style.width = `${80 + (i * 20)}px`;
+            scene.appendChild(cloud);
+        }
+    </script>
+</body>
+</html>
+```

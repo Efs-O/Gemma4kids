@@ -1,0 +1,316 @@
+[
+  {
+    "runKey": "e26b-f3-bouncing-ball",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "bouncing-ball",
+    "promptText": "Make a bouncing ball animation",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present",
+      "bounce physics variable detected"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [
+      "element may be smaller than 80px"
+    ],
+    "durationSec": "116.6",
+    "timestamp": "2026-04-30T13:11:57.026Z"
+  },
+  {
+    "runKey": "e26b-f3-snowflakes",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "snowflakes",
+    "promptText": "Make snowflakes gently falling from the sky",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present",
+      "sufficient particles (variable (100) in loop)"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [],
+    "durationSec": "59.1",
+    "timestamp": "2026-04-30T13:12:56.173Z"
+  },
+  {
+    "runKey": "e26b-f3-fireworks",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "fireworks",
+    "promptText": "Make colorful fireworks exploding in the night sky",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present",
+      "sufficient particles (variable (100) in loop)"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [],
+    "durationSec": "133.3",
+    "timestamp": "2026-04-30T13:15:09.439Z"
+  },
+  {
+    "runKey": "e26b-f3-rainbow",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "rainbow",
+    "promptText": "Make a rainbow appear after rain",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [
+      "rainbow may be static — no @keyframes found"
+    ],
+    "durationSec": "155.2",
+    "timestamp": "2026-04-30T13:17:44.649Z"
+  },
+  {
+    "runKey": "e26b-f3-butterflies",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "butterflies",
+    "promptText": "Make colorful butterflies flying around flowers",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 1,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "animation mechanism present",
+      "wing animation keyframe detected"
+    ],
+    "checkerFailed": [
+      "JS parse error: Unexpected token (63:32)"
+    ],
+    "checkerWarnings": [],
+    "durationSec": "134.8",
+    "timestamp": "2026-04-30T13:19:59.453Z"
+  },
+  {
+    "runKey": "e26b-f3-rocket",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "rocket",
+    "promptText": "Make a rocket launch into space with stars in the background",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 1,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "animation mechanism present",
+      "starfield present (JS for-loop (count 150))",
+      "vertical motion detected"
+    ],
+    "checkerFailed": [
+      "JS parse error: Unexpected token (26:54)"
+    ],
+    "checkerWarnings": [],
+    "durationSec": "243.4",
+    "timestamp": "2026-04-30T13:24:02.874Z"
+  },
+  {
+    "runKey": "e26b-f3-ocean-waves",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "ocean-waves",
+    "promptText": "Make animated ocean waves crashing on a sunny beach",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [
+      "only 0 wave element(s) — need at least 2"
+    ],
+    "durationSec": "184.1",
+    "timestamp": "2026-04-30T13:27:06.987Z"
+  },
+  {
+    "runKey": "e26b-f3-carousel",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "carousel",
+    "promptText": "Make a colorful spinning carousel with horses",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 1,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "animation mechanism present",
+      "rotation transform detected",
+      "translate for circular placement detected"
+    ],
+    "checkerFailed": [
+      "JS parse error: Unexpected token (64:26)"
+    ],
+    "checkerWarnings": [],
+    "durationSec": "128.5",
+    "timestamp": "2026-04-30T13:29:15.498Z"
+  },
+  {
+    "runKey": "e26b-f3-night-sky",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "night-sky",
+    "promptText": "Make a night sky with twinkling stars and shooting stars",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present",
+      "starfield present (variable (150) in loop)"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [],
+    "durationSec": "84.8",
+    "timestamp": "2026-04-30T13:30:40.340Z"
+  },
+  {
+    "runKey": "e26b-f3-fish",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "fish",
+    "promptText": "Make colorful fish swimming in the sea with bubbles",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present",
+      "sufficient particles (JS for-loop (count 40))",
+      "oval/fish body shape detected",
+      "bubble elements present"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [],
+    "durationSec": "160.1",
+    "timestamp": "2026-04-30T13:33:20.438Z"
+  },
+  {
+    "runKey": "e26b-f3-autumn-leaves",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "autumn-leaves",
+    "promptText": "Make colorful autumn leaves gently falling from trees",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 2,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "JS parses OK",
+      "animation mechanism present",
+      "sufficient particles (variable (70) in loop)"
+    ],
+    "checkerFailed": [],
+    "checkerWarnings": [
+      "no translateY/fall/drop motion — leaves may not drift"
+    ],
+    "durationSec": "154.7",
+    "timestamp": "2026-04-30T13:35:55.147Z"
+  },
+  {
+    "runKey": "e26b-f3-clown",
+    "model": "gemma4:26b",
+    "familyId": 3,
+    "familyLabel": "Hardcoded-Animation Logic Prompt",
+    "promptSlug": "clown",
+    "promptText": "Make a fun clown juggling colorful bouncing balls",
+    "htmlExtracted": true,
+    "error": null,
+    "checkerScore": 1,
+    "checkerPassed": [
+      "has DOCTYPE",
+      "has <html>",
+      "has <head>",
+      "has <body>",
+      "has <style> or <script>",
+      "animation mechanism present",
+      "juggling arc or multi-axis motion detected"
+    ],
+    "checkerFailed": [
+      "JS parse error: Assigning to rvalue (91:12)"
+    ],
+    "checkerWarnings": [],
+    "durationSec": "148.4",
+    "timestamp": "2026-04-30T13:38:23.574Z"
+  }
+]
