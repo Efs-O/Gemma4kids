@@ -1,0 +1,27 @@
+{
+  "runKey": "gemma4-e4b-f3-night-sky",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 3,
+  "familyLabel": "Hardcoded-Animation Logic Prompt",
+  "promptSlug": "night-sky",
+  "promptText": "Make a night sky with twinkling stars and shooting stars",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "only 0 star elements — need 40+ for a starfield"
+  ],
+  "durationSec": "21.1",
+  "timestamp": "2026-04-30T08:14:08.072Z"
+}

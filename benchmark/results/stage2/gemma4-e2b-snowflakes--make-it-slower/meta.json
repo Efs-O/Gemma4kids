@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e2b-snowflakes--make-it-slower",
+  "stage": 2,
+  "model": "gemma4:e2b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e2b-f2-snowflakes",
+  "promptSlug": "snowflakes",
+  "chip": "Make it slower",
+  "chipSlug": "make-it-slower",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (1 → 1)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (1%)",
+    "JS parses OK"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "10.3",
+  "timestamp": "2026-04-30T08:28:30.278Z"
+}

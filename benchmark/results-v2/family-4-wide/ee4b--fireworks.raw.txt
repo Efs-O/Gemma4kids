@@ -1,0 +1,226 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Fireworks Display</title>
+    <style>
+        :root {
+            /* Define core night sky colors */
+            --sky-dark: #08001a;
+            --star-color: rgba(147, 197, 253, 0.8);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: var(--sky-dark);
+            overflow: hidden;
+            position: relative;
+            /* Subtle overall gradient/texture for depth */
+            background-image: radial-gradient(circle at 50% 10%, rgba(0, 0, 50, 0.3) 0%, transparent 50%);
+        }
+
+        /* --- Background Stars (Deep Background Layer) --- */
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: var(--star-color);
+            border-radius: 50%;
+            animation: twinkle 10s linear infinite alternate;
+            opacity: 0.7;
+        }
+
+        @keyframes twinkle {
+            0% { transform: scale(0.8) translateY(0); opacity: 0.5; }
+            100% { transform: scale(1.2) translateY(-3px); opacity: 1; }
+        }
+
+        /* --- Firework Container (Manages the visible burst) --- */
+        .firework-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Ensures clicks pass through to body */
+        }
+
+        /* --- Rocket Trajectory (Rising element - Midground) --- */
+        .rocket {
+            position: absolute;
+            width: 4px;
+            height: 0; /* Starts invisible, grows via animation */
+            background: linear-gradient(to bottom, rgba(255, 255, 0, 0.8), rgba(255, 165, 0, 0.8));
+            border-radius: 2px;
+            transform-origin: bottom center;
+            animation: rise linear forwards;
+        }
+
+        @keyframes rise {
+            0% { 
+                transform: scaleY(0); 
+                opacity: 1; 
+                bottom: 0; 
+                height: 0;
+            }
+            100% { 
+                /* Final height will be set by JS for accurate bursting */
+                opacity: 0.8; 
+            }
+        }
+
+        /* --- Spark Elements (Foreground focus) --- */
+        .spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            opacity: 1;
+            animation: burst-fade linear forwards;
+            will-change: transform;
+            transition: all 0.5s ease-out; /* Smooth transition fallback */
+        }
+
+        /* Keyframes for the explosive burst and fade */
+        @keyframes burst-fade {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="firework-display" class="firework-container">
+        <!-- Stars will be appended here by JS -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const display = document.getElementById('firework-display');
+            const numStars = 50;
+
+            // 1. Generate Background Stars (Background Layer)
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.top = Math.random() * 100 + 'vh';
+                star.style.left = Math.random() * 100 + 'vw';
+                star.style.animationDuration = Math.random() * 10 + 10 + 's';
+                star.style.animationDelay = Math.random() * 10 + 's';
+                display.appendChild(star);
+            }
+
+            // --- Helper Function to Create and Animate a Firework ---
+            function launchFirework(startX, startY, targetX, targetY, color1, color2) {
+                // 1. Create the initial rocket element
+                const rocket = document.createElement('div');
+                rocket.className = 'rocket';
+                rocket.style.left = startX + 'px';
+                rocket.style.bottom = '0px';
+                rocket.style.animationName = 'rise';
+                rocket.style.animationDuration = `${Math.random() * 1.5 + 1.5}s`; // 1.5s to 3s rise time
+                rocket.style.animationTimingFunction = 'linear';
+                rocket.style.animationFillMode = 'forwards';
+                rocket.style.zIndex = '10';
+                
+                display.appendChild(rocket);
+
+                // 2. Trigger the explosion after the simulated rise time
+                const riseDuration = parseFloat(rocket.style.animationDuration.match(/(\d+\.?\d*)/)[0]);
+
+                setTimeout(() => {
+                    // Remove the rocket trail element immediately
+                    rocket.remove(); 
+
+                    // Create sparks at the burst point (targetX, targetY)
+                    const sparkCount = 40 + Math.floor(Math.random() * 30);
+                    for (let i = 0; i < sparkCount; i++) {
+                        const spark = document.createElement('div');
+                        spark.className = 'spark';
+                        
+                        // Randomize initial small offset around the target point
+                        const offset = Math.random() * 30 - 15;
+                        const initialSparkX = targetX + offset;
+                        const initialSparkY = targetY + offset;
+                        
+                        spark.style.backgroundColor = i % 2 === 0 ? color1 : color2;
+                        spark.style.left = initialSparkX + 'px';
+                        spark.style.top = initialSparkY + 'px';
+                        spark.style.zIndex = '20';
+                        
+                        display.appendChild(spark);
+
+                        // Calculate random angle and velocity for the burst
+                        const angle = Math.random() * 2 * Math.PI;
+                        const velocity = Math.random() * 20 + 10; // 10 to 30 pixels/frame force
+                        
+                        // Calculate final translation for the keyframe animation
+                        const finalTx = Math.cos(angle) * velocity * 5; // Spread horizontally
+                        const finalTy = Math.sin(angle) * velocity * 5; // Spread vertically
+                        
+                        // Apply CSS custom properties to drive the keyframe animation
+                        spark.style.setProperty('--tx', `${finalTx}px`);
+                        spark.style.setProperty('--ty', `${finalTy}px`);
+                        
+                        // Randomize animation duration (300ms to 1000ms)
+                        const duration = Math.random() * 700 + 300;
+                        spark.style.animationDuration = `${duration}ms`;
+                        
+                        // Apply the animation style
+                        spark.style.animationPlayState = 'running';
+                        
+                        // Clean up sparks after animation finishes
+                        setTimeout(() => {
+                            spark.remove();
+                        }, duration);
+                    }
+                }, riseDuration * 1000 + 100); // +100ms buffer
+            }
+
+            // --- Main Loop: Launch multiple fireworks over time ---
+            const launchSequence = [
+                // (startX, startY, targetX, targetY, color1, color2, delay)
+                [100, 0, 200, 100, '#ff00ff', '#00ffff', 0.5], // Magenta/Cyan - Top Left
+                [700, 0, 500, 150, '#ff8c00', '#ff4500', 1.5], // Orange/Red - Center
+                [900, 0, 850, 250, '#00ff00', '#32cd32', 2.5], // Lime/Green - Bottom Right
+                [200, 0, 100, 200, '#ff69b4', '#ee82ee', 3.5], // Pink/Violet - Top Left 2
+                [800, 0, 950, 100, '#ffd700', '#ffdab9', 5.0], // Gold/Peach - Top Right
+                [50, 0, 400, 300, '#00ffff', '#8a2be2', 6.5] // Cyan/Blue Violet - Deep Shot
+            ];
+
+            launchSequence.forEach(([startX, startY, targetX, targetY, c1, c2, delay]) => {
+                setTimeout(() => {
+                    launchFirework(startX, startY, targetX, targetY, c1, c2);
+                }, delay * 1000);
+            });
+            
+            // Keep launching small fireworks periodically for continuous effect
+            setInterval(() => {
+                const randomX = Math.random() * window.innerWidth;
+                const randomY = Math.random() * window.innerHeight * 0.6; // Keep blasts high enough
+                const randomC1 = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+                const randomC2 = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+
+                // Launch a smaller, random firework every 7 seconds
+                if (Math.random() > 0.8) {
+                    launchFirework(randomX, 0, randomX + (Math.random() - 0.5) * 100, randomY, randomC1, randomC2);
+                }
+
+            }, 7000);
+
+        });
+    </script>
+</body>
+</html>
+```

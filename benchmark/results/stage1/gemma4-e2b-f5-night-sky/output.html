@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Night Sky</title>
+    <style>
+        body {
+            background-color: #0a0a1a; /* Deep space blue/purple */
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* --- Stars Styling --- */
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #ffff00;
+            animation: twinkle 3s infinite alternate;
+            opacity: 0.8;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.4; transform: scale(0.8); }
+            to { opacity: 1.0; transform: scale(1.2); }
+        }
+
+        /* --- Shooting Stars Styling --- */
+        .shooting-star {
+            position: absolute;
+            width: 3px;
+            height: 50px;
+            background: linear-gradient(to right, #ffdd00, #ff66b2, #ffffff); /* Vivid trail colors */
+            border-radius: 2px;
+            opacity: 0; /* Start invisible */
+            animation: shoot 2.5s ease-out forwards;
+        }
+
+        @keyframes shoot {
+            0% {
+                left: -10%;
+                top: 50%;
+                opacity: 1;
+            }
+            100% {
+                left: 110%;
+                top: 50%;
+                opacity: 0;
+            }
+        }
+
+        /* --- Scene Setup (Generating Stars) --- */
+        /* We will dynamically populate these via JS for better density, but for pure CSS demonstration, we define the structure. */
+        /* Since we need dynamic density, JS is necessary to populate thousands of elements efficiently. */
+        
+        /* CSS for a few static decorative elements if JS fails to populate enough */
+        .static-glow {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            animation: pulse 15s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Stars will be injected here by JavaScript -->
+
+    <script>
+        const container = document.body;
+        const numStars = 300;
+        const shootingStarCount = 100;
+
+        // 1. Generate Stars
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random position
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            
+            // Random size variation (subtle)
+            const size = Math.random() * 2 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            
+            // Random initial delay for staggered twinkling
+            star.style.animationDelay = `${Math.random() * 3}s`;
+            star.style.animationDuration = `${3 + Math.random() * 2}s`;
+
+
+            container.appendChild(star);
+        }
+
+        // 2. Generate Shooting Stars
+        for (let i = 0; i < shootingStarCount; i++) {
+            const shoot = document.createElement('div');
+            shoot.className = 'shooting-star';
+            
+            // Random starting position (bottom half of the screen)
+            shoot.style.top = `${Math.random() * 50 + 50}vh`; 
+            
+            // Random horizontal start position
+            shoot.style.left = `${Math.random() * 100}vw`;
+
+            // Random animation duration and delay for varied speed
+            shoot.style.animationDuration = `${2 + Math.random() * 3}s`;
+            shoot.style.animationDelay = `${Math.random() * 2}s`;
+            
+            container.appendChild(shoot);
+        }
+    </script>
+</body>
+</html>

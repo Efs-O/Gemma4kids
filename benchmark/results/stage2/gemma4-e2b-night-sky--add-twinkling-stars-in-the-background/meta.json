@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e2b-night-sky--add-twinkling-stars-in-the-background",
+  "stage": 2,
+  "model": "gemma4:e2b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e2b-f2-night-sky",
+  "promptSlug": "night-sky",
+  "chip": "Add twinkling stars in the background",
+  "chipSlug": "add-twinkling-stars-in-the-background",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (0 → 0)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (0%)",
+    "JS parses OK"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "12.8",
+  "timestamp": "2026-04-30T08:32:23.643Z"
+}

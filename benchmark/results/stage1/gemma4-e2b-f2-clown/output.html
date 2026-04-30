@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juggling Clown</title>
+    <style>
+        /* Define some fun colors using CSS variables */
+        :root {
+            --clown-color: hsl(30, 100%, 50%); /* Bright skin tone */
+            --ball1-color: #FF6347; /* Tomato Red */
+            --ball2-color: #46B450; /* Green */
+            --ball3-color: #4169E1; /* Blue */
+            --ball4-color: #FFD700; /* Gold/Yellow */
+            --background-color: linear-gradient(to bottom, #87CEEB, #4682B4); /* Sky Blue to Steel Blue */
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--background-color);
+            overflow: hidden; /* Hide overflow during bouncing */
+        }
+
+        /* Style for the Clown (A simple representation) */
+        .clown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 250px;
+            background-color: var(--clown-color);
+            border-radius: 50%;
+            border: 5px solid orange;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
+            z-index: 10;
+        }
+
+        /* Style for the Juggling Balls */
+        .ball {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            /* Initial position set by JS */
+            animation: bounce var(--bounce-duration) infinite ease-in-out;
+        }
+
+        /* Define the bouncing animation */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-50px);
+            }
+        }
+
+        /* Specific ball colors and positioning */
+        .ball:nth-child(1) { background-color: var(--ball1-color); animation-duration: 2s; }
+        .ball:nth-child(2) { background-color: var(--ball2-color); animation-duration: 2.5s; }
+        .ball:nth-child(3) { background-color: var(--ball3-color); animation-duration: 1.8s; }
+        .ball:nth-child(4) { background-color: var(--ball4-color); animation-duration: 3s; }
+
+    </style>
+</head>
+<body>
+
+    <div class="clown"></div>
+
+    <!-- The Juggling Balls -->
+    <div class="ball" style="left: 10%; top: 30%;"></div>
+    <div class="ball" style="left: 30%; top: 40%;"></div>
+    <div class="ball" style="left: 50%; top: 20%;"></div>
+    <div class="ball" style="left: 70%; top: 50%;"></div>
+
+    <script>
+        const balls = document.querySelectorAll('.ball');
+
+        balls.forEach(ball => {
+            // Set random initial positions within the viewport
+            const randomX = Math.random() * (window.innerWidth - 80);
+            const randomY = Math.random() * (window.innerHeight - 80);
+
+            ball.style.left = `${randomX}px`;
+            ball.style.top = `${randomY}px`;
+
+            // Set a random bounce duration for variety
+            const bounceDuration = 1.5 + Math.random() * 1.5; // Between 1.5s and 3s
+            ball.style.setProperty('--bounce-duration', `${bounceDuration}s`);
+        });
+    </script>
+
+</body>
+</html>

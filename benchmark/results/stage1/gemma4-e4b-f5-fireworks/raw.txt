@@ -1,0 +1,230 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Fireworks Display</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000010; /* Deep space night sky */
+            cursor: none; /* Hide cursor for a cleaner effect */
+        }
+        #fireworksCanvas {
+            display: block;
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="fireworksCanvas"></canvas>
+
+    <script>
+        // --- Setup ---
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let canvasWidth = window.innerWidth;
+        let canvasHeight = window.innerHeight;
+
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+
+        // Constants for physics simulation
+        const GRAVITY = 0.03;
+        const MAX_PARTICLES = 150;
+        const FIREWORK_COUNT = 1; // Controlled by the launcher interval
+
+        // Global arrays to hold active fireworks and particles
+        let fireworks = [];
+        let particles = [];
+
+        // --- Utility Functions ---
+
+        /** Generates a bright, vivid random hexadecimal color */
+        function getRandomColor() {
+            const colors = [
+                '#FF1493', // Deep Pink
+                '#00FFFF', // Cyan
+                '#FFFF00', // Yellow
+                '#FF4500', // Orange Red
+                '#9932CC', // Dark Orchid
+                '#39FF14'  // Neon Green
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        /** Calculates distance between two points */
+        function distance(x1, y1, x2, y2) {
+            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        }
+
+        // --- Particle/Firework Classes ---
+
+        /** Represents a single piece of the explosion */
+        class Particle {
+            constructor(x, y, color, angle, speed) {
+                this.x = x;
+                this.y = y;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.color = color;
+                this.alpha = 1;
+                this.decayRate = Math.random() * 0.01 + 0.015; // Faster fade
+                this.friction = 0.99;
+                this.size = Math.random() * 3 + 1;
+            }
+
+            update() {
+                // Apply friction and gravity
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.vy += GRAVITY;
+
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Fade out
+                this.alpha -= this.decayRate * 0.8;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        /** Represents the initial rocket trajectory */
+        class Firework {
+            constructor(sx, sy, tx, ty) {
+                this.x = sx;
+                this.y = sy;
+                this.sx = sx;
+                this.sy = sy;
+                this.tx = tx; // Target X
+                this.ty = ty; // Target Y
+                this.distanceToTarget = distance(sx, sy, tx, ty);
+                this.distanceTraveled = 0;
+                this.speed = 4;
+                this.angle = Math.atan2(ty - sy, tx - sx);
+                this.color = getRandomColor();
+            }
+
+            update() {
+                // Calculate movement based on angle and speed
+                const dx = Math.cos(this.angle) * this.speed;
+                const dy = Math.sin(this.angle) * this.speed;
+
+                this.distanceTraveled = distance(this.sx, this.sy, this.x, this.y);
+
+                // Check if we reached the target area (or slightly past it)
+                if (this.distanceTraveled >= this.distanceToTarget || this.y > canvasHeight) {
+                    this.explode();
+                    return true; // Signal to be removed
+                } else {
+                    this.x += dx;
+                    this.y += dy;
+                }
+                return false; // Keep active
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            explode() {
+                // Create many particles spreading from the explosion point
+                const particleCount = 80 + Math.floor(Math.random() * 40);
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = (i / particleCount) * Math.PI * 2;
+                    const speed = Math.random() * 5 + 1;
+                    particles.push(new Particle(this.x, this.y, this.color, angle, speed));
+                }
+            }
+        }
+
+        // --- Animation Loop ---
+
+        /** Clears the canvas with a slight fade effect instead of pure black */
+        function clearCanvas() {
+            // Drawing a semi-transparent black rectangle simulates the afterglow/night sky ambiance
+            ctx.fillStyle = 'rgba(0, 0, 16, 0.2)';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+
+        /** Updates and draws all fireworks and particles */
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            clearCanvas();
+
+            // 1. Update & Draw Fireworks (Rockets)
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                const firework = fireworks[i];
+                firework.draw();
+                const remove = firework.update();
+                if (remove) {
+                    fireworks.splice(i, 1);
+                }
+            }
+
+            // 2. Update & Draw Particles (Explosion Trails)
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                particle.update();
+                particle.draw();
+
+                // Remove if faded out or hit the bottom boundary
+                if (particle.alpha <= 0.05 || particle.y > canvasHeight + 10) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        /** Launches a new firework from the bottom edge to a random target */
+        function launchFirework() {
+            // Start near the bottom center, slightly randomized
+            const startX = canvasWidth * (0.2 + Math.random() * 0.6);
+            const startY = canvasHeight;
+
+            // Target high up and randomized across the screen
+            const targetX = canvasWidth * (0.1 + Math.random() * 0.8);
+            const targetY = canvasHeight * (0.1 + Math.random() * 0.4); // Keep targets in the upper 40%
+
+            fireworks.push(new Firework(startX, startY, targetX, targetY));
+        }
+
+        // --- Event Handlers & Initialization ---
+
+        function handleResize() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+        }
+
+        window.addEventListener('resize', handleResize);
+
+        // Initial Launch: Trigger fireworks automatically
+        let launchInterval = setInterval(() => {
+            launchFirework();
+        }, 500); // Launch a firework every 500 milliseconds
+
+        // Start the main animation loop
+        animate();
+
+    </script>
+</body>
+</html>
+```

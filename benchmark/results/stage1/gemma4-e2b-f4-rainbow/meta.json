@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e2b-f4-rainbow",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 4,
+  "familyLabel": "Wide General Animation Prompt",
+  "promptSlug": "rainbow",
+  "promptText": "Make a rainbow appear after rain",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present",
+    "10 div elements in body"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "only 1 @keyframes — wide prompt expects ≥ 2 for multi-element scene"
+  ],
+  "durationSec": "14.8",
+  "timestamp": "2026-04-30T07:50:31.661Z"
+}

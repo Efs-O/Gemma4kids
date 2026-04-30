@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e2b-f3-fireworks",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 3,
+  "familyLabel": "Hardcoded-Animation Logic Prompt",
+  "promptSlug": "fireworks",
+  "promptText": "Make colorful fireworks exploding in the night sky",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)",
+    "low element count (0 inline, no large JS loop found)"
+  ],
+  "durationSec": "17.8",
+  "timestamp": "2026-04-30T07:47:16.292Z"
+}

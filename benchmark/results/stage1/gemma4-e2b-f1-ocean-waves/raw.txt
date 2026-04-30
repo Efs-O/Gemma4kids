@@ -1,0 +1,155 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Ocean Crash</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Bright sky blue */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .scene {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- Beach Area --- */
+        .beach {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(to top, #FFD700, #FFA500); /* Bright yellow/orange sand */
+        }
+
+        /* --- Ocean Area --- */
+        .ocean {
+            position: absolute;
+            top: 0;
+            bottom: 40%; /* Start ocean where the sand ends */
+            left: 0;
+            width: 100%;
+            background-color: #007FFF; /* Vivid blue water */
+            z-index: 1;
+        }
+
+        /* --- Wave Animation Setup --- */
+        .wave {
+            position: absolute;
+            bottom: 40%; /* Start waves from the water line */
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3));
+            border-radius: 50% 50% 0 0;
+            animation: waveMotion 5s ease-in-out infinite;
+            z-index: 2;
+        }
+
+        /* Define the crashing foam effect */
+        .foam {
+            position: absolute;
+            bottom: 40%;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+            animation: foamEffect 1.5s ease-in-out infinite;
+            z-index: 3;
+        }
+
+        /* Keyframes for Wave Movement */
+        @keyframes waveMotion {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-30px); /* Peak of the wave */
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        /* Keyframes for Foam Splashes */
+        @keyframes foamEffect {
+            0% {
+                transform: translateY(0) scaleY(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-15px) scaleY(1.5); /* Splash peak */
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(0) scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        /* Adding a few distinct waves for visual complexity */
+        .wave:nth-child(1) {
+            animation-delay: 0s;
+            height: 80px;
+        }
+        .wave:nth-child(2) {
+            animation-delay: 1s;
+            height: 120px;
+            animation-duration: 6s;
+        }
+        .wave:nth-child(3) {
+            animation-delay: 2s;
+            height: 60px;
+            animation-duration: 4s;
+        }
+
+        /* Add some floating elements for sun/sand detail */
+        .sun {
+            position: absolute;
+            top: 5%;
+            right: 5%;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #FFD700, #FFA500);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 165, 0, 0.8);
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <!-- Sunny Beach Sand -->
+        <div class="beach"></div>
+
+        <!-- Ocean Background -->
+        <div class="ocean"></div>
+
+        <!-- Dynamic Waves -->
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+
+        <!-- Foam Splashes (Simulating the crash) -->
+        <div class="foam"></div>
+        <div class="foam" style="animation-delay: 0.5s;"></div>
+        <div class="foam" style="animation-delay: 1.2s;"></div>
+    
+        <!-- Sun Element -->
+        <div class="sun"></div>
+    </div>
+</body>
+</html>
+```

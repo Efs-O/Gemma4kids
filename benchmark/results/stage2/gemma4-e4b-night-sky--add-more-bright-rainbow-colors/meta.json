@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e4b-night-sky--add-more-bright-rainbow-colors",
+  "stage": 2,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e4b-f2-night-sky",
+  "promptSlug": "night-sky",
+  "chip": "Add more bright rainbow colors",
+  "chipSlug": "add-more-bright-rainbow-colors",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (1 → 1)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (3%)",
+    "JS parses OK"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "31.4",
+  "timestamp": "2026-04-30T08:44:19.224Z"
+}

@@ -1,0 +1,209 @@
+I changed the animation duration for the `.carousel-container` to make the spinning effect more pronounced, changing it from `20s` to `12s`.
+
+Specific change:
+*   On line 11, in the `.carousel-container` CSS rule, I changed `animation: spin 20s linear infinite;` to `animation: spin 12s linear infinite;`.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Spinning Carousel</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom, #ffecd1, #ffc8dd); /* Sunny carnival background */
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .carousel-container {
+        width: 800px;
+        height: 400px;
+        position: relative;
+        transform-style: preserve-3d;
+        animation: spin 12s linear infinite; /* The main spinning animation */
+        /* Setting the origin of the spin to the center bottom for a realistic carousel feel */
+        transform-origin: center bottom;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotateY(0deg) translateZ(-100px);
+        }
+        to {
+            transform: rotateY(360deg) translateZ(-100px);
+        }
+    }
+
+    .horse {
+        position: absolute;
+        width: 120px;
+        height: 180px;
+        bottom: 0; /* Keeps them sitting on the "ground" */
+        transform-origin: center bottom;
+        animation: bounce 1s infinite alternate ease-in-out; /* Little bounce while spinning */
+        /* Stagger the animations so they don't all bounce at the exact same time */
+        animation-delay: calc(var(--delay) * 0.5s);
+        /* Use 3D rotation to make them look like they are placed on a rotating platform */
+        transform: rotateY(0deg) translateZ(0);
+    }
+
+    /* Keyframes for the continuous bounce */
+    @keyframes bounce {
+        from {
+            transform: rotateY(0deg) translateZ(0) scale(1);
+        }
+        to {
+            transform: rotateY(0deg) translateZ(0) scale(1.05);
+        }
+    }
+
+    /* Styling the horses to look more detailed */
+    .horse-body {
+        width: 100%;
+        height: 100%;
+        background-color: #FF6347; /* Bright coral color */
+        border-radius: 50% 50% 10% 10% / 50% 50% 20% 20%; /* Oval shape for body */
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .horse-neck {
+        width: 15px;
+        height: 50px;
+        background-color: #A0522D; /* Brownish color */
+        position: absolute;
+        top: 30px;
+        left: 40px;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .horse-head {
+        width: 50px;
+        height: 40px;
+        background-color: #A0522D;
+        position: absolute;
+        top: 40px;
+        left: 30px;
+        border-radius: 50% 50% 30% 30%;
+        border-bottom: 2px solid #693521;
+    }
+
+    .horse-eye {
+        width: 8px;
+        height: 8px;
+        background-color: black;
+        border-radius: 50%;
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        border: 1px solid black;
+    }
+
+    /* Specific Horse Placements and Colors */
+
+    /* Horse 1 (Red/Gold) */
+    .horse:nth-child(1) {
+        left: 50px;
+        --delay: 0;
+    }
+    .horse:nth-child(1) .horse-body { background-color: #FFD700; }
+    .horse:nth-child(1) .horse-neck { background-color: #DAA520; }
+    .horse:nth-child(1) .horse-head { background-color: #DAA520; }
+
+    /* Horse 2 (Blue/Purple) */
+    .horse:nth-child(2) {
+        left: 200px;
+        --delay: 1;
+    }
+    .horse:nth-child(2) .horse-body { background-color: #7C3AED; }
+    .horse:nth-child(2) .horse-neck { background-color: #4B0082; }
+    .horse:nth-child(2) .horse-head { background-color: #4B0082; }
+
+    /* Horse 3 (Green/Pink) */
+    .horse:nth-child(3) {
+        left: 350px;
+        --delay: 2;
+    }
+    .horse:nth-child(3) .horse-body { background-color: #10B981; }
+    .horse:nth-child(3) .horse-neck { background-color: #38761D; }
+    .horse:nth-child(3) .horse-head { background-color: #38761D; }
+
+    /* Horse 4 (Orange/Yellow) */
+    .horse:nth-child(4) {
+        left: 500px;
+        --delay: 3;
+    }
+    .horse:nth-child(4) .horse-body { background-color: #FFA07A; }
+    .horse:nth-child(4) .horse-neck { background-color: #D2691E; }
+    .horse:nth-child(4) .horse-head { background-color: #D2691E; }
+
+    /* Horse 5 (Pink/Red) */
+    .horse:nth-child(5) {
+        left: 650px;
+        --delay: 4;
+    }
+    .horse:nth-child(5) .horse-body { background-color: #FF69B4; }
+    .horse:nth-child(5) .horse-neck { background-color: #C71585; }
+    .horse:nth-child(5) .horse-head { background-color: #C71585; }
+
+</style>
+</head>
+<body >
+
+    <div class="carousel-container">
+        <!-- Horse 1 -->
+        <div class="horse" style="--delay: 0;">
+            <div class="horse-body"></div>
+            <div class="horse-neck"></div>
+            <div class="horse-head">
+                <div class="horse-eye"></div>
+            </div>
+        </div>
+
+        <!-- Horse 2 -->
+        <div class="horse" style="--delay: 1;">
+            <div class="horse-body"></div>
+            <div class="horse-neck"></div>
+            <div class="horse-head">
+                <div class="horse-eye"></div>
+            </div>
+        </div>
+
+        <!-- Horse 3 -->
+        <div class="horse" style="--delay: 2;">
+            <div class="horse-body"></div>
+            <div class="horse-neck"></div>
+            <div class="horse-head">
+                <div class="horse-eye"></div>
+            </div>
+        </div>
+
+        <!-- Horse 4 -->
+        <div class="horse" style="--delay: 3;">
+            <div class="horse-body"></div>
+            <div class="horse-neck"></div>
+            <div class="horse-head">
+                <div class="horse-eye"></div>
+            </div>
+        </div>
+
+        <!-- Horse 5 -->
+        <div class="horse" style="--delay: 4;">
+            <div class="horse-body"></div>
+            <div class="horse-neck"></div>
+            <div class="horse-head">
+                <div class="horse-eye"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+```

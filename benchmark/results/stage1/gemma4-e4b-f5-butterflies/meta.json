@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e4b-f5-butterflies",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "promptSlug": "butterflies",
+  "promptText": "Make colorful butterflies flying around flowers",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "36.0",
+  "timestamp": "2026-04-30T08:24:40.356Z"
+}

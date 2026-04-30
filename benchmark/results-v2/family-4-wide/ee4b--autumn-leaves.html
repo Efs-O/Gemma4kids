@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autumn Leaf Cascade</title>
+    <style>
+        :root {
+            --sky-color: #1a0800; /* Deep, warm dark background */
+            --leaf-red: #e74c3c;
+            --leaf-orange: #f39c12;
+            --leaf-yellow: #f1c40f;
+            --leaf-gold: #f1c40f;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Hide scrollbars caused by animation */
+            background: linear-gradient(to bottom, #4c2e0e 0%, #7a4e1a 100%); /* Gradient simulating deep woods/sky */
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* Keyframe for falling leaves */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                /* Fall off the bottom and drift slightly */
+                transform: translateY(110vh) translateX(10vw) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Keyframe for background elements (e.g., subtle movement in the canopy) */
+        @keyframes canopySway {
+            0%, 100% {
+                transform: translateX(-10vw) scale(1);
+            }
+            50% {
+                transform: translateX(10vw) scale(1.02);
+            }
+        }
+
+        .leaf {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: var(--leaf-red);
+            background-size: cover;
+            opacity: 0;
+            animation: fall linear infinite; /* Default animation set on children */
+            pointer-events: none; /* Ignore mouse events */
+            transition: transform 0.5s ease-out; /* Smooth initial placement */
+        }
+
+        /* Specific leaf styling and animation application */
+
+        /* Leaf 1: Large, Slow Red (Background Layer) */
+        #leaf1 {
+            background-color: var(--leaf-red);
+            width: 80px;
+            height: 80px;
+            top: -10%;
+            left: 10%;
+            animation: fall linear 30s infinite;
+            animation-delay: 0s;
+        }
+
+        /* Leaf 2: Medium, Steady Orange (Midground Layer) */
+        #leaf2 {
+            background-color: var(--leaf-orange);
+            width: 50px;
+            height: 50px;
+            top: 5%;
+            left: 35%;
+            animation: fall linear 20s infinite;
+            animation-delay: 2s;
+        }
+        
+        /* Leaf 3: Small, Fast Yellow (Midground Layer) */
+        #leaf3 {
+            background-color: var(--leaf-yellow);
+            width: 40px;
+            height: 40px;
+            top: 15%;
+            left: 70%;
+            animation: fall linear 15s infinite;
+            animation-delay: 5s;
+        }
+
+        /* Leaf 4: Large, Gentle Gold Drift (Foreground Layer) */
+        #leaf4 {
+            background-color: var(--leaf-gold);
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            left: 5%;
+            animation: fall linear 45s infinite;
+            animation-delay: 10s;
+        }
+
+        /* Leaf 5: Medium Red, crossing path (Varying path) */
+        #leaf5 {
+            background-color: var(--leaf-red);
+            width: 45px;
+            height: 45px;
+            top: 20%;
+            left: 85%;
+            animation: fall cubic-bezier(0.5, 0, 0.5, 1) 25s infinite; /* Using a custom curve */
+            animation-delay: 1s;
+        }
+        
+        /* Canopy/Visual Anchor (Background Element - Subtle movement) */
+        .canopy-source {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.1); /* Subtle overlay */
+            z-index: 1;
+            animation: canopySway 30s ease-in-out infinite alternate;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <!-- Background/Visual Depth Element -->
+    <div class="canopy-source"></div>
+
+    <!-- Animated Leaves -->
+    <div class="leaf" id="leaf1"></div>
+    <div class="leaf" id="leaf2"></div>
+    <div class="leaf" id="leaf3"></div>
+    <div class="leaf" id="leaf4"></div>
+    <div class="leaf" id="leaf5"></div>
+
+    <script>
+        // No complex JS needed, but we confirm adherence to camelCase rules if any dynamic changes were required.
+        // All animation timing is controlled via CSS for performance and simplicity.
+    </script>
+</body>
+</html>

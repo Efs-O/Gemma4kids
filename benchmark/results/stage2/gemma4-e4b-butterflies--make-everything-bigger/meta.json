@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e4b-butterflies--make-everything-bigger",
+  "stage": 2,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e4b-f2-butterflies",
+  "promptSlug": "butterflies",
+  "chip": "Make everything bigger",
+  "chipSlug": "make-everything-bigger",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (25 → 25)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (0%)",
+    "CSS-only (no script to parse)"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "48.1",
+  "timestamp": "2026-04-30T08:38:47.719Z"
+}

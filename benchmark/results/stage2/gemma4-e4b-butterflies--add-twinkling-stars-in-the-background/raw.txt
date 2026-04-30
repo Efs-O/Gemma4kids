@@ -1,0 +1,297 @@
+I will add a dedicated star field container to the `<body>` and define the necessary CSS animations for twinkling stars.
+
+**Specific changes:**
+1.  **HTML:** Added `<div id="star-container"></div>` inside the `<body>` tag, before the butterflies.
+2.  **CSS:** Added CSS rules for `.star` elements, defined the `@keyframes twinkle`, and initialized several stars within the star container using CSS variables/styles for placement and timing.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butterfly Garden</title>
+    <style>
+        :root {
+            --sky-color: #87CEEB; /* Light blue sky */
+            --grass-color: #6B8E23; /* Olive green grass */
+            --butterfly-speed: 15s;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #aed6f1, #85c1e9); /* Soft blue gradient for the sky */
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative; /* Needed for absolute positioning of stars */
+        }
+
+        /* --- Star Field Styles --- */
+        #star-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5; /* Below butterflies (z-index 20) but visible */
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle linear infinite;
+        }
+        /* Defining specific stars for demonstration */
+        .star:nth-child(1) { width: 2px; height: 2px; top: 10%; left: 5%; animation-duration: 4s; animation-delay: 0s; }
+        .star:nth-child(2) { width: 1.5px; height: 1.5px; top: 20%; left: 30%; animation-duration: 5s; animation-delay: 1s; }
+        .star:nth-child(3) { width: 2px; height: 2px; top: 5%; left: 70%; animation-duration: 3s; animation-delay: 0.5s; }
+        .star:nth-child(4) { width: 1px; height: 1px; top: 40%; left: 90%; animation-duration: 6s; animation-delay: 2s; }
+        .star:nth-child(5) { width: 2px; height: 2px; top: 70%; left: 15%; animation-duration: 4.5s; animation-delay: 0.2s; }
+        .star:nth-child(6) { width: 1.5px; height: 1.5px; top: 85%; left: 50%; animation-duration: 5.5s; animation-delay: 0.8s; }
+
+
+        .garden-ground {
+            width: 100%;
+            height: 30vh;
+            background: linear-gradient(to top, #5e9c21, #6b8e23); /* Green ground effect */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- Flower Styles --- */
+        .flower {
+            position: absolute;
+            bottom: 0;
+            z-index: 15;
+            transform-origin: bottom center;
+            animation: sway 6s ease-in-out infinite alternate;
+        }
+
+        /* Flower 1: Big Red */
+        .flower-red {
+            left: 15%;
+            height: 100px;
+            animation-delay: 0s;
+        }
+        .petal {
+            width: 40px;
+            height: 30px;
+            background-color: #E74C3C; /* Bright Red */
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            animation: float 3s ease-out infinite alternate;
+        }
+        .petal:nth-child(1) { transform: rotate(0deg) translate(0, -10px); }
+        .petal:nth-child(2) { transform: rotate(90deg) translate(0, -10px); }
+        .petal:nth-child(3) { transform: rotate(180deg) translate(0, -10px); }
+        .petal:nth-child(4) { transform: rotate(270deg) translate(0, -10px); }
+
+        .stem {
+            width: 4px;
+            height: 70px;
+            background-color: #2ECC71; /* Bright Green Stem */
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Flower 2: Yellow/Orange */
+        .flower-yellow {
+            left: 40%;
+            height: 120px;
+            animation-delay: 2s;
+        }
+        .petal {
+            width: 35px;
+            height: 25px;
+            background-color: #F39C12; /* Orange/Yellow */
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            animation: float 3s ease-out infinite alternate;
+        }
+        .petal:nth-child(1) { transform: rotate(0deg) translate(0, -8px); }
+        .petal:nth-child(2) { transform: rotate(90deg) translate(0, -8px); }
+        .petal:nth-child(3) { transform: rotate(180deg) translate(0, -8px); }
+        .petal:nth-child(4) { transform: rotate(270deg) translate(0, -8px); }
+
+        .stem {
+            width: 3px;
+            height: 80px;
+            background-color: #2ECC71;
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Flower 3: Purple/Pink */
+        .flower-purple {
+            left: 70%;
+            height: 90px;
+            animation-delay: 4s;
+        }
+        .petal {
+            width: 30px;
+            height: 20px;
+            background-color: #9B59B6; /* Purple */
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            animation: float 3s ease-out infinite alternate;
+        }
+        .petal:nth-child(1) { transform: rotate(0deg) translate(0, -7px); }
+        .petal:nth-child(2) { transform: rotate(90deg) translate(0, -7px); }
+        .petal:nth-child(3) { transform: rotate(180deg) translate(0, -7px); }
+        .petal:nth-child(4) { transform: rotate(270deg) translate(0, -7px); }
+
+        .stem {
+            width: 3px;
+            height: 60px;
+            background-color: #2ECC71;
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+
+        /* --- Butterfly Styles --- */
+        .butterfly {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: fly linear infinite;
+            z-index: 20;
+        }
+
+        .b1 { /* Blue/Yellow */
+            top: 10%; left: 5%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%233498DB" d="M 10 50 Q 20 20, 50 40 T 90 50 Z"/><path fill="%23F1C40F" d="M 10 50 Q 20 80, 50 60 T 90 50 Z"/></svg>');
+            background-size: 100% 100%;
+            animation-duration: 15s;
+            animation-timing-function: linear;
+            animation-name: fly-b1;
+        }
+
+        .b2 { /* Pink/Orange */
+            top: 30%; left: 80%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="30" cy="30" r="25" fill="%23E91E63"/><circle cx="70" cy="70" r="25" fill="%23FF9800"/></svg>');
+            background-size: 100% 100%;
+            animation-duration: 20s;
+            animation-timing-function: ease-in-out;
+            animation-name: fly-b2;
+        }
+
+        .b3 { /* Green/Purple */
+            top: 60%; left: 20%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="15" height="40" x="10" y="20" fill="%231ABC9C"/><rect width="15" height="40" x="50" y="40" fill="%239B59B6"/></svg>');
+            background-size: 100% 100%;
+            animation-duration: 18s;
+            animation-timing-function: cubic-bezier(0.6, -0.2, 0.2, 1.2);
+            animation-name: fly-b3;
+        }
+
+        /* --- Keyframe Animations --- */
+        /* Butterfly Flight Path Animation */
+        @keyframes fly-b1 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            25% { transform: translate(15vw, -10vh) rotate(10deg); opacity: 1; }
+            50% { transform: translate(35vw, 0) rotate(-10deg); opacity: 1; }
+            75% { transform: translate(50vw, 10vh) rotate(5deg); opacity: 1; }
+            100% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+        }
+
+        @keyframes fly-b2 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            25% { transform: translate(-20vw, -15vh) rotate(-15deg); opacity: 1; }
+            50% { transform: translate(25vw, -5vh) rotate(5deg); opacity: 1; }
+            75% { transform: translate(5vw, 15vh) rotate(-5deg); opacity: 1; }
+            100% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+        }
+        
+        @keyframes fly-b3 {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            25% { transform: translate(-15vw, 10vh) rotate(5deg); opacity: 1; }
+            50% { transform: translate(20vw, 5vh) rotate(-10deg); opacity: 1; }
+            75% { transform: translate(-5vw, -10vh) rotate(10deg); opacity: 1; }
+            100% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+        }
+
+        /* General element movement (for flower swaying) */
+        @keyframes sway {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(3deg); }
+        }
+
+        /* Petal float animation (gives a slight, natural shake) */
+        @keyframes float {
+            0% { transform: translate(0, 0px) rotate(var(--r)); }
+            100% { transform: translate(2px, -5px) rotate(var(--r)); }
+        }
+
+        /* --- Twinkling Star Animation --- */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sky is set on body -->
+    <div id="star-container">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+
+    <div class="garden-ground">
+        <!-- Flower 1: Red -->
+        <div class="flower flower-red">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="stem"></div>
+        </div>
+
+        <!-- Flower 2: Yellow/Orange -->
+        <div class="flower flower-yellow">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="stem"></div>
+        </div>
+
+        <!-- Flower 3: Purple -->
+        <div class="flower flower-purple">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="stem"></div>
+        </div>
+    </div >
+
+    <!-- Butterflies -->
+    <div class="butterfly b1"></div>
+    <div class="butterfly b2"></div>
+    <div class="butterfly b3"></div>
+
+</body>
+</html>
+```

@@ -1,0 +1,90 @@
+I will update the JavaScript to generate random, bright rainbow colors for each snowflake.
+
+Line changed: `snowflake.style.background-color` (inside the loop)
+
+```html
+<body
+    background: linear-gradient(to bottom, #1a1a2e, #16213e);
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: sans-serif;
+</body>
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Snowflakes</title>
+    <style>
+        :root {
+            --sky-color: #0a1931; /* Deep navy/dark blue */
+        }
+        body {
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        .snowflake {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            /* Changed background color logic will be handled by JS */
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        /* Define falling animation */
+        @keyframes fall {
+            from {
+                transform: translateY(-100vh);
+                opacity: 0.5;
+            }
+            to {
+                transform: translateY(100vh);
+                opacity: 0.9;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="snowfall-container">
+        <!-- Snowflakes will be added here by JavaScript -->
+    </div>
+
+    <script>
+        const container = document.getElementById('snowfall-container');
+        const numberOfSnowflakes = 50; // How many snowflakes we want!
+
+        for (let i = 0; i < numberOfSnowflakes; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+
+            // Set random starting position (horizontal) and delay for staggered start
+            const startX = Math.random() * 100; // 0 to 100% width
+            const delay = Math.random() * 5; // Stagger the start time
+            
+            // Generate a random bright rainbow color using HSL
+            const hue = Math.floor(Math.random() * 360);
+            const saturation = 80 + Math.random() * 20; // Keep saturation high
+            const lightness = 60 + Math.random() * 20; // Keep lightness bright
+            
+            snowflake.style.left = `${startX}vw`;
+            snowflake.style.top = `${-10}vh`; // Start just above the screen
+            snowflake.style.animationDelay = `${delay}s`;
+            snowflake.style.animationDuration = `${5 + Math.random() * 8}s`; // Vary the falling speed
+            snowflake.style.animationName = 'fall';
+            snowflake.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            
+            container.appendChild(snowflake);
+        }
+    </script>
+</body>
+</html>
+```

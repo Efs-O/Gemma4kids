@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e2b-f2-rainbow",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 2,
+  "familyLabel": "Production Prompt As-Is",
+  "promptSlug": "rainbow",
+  "promptText": "Make a rainbow appear after rain",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "10.7",
+  "timestamp": "2026-04-30T07:44:06.767Z"
+}

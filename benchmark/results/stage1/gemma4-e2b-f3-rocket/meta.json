@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e2b-f3-rocket",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 3,
+  "familyLabel": "Hardcoded-Animation Logic Prompt",
+  "promptSlug": "rocket",
+  "promptText": "Make a rocket launch into space with stars in the background",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present",
+    "vertical motion detected"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "only 0 star elements — need 40+ for a starfield"
+  ],
+  "durationSec": "14.1",
+  "timestamp": "2026-04-30T07:47:57.721Z"
+}

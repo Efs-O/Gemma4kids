@@ -1,0 +1,101 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Night Sky Fireworks</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            background: linear-gradient(to bottom, #0a0022, #11184d); /* Deep night sky gradient */
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        .firework-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .firework {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            animation: explode 2s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0.1) translate(50%, 50%);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3) translate(0, 0);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="fireworkContainer" class="firework-container"></div>
+
+    <script>
+        const container = document.getElementById('fireworkContainer');
+        const numBursts = 30;
+
+        function createFirework() {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+
+            // Random position at the top, slightly offset horizontally
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * (window.innerHeight * 0.4); // Keep explosions high up
+            
+            firework.style.left = `${startX}px`;
+            firework.style.top = `${startY}px`;
+
+            // Random size and color for the explosion effect
+            const size = Math.random() * 150 + 50; // Min size 50px, Max size 200px
+            const color = `hsl(${Math.random() * 360}, 100%, 70%)`; // Vivid random color
+
+            firework.style.width = `${size}px`;
+            firework.style.height = `${size}px`;
+            firework.style.backgroundColor = color;
+            
+            // Apply animation properties dynamically to control the spread
+            // We use a slight delay before applying the 'explode' class to stagger the timing
+            firework.style.animationDelay = `${Math.random() * 0.5}s`;
+            
+            container.appendChild(firework);
+
+            // Clean up the element after animation finishes to prevent memory buildup
+            firework.addEventListener('animationend', () => {
+                firework.remove();
+            });
+        }
+
+        // Start spawning fireworks continuously and randomly
+        function startFireworks() {
+            // Spawn a new firework every 500ms to 1500ms
+            const intervalTime = 500 + Math.random() * 1000;
+            
+            const fireworkTimeout = setTimeout(() => {
+                createFirework();
+                startFireworks(); // Recursive call to keep the show going
+            }, intervalTime);
+        }
+
+        // Initial launch sequence
+        startFireworks();
+
+    </script>
+</body>
+</html>
+```

@@ -1,0 +1,120 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch to Space</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0a001f, #1a0033); /* Deep space gradient */
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        /* --- Starfield Background --- */
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.2; }
+            to { opacity: 1.0; }
+        }
+
+        /* --- Rocket Styling --- */
+        .rocket {
+            position: absolute;
+            bottom: 10vh; /* Start near the bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 150px;
+            background: linear-gradient(to top, #ff4d4d, #ffaa00); /* Fiery colors */
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 0 15px #ffaa00, 0 0 30px #ff4d4d;
+            z-index: 10;
+            animation: launch 3s ease-out forwards;
+        }
+
+        /* --- Rocket Trail Effect --- */
+        .trail {
+            position: absolute;
+            bottom: 10vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffaa00;
+            animation: trailMovement 3s ease-out forwards;
+            z-index: 5;
+        }
+
+        /* --- Animations --- */
+        @keyframes launch {
+            0% {
+                bottom: 10vh;
+                transform: translateX(-50%) scaleY(1);
+            }
+            100% {
+                bottom: 80vh; /* Launching towards the top */
+                transform: translateX(-50%) scaleY(1.2);
+            }
+        }
+
+        @keyframes trailMovement {
+            0% {
+                bottom: 10vh;
+                transform: translateX(-50%) scaleY(1);
+            }
+            100% {
+                bottom: 80vh;
+                transform: translateX(-50%) scaleY(1.2);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Starfield Generation -->
+    <script>
+        const body = document.body;
+        const starCount = 70;
+
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random position across the viewport
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            
+            star.style.left = `${x}px`;
+            star.style.top = `${y}px`;
+            
+            // Random size variation
+            const size = Math.random() * 2 + 0.5;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+
+            body.appendChild(star);
+        }
+    </script>
+
+    <!-- Rocket Element -->
+    <div class="rocket"></div>
+
+    <!-- Exhaust Trail Element -->
+    <div class="trail"></div>
+
+</body>
+</html>
+```

@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e4b-f5-rocket",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "promptSlug": "rocket",
+  "promptText": "Make a rocket launch into space with stars in the background",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "30.8",
+  "timestamp": "2026-04-30T08:25:11.177Z"
+}

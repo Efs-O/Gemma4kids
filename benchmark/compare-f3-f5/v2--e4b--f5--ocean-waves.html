@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Animated Ocean Waves</title>
+    <style>
+        :root {
+            /* Color Palette */
+            --sky-color: #87CEEB; /* Light Sky Blue */
+            --sand-color: #F0E68C; /* Khaki/Light Sand */
+            --deep-sea-color: #0077BE; /* Vivid Deep Blue */
+            --wave-color: #1E90FF; /* Dodger Blue - Primary Water */
+            --foam-color: #FFFFFF;
+            --highlight-color: #FFD700; /* Gold for sun reflection/brightness */
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: sans-serif;
+            background: radial-gradient(circle at 50% 10%, #cceeff, var(--sky-color));
+        }
+
+        /* --- LAYOUT CONTAINERS --- */
+
+        #scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 1. SKY (Subtle background effect) */
+        #sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60%; /* Occupy upper portion */
+            background: linear-gradient(to bottom, var(--sky-color) 0%, #add8e6 100%);
+            z-index: 1;
+        }
+
+        /* 2. BEACH SAND */
+        #beach {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25%; /* Sand depth */
+            background-color: var(--sand-color);
+            z-index: 2;
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.1) saturate(1.2);
+        }
+
+        /* 3. OCEAN AREA (Above sand, below sky) */
+        #ocean-container {
+            position: absolute;
+            bottom: 25%; /* Starts where the sand ends */
+            left: 0;
+            width: 100%;
+            height: 75%; /* Water height */
+            overflow: hidden;
+            z-index: 3;
+        }
+
+        /* --- WAVE ANIMATION --- */
+
+        /* The main animated wave element */
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 40%; /* Controls how much of the water area is animated */
+            background: linear-gradient(
+                to bottom,
+                rgba(30, 144, 255, 0.8) 0%, /* Top water color */
+                var(--wave-color) 50%,
+                rgba(0, 123, 190, 0.9) 100%
+            );
+            bottom: 0;
+            animation: waveMovement 6s linear infinite;
+            /* Staggering delays for multiple visible waves */
+            animation-delay: -0.5s; 
+            opacity: 0.95;
+        }
+
+        /* Creates the illusion of multiple, overlapping waves using multiple elements */
+        .wave-layer {
+            position: absolute;
+            width: 100%;
+            height: 40%;
+            bottom: 0;
+            z-index: 10;
+            border-radius: 10% 10% 0 0;
+        }
+        
+        /* Staggering different wave layers */
+        #wave1 {
+            background: radial-gradient(circle at 50% 100%, rgba(30, 144, 255, 0.7) 0%, var(--wave-color) 100%);
+            animation: waveMovement 6s linear infinite;
+            animation-duration: 6s;
+            animation-timing-function: ease-in-out;
+            animation-delay: 0s;
+        }
+
+        #wave2 {
+            background: radial-gradient(circle at 50% 100%, rgba(30, 144, 255, 0.6) 0%, var(--wave-color) 100%);
+            animation: waveMovement 6s linear infinite;
+            animation-duration: 6s;
+            animation-timing-function: ease-in-out;
+            animation-delay: -1.5s; /* Staggered phase */
+            transform: translate(0, -5%); /* Slightly higher/different appearance */
+        }
+        
+        /* --- FOAM/CRASH EFFECT --- */
+        .foam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 15;
+            pointer-events: none;
+        }
+        
+        .foam-element {
+            position: absolute;
+            height: 150px;
+            background: radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 60%);
+            animation: crashEffect 1s ease-out infinite;
+            opacity: 0;
+        }
+
+        /* Keyframes for the main horizontal wave movement */
+        @keyframes waveMovement {
+            0% {
+                transform: translateX(-100%) translateY(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateX(100%) translateY(0);
+                opacity: 0.8;
+            }
+        }
+        
+        /* Keyframes for simulating the wave crest/upward motion */
+        @keyframes waveLift {
+            0%, 100% {
+                transform: translateY(0) scaleY(1);
+            }
+            50% {
+                transform: translateY(-10px) scaleY(1.05);
+            }
+        }
+        
+        /* Keyframes for the crashing foam/spray */
+        @keyframes crashEffect {
+            0% {
+                transform: translateX(-100%) translateY(100%);
+                opacity: 0;
+                filter: blur(5px);
+            }
+            5% {
+                opacity: 0.9;
+                filter: blur(2px);
+            }
+            100% {
+                transform: translate(100%, -100%);
+                opacity: 0;
+                filter: blur(10px);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="scene">
+        <!-- Sky -->
+        <div id="sky"></div>
+
+        <!-- Beach Sand -->
+        <div id="beach"></div>
+
+        <!-- Ocean Container -->
+        <div id="ocean-container">
+            
+            <!-- Water Waves (Using layered pseudo-elements for better control) -->
+            <div id="wave1" class="wave-layer"></div>
+            <div id="wave2" class="wave-layer"></div>
+            
+            <!-- Foam/Spray Elements (These will be dynamically positioned/animated for a better crash look) -->
+            <div id="foam-area" class="foam">
+                <!-- We will add multiple foam elements using JS or rely on the continuous nature of the background gradient fade for simplicity and performance -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const foamArea = document.getElementById('foam-area');
+            const numFoams = 10; // Number of wave crashes to simulate
+
+            // Function to create a single, randomized foam element
+            function createFoamElement() {
+                const foam = document.createElement('div');
+                foam.classList.add('foam-element');
+                
+                // Randomize starting position (width)
+                const startX = Math.random() * 100;
+                const duration = Math.random() * 1.5 + 0.8; // 0.8s to 2.3s
+                
+                foam.style.left = `${startX}%`;
+                foam.style.animationDuration = `${duration}s`;
+                foam.style.animationName = 'crashEffect';
+                foam.style.animationTimingFunction = 'ease-out';
+                foam.style.animationPlayState = 'running';
+                
+                // Stagger initial appearance
+                foam.style.animationDelay = `${Math.random() * 1.5}s`;
+                
+                return foam;
+            }
+
+            // Populate the foam area with multiple crashing waves
+            for (let i = 0; i < numFoams; i++) {
+                const foam = createFoamElement();
+                foamArea.appendChild(foam);
+            }
+        });
+    </script>
+</body>
+</html>

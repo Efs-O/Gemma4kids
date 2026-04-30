@@ -1,0 +1,120 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clown Juggling Balls</title>
+    <style>
+        body {
+            background-color: #1a1a2e; /* Deep purple background */
+            overflow: hidden; /* Hide scrollbars from bouncing */
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Clown Area Styling */
+        .clown-stage {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Clown Representation (Simple stylized element) */
+        .clown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            color: #ffeb3b; /* Bright yellow for face/focus */
+            z-index: 10;
+            text-shadow: 0 0 15px #ff4081; /* Pink glow */
+            animation: wiggle 1.5s infinite alternate;
+        }
+
+        @keyframes wiggle {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        /* Ball Styling and Animation */
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            top: 10%;
+            border: 4px solid #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            animation: bounce var(--duration) infinite ease-in-out;
+        }
+
+        /* Define specific ball colors and animation timings */
+        .ball-1 {
+            background-color: #ff4081; /* Pink */
+            left: 10%;
+            animation-duration: 3s;
+            animation-delay: 0s;
+        }
+
+        .ball-2 {
+            background-color: #4dd0e1; /* Light Blue */
+            left: 30%;
+            animation-duration: 2.5s;
+            animation-delay: 0.5s;
+        }
+
+        .ball-3 {
+            background-color: #66bb6a; /* Green */
+            left: 50%;
+            animation-duration: 3.5s;
+            animation-delay: 1s;
+        }
+
+        .ball-4 {
+            background-color: #ffeb3b; /* Yellow */
+            left: 70%;
+            animation-duration: 2s;
+            animation-delay: 1.5s;
+        }
+
+        .ball-5 {
+            background-color: #f48fb1; /* Rose */
+            left: 90%;
+            animation-duration: 3.2s;
+            animation-delay: 2s;
+        }
+
+        /* General Bounce Animation */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-50px) rotate(180deg);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="clown-stage">
+        <!-- The Clown Element -->
+        <div class="clown">🤡</div>
+
+        <!-- Juggling Balls -->
+        <div class="ball ball-1"></div>
+        <div class="ball ball-2"></div>
+        <div class="ball ball-3"></div>
+        <div class="ball ball-4"></div>
+        <div class="ball ball-5"></div>
+    </div>
+
+</body>
+</html>
+```

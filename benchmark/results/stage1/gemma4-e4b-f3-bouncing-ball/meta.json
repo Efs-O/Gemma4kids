@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e4b-f3-bouncing-ball",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 3,
+  "familyLabel": "Hardcoded-Animation Logic Prompt",
+  "promptSlug": "bouncing-ball",
+  "promptText": "Make a bouncing ball animation",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present",
+    "bounce physics variable detected"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "element may be smaller than 80px"
+  ],
+  "durationSec": "18.8",
+  "timestamp": "2026-04-30T08:10:28.476Z"
+}

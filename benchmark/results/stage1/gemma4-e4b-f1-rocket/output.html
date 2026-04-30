@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch to Space</title>
+    <style>
+        :root {
+            --space-dark: #05001a;
+            --star-color: #ffffff;
+            --rocket-body: #ff4444;
+            --flame-color1: #ffaa00;
+            --flame-color2: #ff6600;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--space-dark);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Start the action near the bottom */
+            position: relative;
+            font-family: sans-serif;
+        }
+
+        /* --- Star Background Animation --- */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                /* Creating a subtle star field using multiple background layers for density */
+                radial-gradient(circle at 10% 10%, #ffffff33 1px, transparent 1px),
+                radial-gradient(circle at 80% 30%, #ffffff44 1px, transparent 1px),
+                radial-gradient(circle at 30% 90%, #ffffff22 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, #ffffff11 1px, transparent 1px);
+            background-size: 100vw 100vh;
+            animation: star-drift 120s linear infinite;
+        }
+
+        @keyframes star-drift {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-100vh); /* Moves the field up slowly */
+            }
+        }
+
+        /* --- Rocket Structure --- */
+        .rocket-container {
+            position: absolute;
+            bottom: 0;
+            width: 100px;
+            height: 100px;
+            transform-origin: bottom center;
+            /* Initial placement ensures it starts low on the screen */
+            left: 50%;
+            transform: translateX(-50%) translateY(0); 
+            z-index: 10;
+        }
+
+        .rocket-body {
+            width: 0; 
+            height: 0;
+            border: 15px solid transparent; /* Creating a triangle/cone base */
+            border-top-color: transparent;
+            border-bottom-color: var(--rocket-body);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            transform: translateY(-10px); /* Position the visible body */
+        }
+
+        .rocket-cockpit {
+            position: absolute;
+            top: -40px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 50% 50%, #ffff88, #ff8800);
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffaa00;
+            border: 2px solid #ffaa00;
+        }
+
+        /* --- Flame/Exhaust --- */
+        .exhaust {
+            position: absolute;
+            bottom: -10px;
+            left: -20px;
+            width: 100px;
+            height: 50px;
+            background: radial-gradient(ellipse at 50% 100%, var(--flame-color1) 0%, var(--flame-color2) 70%, transparent 100%);
+            border-radius: 0 0 50% 50%;
+            transform: rotateX(15deg);
+            animation: fire-burn 0.1s linear infinite alternate;
+        }
+
+        /* --- Animation Keyframes --- */
+
+        /* Rocket Ascent */
+        @keyframes launch {
+            0% {
+                transform: translateX(-50%) translateY(0) scaleY(1);
+                opacity: 1;
+            }
+            100% {
+                /* Launched high up, scaling down slightly to give depth */
+                transform: translateX(-50%) translateY(-110vh) scaleY(0.8);
+                opacity: 0.7;
+            }
+        }
+
+        /* Fire/Exhaust Animation */
+        @keyframes fire-burn {
+            from {
+                transform: scale(1) translateY(0);
+                opacity: 0.8;
+                box-shadow: 0 0 15px var(--flame-color1);
+            }
+            to {
+                transform: scale(1.2) translateY(10px);
+                opacity: 1;
+                box-shadow: 0 0 25px var(--flame-color1);
+            }
+        }
+
+        /* The animation that actually moves the rocket upwards */
+        .rocket-launch {
+            animation: launch 6s cubic-bezier(0.2, 1.5, 0.8, 0.1) forwards;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background Stars -->
+    <div class="stars"></div>
+
+    <!-- Rocket Element -->
+    <div class="rocket-container" id="rocket">
+        <div class="rocket-body"></div>
+        <div class="rocket-cockpit"></div>
+        <div class="exhaust"></div>
+    </div>
+
+    <script>
+        // JavaScript to add the launch class after ensuring visibility immediately
+        document.addEventListener('DOMContentLoaded', () => {
+            const rocket = document.getElementById('rocket');
+            // Adding the launch class triggers the CSS animation defined above
+            rocket.classList.add('rocket-launch');
+        });
+    </script>
+</body>
+</html>

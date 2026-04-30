@@ -1,0 +1,137 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Butterfly Garden</title>
+    <style>
+        body {
+            background-color: #1a1a2e; /* Deep violet background */
+            overflow: hidden;
+            margin: 0;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- Flower Styling --- */
+        .flower {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(0, 0, 0, 0.5);
+            animation: pulse 3s infinite alternate;
+        }
+
+        .flower.red {
+            background-color: #ff6b6b; /* Vivid Red */
+            top: 20%;
+            left: 10%;
+            animation-duration: 4s;
+        }
+
+        .flower.blue {
+            background-color: #4ecdc4; /* Vivid Cyan */
+            top: 50%;
+            left: 60%;
+            animation-duration: 5s;
+        }
+
+        .flower.yellow {
+            background-color: #ffeaa7; /* Vivid Yellow */
+            top: 80%;
+            left: 30%;
+            animation-duration: 3.5s;
+        }
+
+        .flower.pink {
+            background-color: #f9a8d4; /* Vivid Pink */
+            top: 30%;
+            left: 85%;
+            animation-duration: 4.5s;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.9; }
+            to { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* --- Butterfly Styling --- */
+        .butterfly {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            border-radius: 50% 50% 10% 10%;
+            transform-origin: center;
+            animation: fly 10s infinite linear; /* Base flight animation */
+        }
+
+        /* Define specific colors for butterflies */
+        .b1 { background-color: #ffeb3b; border: 2px solid #f9a8d4; } /* Yellow/Pink */
+        .b2 { background-color: #81d4fa; border: 2px solid #ff6b6b; } /* Cyan/Red */
+        .b3 { background-color: #a5d6a7; border: 2px solid #4ecdc4; } /* Light Green/Cyan */
+        .b4 { background-color: #fbc0ad; border: 2px solid #ffeb3b; } /* Orange/Yellow */
+        .b5 { background-color: #e1bee7; border: 2px solid #f9a8d4; } /* Lavender/Pink */
+
+
+        /* --- Keyframe Animation for Flying --- */
+        @keyframes fly {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0.8;
+            }
+            25% {
+                transform: translate(10vw, -10vh) rotate(45deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-5vw, 5vh) rotate(90deg);
+                opacity: 0.9;
+            }
+            75% {
+                transform: translate(15vw, -5vh) rotate(135deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(0, 0) rotate(180deg);
+                opacity: 0.8;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Flowers -->
+    <div class="flower red"></div>
+    <div class="flower blue"></div>
+    <div class="flower yellow"></div>
+    <div class="flower pink"></div>
+
+    <!-- Butterflies (Flying around) -->
+
+    <!-- Butterfly 1 (Yellow/Pink) -->
+    <div class="butterfly b1" style="top: 10%; left: 5%; animation-delay: 0s;"></div>
+
+    <!-- Butterfly 2 (Cyan/Red) -->
+    <div class="butterfly b2" style="top: 50%; left: 70%; animation-delay: 2s;"></div>
+
+    <!-- Butterfly 3 (Light Green/Cyan) -->
+    <div class="butterfly b3" style="top: 25%; left: 50%; animation-delay: 4s;"></div>
+
+    <!-- Butterfly 4 (Orange/Yellow) -->
+    <div class="butterfly b4" style="top: 85%; left: 15%; animation-delay: 1s;"></div>
+
+    <!-- Butterfly 5 (Lavender/Pink) -->
+    <div class="butterfly b5" style="top: 40%; left: 90%; animation-delay: 3s;"></div>
+
+    <!-- Adding more butterflies for denser movement -->
+    <div class="butterfly b1" style="top: 15%; left: 80%; animation-delay: 5s;"></div>
+    <div class="butterfly b2" style="top: 75%; left: 10%; animation-delay: 0.5s;"></div>
+    <div class="butterfly b3" style="top: 35%; left: 45%; animation-delay: 1.5s;"></div>
+    <div class="butterfly b4" style="top: 60%; left: 30%; animation-delay: 3.5s;"></div>
+
+</body>
+</html>
+```

@@ -1,0 +1,202 @@
+That sounds like an amazing idea! A rocket launching into space with twinkling stars—that will look so cool! 🚀✨
+
+I've created an animation for you. We'll give the sky a deep space gradient, make lots of twinkling stars, and launch a colorful rocket right up into the cosmos!
+
+Here is the complete HTML file:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch to Space</title>
+    <style>
+        /* Set the deep space background */
+        body {
+            background: linear-gradient(to bottom, #0a0a2a 0%, #000011 100%);
+            background-attachment: fixed;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Start everything near the bottom */
+        }
+
+        /* --- Starry Background Effect --- */
+        .star-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* So it doesn't block clicks */
+        }
+
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+
+        /* Creating several stars at different sizes and positions */
+        .star:nth-child(1) { width: 2px; height: 2px; top: 10%; left: 5%; animation-delay: 0s; animation-duration: 5s; }
+        .star:nth-child(2) { width: 1px; height: 1px; top: 30%; left: 40%; animation-delay: 2s; animation-duration: 7s; }
+        .star:nth-child(3) { width: 3px; height: 3px; top: 70%; left: 80%; animation-delay: 1s; animation-duration: 4s; }
+        .star:nth-child(4) { width: 1.5px; height: 1.5px; top: 15%; left: 90%; animation-delay: 4s; animation-duration: 6s; }
+        .star:nth-child(5) { width: 2px; height: 2px; top: 90%; left: 20%; animation-delay: 3s; animation-duration: 5.5s; }
+        .star:nth-child(6) { width: 1px; height: 1px; top: 55%; left: 65%; animation-delay: 0.5s; animation-duration: 8s; }
+        .star:nth-child(7) { width: 2.5px; height: 2.5px; top: 25%; left: 10%; animation-delay: 1.5s; animation-duration: 4.5s; }
+        .star:nth-child(8) { width: 1.2px; height: 1.2px; top: 85%; left: 45%; animation-delay: 2.5s; animation-duration: 7.5s; }
+
+
+        /* Keyframes for twinkling effect */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.5); }
+        }
+
+        /* --- Rocket Styling --- */
+        .rocket {
+            position: relative;
+            width: 80px;
+            height: 150px;
+            /* Initial position at the bottom center */
+            transform: translateY(0); 
+            animation: launch 8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+            z-index: 10;
+        }
+
+        /* Rocket Body (Nose Cone) */
+        .nose {
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 100px solid #FF6347; /* Bright Orange/Red */
+            position: absolute;
+            bottom: 100px;
+            left: 0;
+            border-bottom-width: 0; /* Resetting for correct structure */
+            border-radius: 0 0 50px 50px;
+        }
+        
+        .body {
+            background: linear-gradient(to bottom, #FFD700 0%, #FFA500 100%); /* Gold to Orange */
+            width: 60px;
+            height: 100px;
+            position: absolute;
+            bottom: 100px;
+            left: 10px;
+            border-radius: 30px 30px 0 0;
+        }
+
+        /* Rocket Fins */
+        .fin {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 40px solid transparent;
+            border-bottom: 40px solid transparent;
+            border-left: 15px solid #10B981; /* Bright Green Fins */
+            right: -15px;
+            bottom: 90px;
+        }
+        .fin:nth-child(2) {
+            left: 10px;
+            transform: scaleX(-1); /* Mirror effect */
+        }
+
+        /* Rocket Flame */
+        .flame-container {
+            position: absolute;
+            bottom: -20px;
+            left: 10px;
+            width: 60px;
+            height: 80px;
+            overflow: visible;
+            z-index: 5;
+            animation: fire 0.1s steps(1) infinite; /* Controls the constant burning look */
+        }
+        
+        .flame {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 50% 100%, #FF8C00 0%, #FF4500 50%, transparent 100%);
+            animation: flicker 0.3s ease-out infinite alternate;
+        }
+
+        /* --- Keyframe Animations --- */
+
+        /* Rocket Launch Animation */
+        @keyframes launch {
+            0% {
+                transform: translateY(0) scale(1); /* Starts at its original position near the bottom */
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-400px) scale(1.1); /* Moves up and slightly bigger */
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-750px) scale(1); /* Finishes high up in the space */
+                opacity: 0.5; /* Fades out as it enters space */
+            }
+        }
+        
+        /* Fire Flicker */
+        @keyframes flicker {
+            from { transform: scale(1); opacity: 0.9; }
+            to { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* Visual "Fire" effect (The actual flame) */
+        @keyframes fire {
+            0% { transform: scaleY(1); opacity: 1; }
+            100% { transform: scaleY(0.9) translateY(5px); opacity: 0.8; }
+        }
+
+    </style>
+</head>
+<body>
+    
+    <!-- Star Background -->
+    <div class="star-container">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+
+    <!-- Rocket Element -->
+    <div class="rocket">
+        <!-- The nose cone/head of the rocket -->
+        <div class="nose"></div>
+        <!-- The main body -->
+        <div class="body"></div>
+        <!-- Fins -->
+        <div class="fin"></div>
+        <div class="fin"></div>
+        <!-- Flame Container -->
+        <div class="flame-container">
+            <div class="flame"></div>
+        </div>
+    </div>
+
+</body>
+</html>
+```
+
+I used a deep blue/black gradient for space, added multiple randomly placed stars that twinkle, and built the rocket using layered CSS shapes! The rocket uses a `launch` animation to move it smoothly from the bottom up into the deep space background.
+
+Let's see it shine!
+
+<tool_code>
+save_animation{html_content:"<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Rocket Launch to Space</title>\n    <style>\n        /* Set the deep space background */\n        body {\n            background: linear-gradient(to bottom, #0a0a2a 0%, #000011 100%);\n            background-attachment: fixed;\n            overflow: hidden;\n            margin: 0;\n            height: 100vh;\n            display: flex;\n            justify-content: center;\n            align-items: flex-end; /* Start everything near the bottom */\n        }\n\n        /* --- Starry Background Effect --- */\n        .star-container {\n            position: absolute;\n            top: 0;\n            left: 0;\n            width: 100%;\n            height: 100%;\n            pointer-events: none; /* So it doesn't block clicks */\n        }\n\n        .star {\n            position: absolute;\n            background-color: #ffffff;\n            border-radius: 50%;\n            animation: twinkle linear infinite;\n        }\n\n        /* Creating several stars at different sizes and positions */\n        .star:nth-child(1) { width: 2px; height: 2px; top: 10%; left: 5%; animation-delay: 0s; animation-duration: 5s; }\n        .star:nth-child(2) { width: 1px; height: 1px; top: 30%; left: 40%; animation-delay: 2s; animation-duration: 7s; }\n        .star:nth-child(3) { width: 3px; height: 3px; top: 70%; left: 80%; animation-delay: 1s; animation-duration: 4s; }\n        .star:nth-child(4) { width: 1.5px; height: 1.5px; top: 15%; left: 90%; animation-delay: 4s; animation-duration: 6s; }\n        .star:nth-child(5) { width: 2px; height: 2px; top: 90%; left: 20%; animation-delay: 3s; animation-duration: 5.5s; }\n        .star:nth-child(6) { width: 1px; height: 1px; top: 55%; left: 65%; animation-delay: 0.5s; animation-duration: 8s; }\n        .star:nth-child(7) { width: 2.5px; height: 2.5px; top: 25%; left: 10%; animation-delay: 1.5s; animation-duration: 4.5s; }\n        .star:nth-child(8) { width: 1.2px; height: 1.2px; top: 85%; left: 45%; animation-delay: 2.5s; animation-duration: 7.5s; }\n\n\n\n        /* Keyframes for twinkling effect */\n        @keyframes twinkle {\n            0%, 100% { opacity: 0.8; transform: scale(1); }\n            50% { opacity: 0.3; transform: scale(1.5); }\n        }\n\n        /* --- Rocket Styling --- */\n        .rocket {\n            position: relative;\n            width: 80px;\n            height: 150px;\n            /* Initial position at the bottom center */\n            transform: translateY(0); \n            animation: launch 8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;\n            z-index: 10;\n        }\n\n        /* Rocket Body (Nose Cone) */\n        .nose {\n            width: 0;\n            height: 0;\n            border-left: 40px solid transparent;\n            border-right: 40px solid transparent;\n            border-bottom: 100px solid #FF6347; /* Bright Orange/Red */\n            position: absolute;\n            bottom: 100px;\n            left: 0;\n            border-bottom-width: 0; /* Resetting for correct structure */\n            border-radius: 0 0 50px 50px;\n        }\n        \n        .body {\n            background: linear-gradient(to bottom, #FFD700 0%, #FFA500 100%); /* Gold to Orange */\n            width: 60px;\n            height: 100px;\n            position: absolute;\n            bottom: 100px;\n            left: 10px;\n            border-radius: 30px 30px 0 0;\n        }\n\n        /* Rocket Fins */\n        .fin {\n            position: absolute;\n            width: 0;\n            height: 0;\n            border-top: 40px solid transparent;\n            border-bottom: 40px solid transparent;\n            border-left: 15px solid #10B981; /* Bright Green Fins */\n            right: -15px;\n            bottom: 90px;\n        }\n        .fin:nth-child(2) {\n            left: 10px;\n            transform: scaleX(-1); /* Mirror effect */\n        }\n\n        /* Rocket Flame */\n        .flame-container {\n            position: absolute;\n            bottom: -20px;\n            left: 10px;\n            width: 60px;\n            height: 80px;\n            overflow: visible;\n            z-index: 5;\n            animation: fire 0.1s steps(1) infinite; /* Controls the constant burning look */\n        }\n        \n        .flame {\n            width: 100%;\n            height: 100%;\n            background: radial-gradient(ellipse at 50% 100%, #FF8C00 0%, #FF4500 50%, transparent 100%);\n            animation: flicker 0.3s ease-out infinite alternate;\n        }\n\n        /* --- Keyframe Animations --- */\n\n        /* Rocket Launch Animation */\n        @keyframes launch {\n            0% {\n                transform: translateY(0) scale(1); /* Starts at its original position near the bottom */\n                opacity: 1;\n            }\n            50% {\n                transform: translateY(-400px) scale(1.1); /* Moves up and slightly bigger */\n                opacity: 1;\n            }\n            100% {\n                transform: translateY(-750px) scale(1); /* Finishes high up in the space */\n                opacity: 0.5; /* Fades out as it enters space */\n            }\n        }\n        \n        /* Fire Flicker */\n        @keyframes flicker {\n            from { transform: scale(1); opacity: 0.9; }\n            to { transform: scale(1.1); opacity: 1; }\n        }\n\n        /* Visual "Fire" effect (The actual flame) */\n        @keyframes fire {\n            0% { transform: scaleY(1); opacity: 1; }\n            100% { transform: scaleY(0.9) translateY(5px); opacity: 0.8; }\n        }\n\n    </style>\n</head>\n<body>\n    \n    <!-- Star Background -->\n    <div class=\"star-container\">\n        <div class=\"star\"></div>\n        <div class=\"star\"></div>\n        <div class=\"star\"></div>\n        <div class=\"star\"></div>\n        <div class=\"star\"></div>\n        <div class=\"star\"></div>\n        <div class=\"star\"></div>\n        <div class=\"star\"></div>\n    </div>\n\n    <!-- Rocket Element -->\n    <div class=\"rocket\">\n        <!-- The nose cone/head of the rocket -->\n        <div class=\"nose\"></div>\n        <!-- The main body -->\n        <div class=\"body\"></div>\n        <!-- Fins -->\n        <div class=\"fin\"></div>\n        <div class=\"fin\"></div>\n        <!-- Flame Container -->\n        <div class=\"flame-container\">\n            <div class=\"flame\"></div>\n        </div>\n    </div>\n\n</body>\n</html>"}
+</tool_code>

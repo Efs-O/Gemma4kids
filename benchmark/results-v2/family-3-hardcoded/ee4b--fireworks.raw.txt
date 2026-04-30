@@ -1,0 +1,166 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fireworks Display</title>
+    <style>
+        /* Set background for the night sky context */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090829 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="fireworksCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let W = window.innerWidth;
+        let H = window.innerHeight;
+
+        canvas.width = W;
+        canvas.height = H;
+
+        window.addEventListener('resize', () => {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = W;
+            canvas.height = H;
+        });
+
+        // --- Particle & Firework Logic ---
+
+        const particles = [];
+        const GRAVITY = 0.03;
+        const FRICTION = 0.98;
+
+        // Helper function for random numbers
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Function to generate a vivid random color
+        function getRandomColor() {
+            const colors = ['#ff1493', '#ff4b6a', '#ffd700', '#00ffff', '#ff6347', '#9932cc'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        class Particle {
+            constructor(x, y, angle, speed, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.color = color;
+                this.radius = random(1, 3);
+                this.life = 1; // Opacity/Life scale
+                this.decay = random(0.015, 0.03);
+            }
+
+            update() {
+                // Apply physics
+                this.vy += GRAVITY;
+                this.vx *= FRICTION;
+                this.vy *= FRICTION;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Decay life
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Creates an explosion radiating outwards from a point
+        function createExplosion(startX, startY, color) {
+            const particleCount = 70;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (i / particleCount) * Math.PI * 2;
+                const speed = random(1.5, 5);
+                
+                // Use slightly varied colors near the main color for depth
+                const particleColor = Math.random() < 0.7 ? color : getRandomColor();
+
+                particles.push(new Particle(startX, startY, angle, speed, particleColor));
+            }
+        }
+        
+        // --- Animation Loop ---
+        
+        let lastTime = 0;
+        let fireworkTimer = 0;
+
+        function animate(timestamp) {
+            const elapsed = timestamp - lastTime;
+            lastTime = timestamp;
+
+            // 1. Background Fade Effect (Simulates lingering smoke/night sky depth)
+            // Draw a semi-transparent rectangle over the entire canvas to create a fading trail effect
+            ctx.fillStyle = 'rgba(9, 8, 41, 0.1)'; // Matches the deep night sky background
+            ctx.fillRect(0, 0, W, H);
+
+            // 2. Update and Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+
+                // Remove particle if life is depleted or falls off screen
+                if (p.life <= 0 || p.y > H + 50) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            // 3. Staggered Firework Generation (The Core Burst Mechanic)
+            fireworkTimer += elapsed / 1000;
+            
+            // Trigger a large burst every 1.5 to 3 seconds
+            if (fireworkTimer >= random(1.5, 3.0)) {
+                // Determine launch position (randomly across the width, near the bottom third)
+                const startX = random(W * 0.1, W * 0.9);
+                const startY = random(H * 0.3, H * 0.7);
+                
+                // Select a bright, random color for the primary burst
+                const primaryColor = getRandomColor();
+                
+                // Create the explosion effect at this point
+                createExplosion(startX, startY, primaryColor);
+                
+                // Reset timer and add variability
+                fireworkTimer = 0;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start the animation loop
+        animate(0);
+
+    </script>
+</body>
+</html>
+```

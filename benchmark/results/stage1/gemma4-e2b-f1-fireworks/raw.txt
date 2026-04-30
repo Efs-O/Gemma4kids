@@ -1,0 +1,145 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fireworks</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Hide scrollbars */
+            background: radial-gradient(circle at center, #00001a 0%, #05052d 100%); /* Deep night sky */
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* Keyframes for the explosion effect */
+        @keyframes explode {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 1;
+                box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+            }
+            100% {
+                transform: scale(30) translate(var(--dx), var(--dy));
+                opacity: 0;
+                box-shadow: 0 0 100px 50px; /* Bright glow effect */
+            }
+        }
+
+        /* Style for the individual firework particles */
+        .firework {
+            position: absolute;
+            border-radius: 50%;
+            animation: explode 1.5s ease-out forwards;
+            pointer-events: none; /* Ensure they don't block clicks */
+        }
+
+        /* Styling for the trails (the rising part - optional, for realism) */
+        .rocket-trail {
+            position: absolute;
+            width: 2px;
+            height: 50px;
+            background: linear-gradient(to top, rgba(255, 255, 0, 0.8), rgba(255, 100, 255, 0.8));
+            top: 100%; /* Start below the viewport */
+            left: 50%;
+            transform: translateX(-50%);
+            animation: rise 2s ease-out forwards;
+        }
+
+        @keyframes rise {
+            to {
+                top: 5vh; /* Arrive near the top of the screen */
+            }
+        }
+
+        /* Generating random colors and positions for dynamic effect */
+        .firework-group {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="fireworks-container">
+        <!-- Fireworks will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        const container = document.getElementById('fireworks-container');
+        const numFireworks = 15; // Number of fireworks to launch initially
+
+        function createFirework(startX, startY) {
+            const firework = document.createElement('div');
+            firework.className = 'rocket-trail';
+            
+            // Randomly determine the target explosion point (simulated)
+            const targetX = Math.random() * window.innerWidth;
+            const targetY = Math.random() * (window.innerHeight * 0.6); // Explode in the upper 60% of the screen
+
+            // Set initial position for the trail (launch point)
+            firework.style.left = `${startX}px`;
+            firework.style.top = `${startY}px`;
+            
+            // Apply a random delay for staggered launch
+            firework.style.animationDelay = `${Math.random() * 1}s`;
+            
+            // Add the actual explosion element container
+            const explosion = document.createElement('div');
+            explosion.className = 'firework';
+            
+            // Set the final position where the explosion will be centered
+            explosion.style.left = `${targetX}px`;
+            explosion.style.top = `${targetY}px`;
+            
+            // Randomize color
+            const hue = Math.floor(Math.random() * 360);
+            const color = `hsl(${hue}, 100%, 70%)`;
+            explosion.style.backgroundColor = color;
+
+            // Calculate random spread vectors for the explosion animation
+            const dx = (Math.random() - 0.5) * 150; // Horizontal spread
+            const dy = (Math.random() - 0.5) * 150; // Vertical spread
+
+            explosion.style.setProperty('--dx', `${dx}px`);
+            explosion.style.setProperty('--dy', `${dy}px`);
+
+            // Append elements
+            container.appendChild(firework);
+            container.appendChild(explosion);
+
+            // Clean up the trail element after its animation finishes
+            firework.addEventListener('animationend', () => {
+                firework.remove();
+            });
+        }
+
+        // Launch initial fireworks on load
+        for (let i = 0; i < numFireworks; i++) {
+            // Simulate launch from the bottom center area
+            const startX = window.innerWidth * (0.2 + Math.random() * 0.6); 
+            const startY = window.innerHeight;
+            
+            // Launch sequence with a slight delay
+            setTimeout(() => {
+                createFirework(startX, startY);
+            }, i * 500); // Stagger the launches
+        }
+
+        // Add an interval to continuously spawn fireworks to keep the show going
+        setInterval(() => {
+            const startX = Math.random() * window.innerWidth;
+            const startY = window.innerHeight;
+            createFirework(startX, startY);
+        }, 1500); // New firework every 1.5 seconds
+        
+    </script>
+</body>
+</html>
+```

@@ -1,0 +1,54 @@
+That sounds like so much fun! A bouncing ball animation is super bouncy and bright! 🏀✨
+
+I've made one for you with a vibrant background so the ball really pops. Watch it bounce!
+
+Here is the code for your bouncing ball animation:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bouncing Ball</title>
+<style>
+body {
+    background: linear-gradient(to bottom, #ff9a9e, #ff6347); /* Sunset gradient */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.ball {
+    width: 100px;
+    height: 100px;
+    background-color: #10B981; /* Bright green ball */
+    border-radius: 50%; /* Makes it a perfect circle */
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    animation: bounce 2s infinite alternate ease-in-out; /* Bounces forever */
+}
+
+/* The keyframe animation for bouncing */
+@keyframes bounce {
+    from {
+        /* Start near the top */
+        transform: translateY(0px);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1); /* Controls the bounce "feel" */
+    }
+    to {
+        /* Move down and slightly wobble */
+        transform: translateY(200px) rotate(10deg);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+}
+</style>
+</head>
+<body>
+    <div class="ball"></div>
+</body>
+</html>
+```
+
+save_animation(html_content="<!DOCTYPE html>\n<html>\n<head>\n<title>Bouncing Ball</title>\n<style>\nbody {\n    background: linear-gradient(to bottom, #ff9a9e, #ff6347); /* Sunset gradient */\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    height: 100vh;\n    margin: 0;\n    overflow: hidden;\n}\n\n.ball {\n    width: 100px;\n    height: 100px;\n    background-color: #10B981; /* Bright green ball */\n    border-radius: 50%; /* Makes it a perfect circle */\n    position: relative;\n    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);\n    animation: bounce 2s infinite alternate ease-in-out; /* Bounces forever */\n}\n\n/* The keyframe animation for bouncing */\n@keyframes bounce {\n    from {\n        /* Start near the top */\n        transform: translateY(0px);\n        animation-timing-function: cubic-bezier(0.8, 0, 1, 1); /* Controls the bounce \"feel\" */\n    }\n    to {\n        /* Move down and slightly wobble */\n        transform: translateY(200px) rotate(10deg);\n        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);\n    }\n}</style>\n</head>\n<body>\n    <div class=\"ball\"></div>\n</body>\n</html>")
