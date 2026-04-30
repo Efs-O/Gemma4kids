@@ -3,6 +3,7 @@ import { Message } from './Message';
 import { InputRow } from './InputRow';
 import type { ChatMessage } from '../llm/types';
 import { createTTSService } from '../services/TTSService';
+import type { ModelTier } from '../utils/pickCodingModel';
 
 const ALL_STARTERS: { label: string; text: string }[] = [
   { label: '🏀 Make a bouncing ball animation', text: 'Make a bouncing ball animation' },
@@ -22,7 +23,7 @@ const ALL_STARTERS: { label: string; text: string }[] = [
 const ALL_CHIPS: { label: string; text: string }[] = [
   { label: '⚡ Make it faster', text: 'Make it faster' },
   { label: '🐢 Make it slower', text: 'Make it slower' },
-  { label: '🔴 Change color to red', text: 'Change the main color to red' },
+  { label: '🎨 Change color', text: 'Change the main color' },
   { label: '💜 Change color to purple', text: 'Change the main color to purple' },
   { label: '🌈 Add more colors', text: 'Add more bright rainbow colors' },
   { label: '🎵 Add floating music notes', text: 'Add floating music notes to the animation' },
@@ -35,6 +36,28 @@ const ALL_CHIPS: { label: string; text: string }[] = [
 ];
 
 const NEW_ANIMATION_CHIP = { label: '🎨 Make something new', text: 'Make me a completely new animation' };
+const SIMPLE_NEW_CHIP = { label: '🎨 Make something new', text: 'Make me a new colourful picture' };
+
+const SIMPLE_STARTERS: { label: string; text: string }[] = [
+  { label: '🎂 Make a birthday card', text: 'Make a colourful birthday card with balloons and a cake' },
+  { label: '☀️ Draw a happy sunshine', text: 'Draw a big happy sunshine with a blue sky' },
+  { label: '🌸 Paint a flower in a vase', text: 'Paint a flower in a vase with colourful petals' },
+  { label: '🌈 Make a rainbow flag', text: 'Make a rainbow flag with all the colours' },
+  { label: '😊 Draw a smiling face', text: 'Draw a big smiling emoji face' },
+  { label: '🏠 Draw a house with a garden', text: 'Draw a house with a garden and flowers' },
+  { label: '🐱 Draw a cute cat face', text: 'Draw a cute cat face with whiskers and big eyes' },
+  { label: '🍕 Make a pizza slice', text: 'Make a colourful pizza slice with toppings' },
+  { label: '🦸 Draw a superhero badge', text: 'Draw a superhero badge with a bold letter' },
+  { label: '🎈 Make a hot air balloon', text: 'Make a colourful hot air balloon in the sky' },
+  { label: '🌙 Paint a night sky', text: 'Paint a night scene with a moon and stars' },
+  { label: '🌺 Make a welcome sign', text: 'Make a colourful Welcome sign with flowers around it' },
+];
+
+const SIMPLE_CHIPS: { label: string; text: string }[] = [
+  { label: '🎨 Change colour', text: 'Change the main colour' },
+  { label: '💥 Make everything bigger', text: 'Make everything bigger' },
+  { label: '🌈 Add more bright colours', text: 'Add more bright colours' },
+];
 
 function pickRandom<T>(arr: T[], n: number): T[] {
   const shuffled = [...arr];
@@ -61,6 +84,7 @@ interface Props {
   showThinking: boolean;
   ctxUsedPct?: number;
   onClearContext?: () => void;
+  modelTier?: ModelTier;
 }
 
 export function ChatPanel({
@@ -79,18 +103,28 @@ export function ChatPanel({
   showThinking,
   ctxUsedPct,
   onClearContext,
+  modelTier = 'full',
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const userScrolledUpRef = useRef(false);
+  const autoScrollingRef = useRef(false);
   const scrollRafRef = useRef<number | null>(null);
   const tts = useMemo(() => createTTSService(), []);
 
   // Picked once at mount; reshuffled after each assistant reply (messages.length changes).
-  const starters = useMemo(() => pickRandom(ALL_STARTERS, 3), []);
-  const chips = useMemo(() => pickRandom(ALL_CHIPS, 3), [messages.length]);
+  const starters = useMemo(
+    () => modelTier === 'simple' ? pickRandom(SIMPLE_STARTERS, 3) : pickRandom(ALL_STARTERS, 3),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [modelTier],
+  );
+  const chips = useMemo(
+    () => modelTier === 'simple' ? SIMPLE_CHIPS : pickRandom(ALL_CHIPS, 3),
+    [modelTier, messages.length],
+  );
 
   const handleScroll = useCallback(() => {
+    if (autoScrollingRef.current) return;
     const el = listRef.current;
     if (!el) return;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
@@ -107,17 +141,26 @@ export function ChatPanel({
       if (!el || userScrolledUpRef.current) return;
       const target = el.scrollHeight - el.clientHeight;
       const diff = target - el.scrollTop;
-      if (diff <= 0) return;
+      if (diff <= 0) {
+        autoScrollingRef.current = false;
+        return;
+      }
+      autoScrollingRef.current = true;
       // Ease toward target: jump most of the gap each frame.
       el.scrollTop += diff * 0.3;
       // If still not there, keep animating.
-      if (diff > 2) scheduleScroll();
+      if (diff > 2) {
+        scheduleScroll();
+      } else {
+        autoScrollingRef.current = false;
+      }
     });
   }, []);
 
   // New message turn → always scroll to bottom and re-enable auto-scroll.
   useEffect(() => {
     userScrolledUpRef.current = false;
+    autoScrollingRef.current = false;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
@@ -150,9 +193,11 @@ export function ChatPanel({
   useEffect(() => {
     if (!showChips) return;
     userScrolledUpRef.current = false;
+    autoScrollingRef.current = true;
     requestAnimationFrame(() => {
       const el = listRef.current;
       if (el) el.scrollTop = el.scrollHeight;
+      autoScrollingRef.current = false;
     });
   }, [showChips]);
 
@@ -213,7 +258,7 @@ export function ChatPanel({
               {c.label}
             </button>
           ))}
-          <button className="chip chip--new" onClick={() => onSend(NEW_ANIMATION_CHIP.text)}>
+          <button className="chip chip--new" onClick={() => onSend(modelTier === 'simple' ? SIMPLE_NEW_CHIP.text : NEW_ANIMATION_CHIP.text)}>
             {NEW_ANIMATION_CHIP.label}
           </button>
         </div>

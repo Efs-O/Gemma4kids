@@ -1,0 +1,186 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twinkling Night Sky</title>
+    *   <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050510; /* Deep dark blue/black */
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Subtle overlay for a nebula/glow effect */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 0.3) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay"></div>
+    <canvas id="skyCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('skyCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let stars = [];
+        let shootingStars = [];
+        const starCount = 400;
+
+        // Star Class
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 1.5;
+                this.opacity = Math.random();
+                this.twinkleSpeed = 0.005 + Math.random() * 0.02;
+                this.color = this.getRandomStarColor();
+            }
+
+            getRandomStarColor() {
+                const colors = ['#ffffff', '#fff4ea', '#e3f2fd', '#fff9c4'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            update() {
+                // Twinkle logic using sine wave
+                this.opacity += Math.sin(Date.now() * this.twinkleSpeed) * 0.01;
+                if (this.opacity < 0.1) this.opacity = 0.1;
+                if (this.opacity > 1) this.opacity = 1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.opacity > 0.8 ? this.x : this.x, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // Shooting Star Class
+        class ShootingStar {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * (height / 2); // Start in upper half
+                this.len = 10 + Math.random() * 30;
+                this.speed = 5 + Math.random() * 10;
+                this.size = 1 + Math.random() * 2;
+                this.opacity = 1;
+                this.angle = Math.PI / 4 + (Math.random() * 0.2); // Mostly diagonal
+                this.vx = Math.cos(this.angle) * this.speed;
+                this.vy = Math.sin(this.angle) * this.speed;
+                this.active = true;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.opacity -= 0.015; // Fade out over time
+
+                if (this.opacity <= 0 || this.x > width || this.y > height) {
+                    this.active = false;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.lineWidth = this.size;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.lineCap = 'round';
+                ctx.moveTo(this.x, this.y);
+                // Draw a line trailing behind the particle
+                ctx.lineTo(this.x - (this.vx * 2), this.y - (this.vy * 2));
+                ctx.stroke();
+
+                // Add a glow effect to the head
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = "white";
+            }
+        }
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            stars = [];
+            for (let i = 0;
+            i < starCount; i++) {
+                stars.push(new Star());
+            }
+            
+            shootingStars = [];
+        }
+
+        function animate() {
+            // Clear canvas with a dark night gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, '#020205');
+            gradient.addColorStop(1, '#0f1025');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            ctx.shadowBlur = 0; // Reset shadow
+
+            // Update and draw stars
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            // Randomly spawn shooting stars
+            if (Math.random() < 0.015) {
+                shootingStars.push(new ShootingStar());
+            }
+
+            // Update and draw shooting stars
+            for (let i = shootingStars.length - 1; i >= 0; i--) {
+                shootingStars[i].update();
+                shootingStars[i].draw();
+                if (!shootingStars[i].active) {
+                    shootingStars.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            init();
+        });
+
+        // Initial Setup
+        init();
+        animate();
+    </script>
+</body>
+</html>
+```

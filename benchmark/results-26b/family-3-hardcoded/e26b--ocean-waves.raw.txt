@@ -1,0 +1,179 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF de">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunny Beach Waves</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #4facfe;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="oceanCanvas"></canvas>
+
+    <script>
+        const canvas = document.layererCanvas = document.getElementById('oceanCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let waves = [];
+        let particles = [];
+        let sunY = 0;
+        let sunX = 0;
+
+        class Wave {
+            constructor(color, amplitude, frequency, speed, yOffset) {
+                this.color = color;
+                this.amplitude = amplitude;
+                this.frequency = frequency;
+                this.speed = speed;
+                this.yOffset = yOffset;
+                this.phase = 0;
+            }
+
+            update() {
+                this.phase += this.speed;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(0, height);
+                
+                for (let x = 0; x <= width; x += 10) {
+                    const y = Math.sin(x * this.frequency + this.phase) * this.amplitude + this.yOffset;
+                    ctx.lineTo(x, y);
+                }
+
+                ctx.lineTo(width, height);
+                ctx.lineTo(0, height);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        class FoamParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = Math.random() * 2 + 1;
+                this.size = Math.random() * 5 + 2;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 0.02;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            waves = [];
+            // Deep layer
+            waves.push(new Wave('#0077b6', 30, 0.005, 0.01, height * 0.6));
+            // Middle layer
+            waves.push(new Wave('#00b4d8', 25, 0.008, 0.02, height * 0.7));
+            // Shallow/Foam layer
+            waves.push(new Wave('#90e0ef', 20, 0.012, 0.03, height * 0.8));
+
+            particles = [];
+            
+            sunX = width * 0.2;
+            sunY = height * 0.2;
+        }
+
+        function drawBackground() {
+            // Sky Gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#4facfe');
+            skyarmColor = '#00f2fe';
+            skyGradient.addColorStop(1, '#a8e6cf');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Sun
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 60, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff700';
+            ctx.shadowBlur = 50;
+            ctx.shadowColor = '#ffcc00';
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset shadow
+
+            // Sand
+            ctx.fillStyle = '#ffcc33';
+            ctx.fillRect(0, height * 0.85, width, height * 0.15);
+            
+            // Sand Detail (vivid texture)
+            ctx.fillStyle = '#ffb703';
+            ctx.fillRect(0, height * 0.85, width, 5);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            drawBackground();
+
+            // Update and Draw Waves
+            waves.forEach((wave, index) => {
+                wave.update();
+                wave.draw();
+
+                // If it's the topmost wave, spawn "crashing" foam particles at the edge
+                if (index === waves.length - 1) {
+                    // Calculate current wave edge Y at a sample point
+                    const sampleX = width * 0.5;
+                    const edgeY = Math.sin(sampleX * wave.frequency + wave.phase) * wave.amplitude + wave.yOffset;
+                    
+                    // Spawn particles randomly along the wave front
+                    if (Math.random() > 0.8) {
+                        particles.push(new FoamParticle(Math.random() * width, edgeY));
+                    }
+                }
+            });
+
+            // Update and Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+
+        // Start animation
+        init();
+        animate();
+    </script>
+</body>
+</html>
+```

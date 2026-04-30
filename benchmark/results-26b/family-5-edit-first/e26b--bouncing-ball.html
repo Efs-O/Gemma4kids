@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Bouncing Balls</title>
+    <style>
+        /* Ensure the canvas fills the entire screen and remove scrollbars */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000; /* Black background to make colors pop */
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="animationCanvas"></canvas>
+
+    <script>
+        /**
+         * Configuration Constants
+         */
+        const BALL_COUNT = 15;
+        const GRAVITY = 0.25;
+        const FRICTION = 0.98; // Energy retained after a bounce (1.0 = no energy loss)
+        const COLORS = [
+            '#FF0055', // Neon Pink
+            '#00FF99', // Spring Green
+            '#00E5FF', // Electric Blue
+            '#FFD700', // Gold
+            '#FF8C00', // Dark Orange
+            '#9D00FF', // Vivid Purple
+            '#FF00FF'  // Magenta
+        ];
+
+        const canvas = document.getElementById('animationCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let balls = [];
+
+        /**
+         * Ball Class representing a single bouncing object
+         */
+        class Ball {
+            constructor(x, y, radius, color, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.vx = vx; // Velocity X
+                this.vy = vy; // Velocity Y
+            }
+
+            /**
+             * Update position and handle physics logic
+             */
+            update() {
+                // Apply Gravity
+                this.vy += GRAVITY;
+
+                // Apply Friction (air resistance / floor friction)
+                this.vx *= 0.995; 
+
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Collision Detection: Floor
+                if (this.y + this.radius > height) {
+                    this.y = height - this.radius;
+                    this.vy *= -FRICTION;
+                }
+
+                // Collision Detection: Ceiling
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.vy *= -FRICTION;
+                }
+
+                // Collision Detection: Right Wall
+                if (this.x + this.radius > width) {
+                    this.x = width - this.radius;
+                    this.vx *= -FRICTION;
+                }
+
+                // Collision Detection: Left Wall
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx *= -FRICTION;
+                }
+            }
+
+            /**
+             * Render the ball to the canvas
+             */
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                
+                // Add a glow effect
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                
+                ctx.fill();
+                ctx.closePath();
+                
+                // Reset shadow for other drawings
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        /**
+         * Initializes or resizes the animation environment
+         */
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            balls = [];
+
+            for (let i = 0;
+            i < BALL_COUNT; i++) {
+                const radius = Math.random() * 20 + 15;
+                const x = Math.random() * (width - radius * 2) + radius;
+                const y = Math.random() * (height - radius * 2) + radius;
+                const vx = (Math.random() - 0.5) * 15;
+                const vy = (Math.random() - 0.5) * 15;
+                const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+                balls.push(new Ball(x, y, radius, color, vx, vy));
+            }
+        }
+
+        /**
+         * The Main Animation Loop
+         */
+        function animate() {
+            // Create a trailing effect by using a semi-transparent clear rectangle
+            // instead of clearing the whole canvas.
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            balls.forEach(ball => {
+                ball.update();
+                ball.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Handle Window Resizing
+        window.addEventListener('resize', () => {
+            // Update canvas dimensions
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            
+            // Re-initialize balls to prevent them from getting stuck outside bounds
+            init();
+        });
+
+        // Start the animation
+        init();
+        animate();
+
+    </script>
+</body>
+</html>

@@ -69,6 +69,13 @@ export function pickCodingModel(models: string[]): string {
   return gemma ?? models[0];
 }
 
+export type ModelTier = 'simple' | 'full';
+
+/** Simple tier = E2B / E4B; full tier = 26B / 31B and anything else. */
+export function getModelTier(name: string): ModelTier {
+  return isGemma4EdgeE2b(name) || isGemma4EdgeE4b(name) ? 'simple' : 'full';
+}
+
 /** Exact Ollama name for STT, or default string if none pulled yet. */
 export function pickTranscribeModel(models: string[]): string {
   const e4b = models.find(isGemma4EdgeE4b);

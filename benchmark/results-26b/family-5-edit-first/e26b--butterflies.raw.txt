@@ -1,0 +1,269 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Butterfly Garden</title>
+    <style>
+        /* Reset and full screen setup */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA, #90EE90);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Overlay text for atmosphere */
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2e7d32;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>Magic Butterfly Garden</h1>
+    </div>
+    <canvas id="gardenCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gardenCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let flowers = [];
+        let butterflies = [];
+
+        // Configuration
+        const FLOWER_COUNT = 15;
+        const BUTTERFLY_COUNT = 25;
+        const COLORS = [
+            '#FF1493', // Deep Pink
+            '#FFD700', // Gold
+            '#00FF7F', // Spring Green
+            '#00BFFF', // Deep Sky Blue
+            '#FF4500', // Orange Red
+            '#DA70D6', // Orchid
+            '#ADFF2F'  // Green Yellow
+        ];
+
+        /**
+         * Resizes the canvas to fill the viewport
+         */
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initGarden();
+        }
+
+        /**
+         * Flower Class: Represents static decorative flowers at the bottom
+         */
+        class Flower {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = height - (Math.random() * 100);
+                this.size = 20 + Math.random() * 30;
+                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                this.petalCount = 5 + Math.floor(Math.random() * 5);
+                this.sway = Math.random() * Math.PI * 2;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Gentle swaying animation
+                this.sway += 0.02;
+                ctx.rotate(Math.sin(this.sway) * 0.05);
+
+                // Draw Stem
+                ctx.strokeStyle = '#2e7d32';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, 150);
+                ctx.stroke();
+
+                // Draw Petals
+                ctx.fillStyle = this.color;
+                for (let i = 0; i < this.petalCount; i++) {
+                    ctx.rotate((Math.PI * 2) / this.petalCount);
+                    ctx.beginPath();
+                    ctx.ellipse(this.size, 0, this.size, this.size / 2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw Center
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size / 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        /**
+         * Butterfly Class: Represents animated flying entities
+         */
+        class Butterfly {
+            constructor() {
+                this.reset();
+                // Start at random positions, not necessarily at the bottom
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = 8 + Math.random() * 10;
+                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                this.speedX = (Math.random() - 0.5) * 3;
+                this.speedY = (Math.random() - 0.5) * 3;
+                this.flapSpeed = 0.1 + Math.random() * 0.2;
+                this.flapAngle = 0;
+                // Target is a random flower to make them "hover" around flowers
+                this.targetFlower = flowers[Math.floor(Math.random() * flowers.length)];
+            }
+
+            update() {
+                // Move towards target flower or wander
+                const dx = this.targetFlower.x - this.x;
+                const dy = (this.targetFlower.y - 20) - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 50) {
+                    this.speedX += (dx / distance) * 0.1;
+                    this.speedY += (dy / distance) * 0.1;
+                } else {
+                    // Wander randomly when near flower
+                    this.speedX += (Math.random() - 0.5) * 0.5;
+                    this.speedY += (Math.random() - 0.5) * 0.5;
+                    // Occasionally switch targets
+                    if (Math.random() < 0.01) {
+                        this.targetFlower = flowers[Math.floor(Math.random() * flowers.length)];
+                    }
+                }
+
+                // Friction to prevent infinite acceleration
+                this.speedX *= 0.98;
+                this.speedY *= 0.98;
+
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Boundary bounce
+                if (this.x < 0 || this.x > width) this.speedX *= -1;
+                if (this.y < 0 || this.y > height) this.speedY *= -1;
+
+                // Flap wings
+                this.flapAngle += this.flapSpeed;
+            }
+
+            draw() {
+                const wingWidth = Math.abs(Math.sin(this.flapAngle)) * this.size;
+                const rotation = Math.atan2(this.speedY, this.speedX);
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(rotation + Math.PI / 2);
+
+                // Draw Body
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 2, this.size, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw Wings
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.8;
+                
+                // Left Wing
+                ctx.beginPath();
+                ctx.ellipse(-wingWidth, 0, wingWidth, this.size, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Right Wing
+                ctx.beginPath();
+                ctx.ellipse(wingWidth, 0, wingWidth, this.size, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Highlight/Pattern on wings
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.3;
+                ctx.stroke();
+
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        /**
+         * Initialize arrays and objects
+         */
+        function initGarden() {
+            flowers = [];
+            butterflies = [];
+
+            // Create Flowers
+            for (let i = 0; i < FLOWER_COUNT; i++) {
+                flowers.push(new Flower());
+            }
+
+            // Create Butterflies
+            for (let i = 0; i < BUTTERFLY_COUNT; i++) {
+                butterflies.push(new Butterfly());
+            }
+        }
+
+        /**
+         * Main Animation Loop
+         */
+        function animate() {
+            // Clear canvas with a slight trail effect (semi-transparent background)
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw background gradient overlay for depth
+            const grad = ctx.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            grad.addColorStop(1, 'rgba(144, 238, 144, 0.2)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Update and Draw Flowers
+            flowers.forEach(flower => flower.draw());
+
+            // Update and Draw Butterflies
+            butterflies.forEach(butterfly => {
+                butterfly.update();
+                butterfly.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start the engine
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+
+    </script>
+</body>
+</html>
+```

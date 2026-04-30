@@ -1,0 +1,199 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-width">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Neon Snowfall</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a0033 0%, #050010 100%);
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 3rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            pointer-events: none;
+            text-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff;
+            opacity: 0.8;
+            white-space: nowrap;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+                opacity: 1;
+            }
+        }
+
+        /* Background decoration elements */
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            from { transform: translate(0, 0); }
+            to { transform: translate(100px, 50px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay">Magic Snow</div>
+    
+    <!-- Decorative Background Orbs -->
+    <div class="glow-orb" style="width: 400px; height: 400px; background: #ff00ff; top: -100px; left: -100px; opacity: 0.3;"></div>
+    <div class="glow-orb" style="width: 500px; height: 500px; background: #00ffff; bottom: -150px; right: -150px; opacity: 0.2; animation-delay: -2s;"></div>
+
+    <canvas id="snowCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let snowflakes = [];
+        const snowflakeCount = 150;
+        const colors = ['#ffffff', '#00ffff', '#ff00ff', '#77ff00', '#ffff00'];
+
+        class Snowflake {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                // Randomize position
+                this.x = Math.random() * width;
+                this.y = Math.random() * height - height;
+                
+                // Randomize size and depth (Layered depth)
+                // Layer 1: Background (large, slow)
+                // Layer 2: Midground (medium, medium)
+                // Layer 3: Foreground (small, fast)
+                this.layer = Math.random(); 
+                
+                if (this.layer > 0.7) {
+                    // Foreground
+                    this.radius = Math.random() * 2 + 1;
+                    this.speedY = Math.random() * 2 + 3;
+                    this.speedX = Math.random() * 1 - 0.5;
+                    this.opacity = Math.random() * 0.5 + 0.5;
+                    this.color = colors[Math.floor(Math.random() * colors.length)];
+                } else if (this.layer > 0.3) {
+                    // Midground
+                    this.radius = Math.random() * 4 + 2;
+                    this.speedY = Math.random() * 1 + 1.5;
+                    this.speedX = Math.random() * 2 - 1;
+                    this.opacity = Math.random() * 0.4 + 0.3;
+                    this.color = '#ffffff';
+                } else {
+                    // Background
+                    this.radius = Math.random() * 8 + 5;
+                    this.speedY = Math.random() * 0.5 + 0.5;
+                    this.speedX = Math.random() * 0.5;
+                    this.opacity = Math.random() * 0.2 + 0.1;
+                    this.color = '#00ffff';
+                }
+
+                this.drift = Math.random() * 0.02;
+                this.angle = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += Math.sin(this.angle) * this.speedX;
+                this.angle += this.drift;
+
+                // Reset if snowflake leaves screen
+                if (this.y > height + 10) {
+                    this.y = -10;
+                    this.x = Math.random() * width;
+                }
+                if (this.x > width + 10) this.x = -10;
+                if (this.x < -10) this.x = width + 10;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                
+                // Add glow to foreground particles
+                if (this.layer > 0.7) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.color;
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+                
+                ctx.fill();
+                ctx.closePath();
+                ctx.globalAlpha = 1.0;
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Re-initialize snowflakes on resize to prevent empty gaps
+            snowflakes = [];
+            for (let i = 0; i < snowflakeCount; i++) {
+                snowflakes.push(new Snowflake());
+            }
+        }
+
+        function animate() {
+            // Create a slight trail effect by not fully clearing the canvas
+            ctx.fillStyle = 'rgba(5, 0, 16, 0.3)';
+            ctx.fillRect(0, 0, width, height);
+
+            snowflakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+
+        // Initial Setup
+        resize();
+        animate();
+
+    </script>
+</body>
+</html>
+```

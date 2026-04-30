@@ -1,0 +1,106 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball Fun!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .ball {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 30% 30%, #FF6B6B, #EE5253);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        /* Adding a little shine to the ball */
+        .ball::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        .floor {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20%;
+            background: #2ECC71;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translate(-50%, -50%) translateY(0);
+                animation-timing-function: ease-out;
+            }
+            50% {
+                transform: translate(-50%, -50%) translateY(-300px);
+                animation-timing-function: ease-in;
+            }
+        }
+
+        /* Some extra decorations like clouds */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+        }
+
+        .cloud-1 { width: 120px; height: 40px; top: 10%; left: 10%; }
+        .cloud-2 { width: 150px; height: 50px; top: 20%; right: 15%; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        
+        <div class="ball"></div>
+        
+        <div class="floor"></div>
+    </div>
+
+</body>
+</html>
+```
+
+call: save_animation(html_content='<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Bouncing Ball Fun!</title>\n    <style>\n        body {\n            margin: 0;\n            padding: 0;\n            overflow: hidden;\n            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            height: 100vh;\n        }\n\n        .container {\n            position: relative;\n            width: 100vw;\n            height: 100vh;\n        }\n\n        .ball {\n            width: 80px;\n            height: 80px;\n            background: radial-gradient(circle at 30% 30%, #FF6B6B, #EE5253);\n            border-radius: 50%;\n            position: absolute;\n            top: 50%;\n            left: 50%;\n            transform: translate(-50%, -50%);\n            box-shadow: 0 10px 20px rgba(0,0,0,0.2);\n            animation: bounce 2s infinite ease-in-out;\n        }\n\n        /* Adding a little shine to the ball */\n        .ball::after {\n            content: \'\';\n            position: absolute;\n            top: 15%;\n            left: 15%;\n            width: 20px;\n            height: 20px;\n            background: rgba(255, 255, 255, 0.4);\n            border-radius: 50%;\n        }\n\n        .floor {\n            position: absolute;\n            bottom: 0;\n            width: 100%;\n            height: 20%;\n            background: #2ECC71;\n        }\n\n        @keyframes bounce {\n            0%, 100% {\n                transform: translate(-50%, -50%) translateY(0);\n                animation-timing-function: ease-out;\n            }\n            50% {\n                transform: translate(-50%, -50%) translateY(-300px);\n                animation-timing-function: ease-in;\n            }\n        }\n\n        /* Some extra decorations like clouds */\n        .cloud {\n            position: absolute;\n            background: white;\n            border-radius: 50px;\n            opacity: 0.8;\n        }\n\n        .cloud-1 { width: 120px; height: 40px; top: 10%; left: 10%; }\n        .cloud-2 { width: 150px; height: 50px; top: 20%; right: 15%; }\n    </style>\n</head>\n<body>\n\n    <div class="container">\n        <div class="cloud cloud-1"></div>\n        <div class="cloud cloud-2"></div>\n        \n        <div class="ball"></div>\n        \n        <div class="floor"></div>\n    </div>\n\n</body>\n</html>')
+```
+
+Woohoo! 🥳 That is a super fun idea! A bouncing ball is a perfect way to start learning about animations. 
+
+I've created a bright, bouncy red ball for you! It even has a little shine on it to make it look 3D, and I added some fluffy clouds and a green floor so it has a beautiful place to bounce. ☁️🌱
+
+Look at how it uses `ease-in` and `ease-out`—that's a secret coding trick to make the ball slow down at the top and speed up as it hits the ground, just like a real ball!
+
+Do you want to try changing the color of the ball to your favorite color? You can look for `radial-gradient` in the code! 🎨✨

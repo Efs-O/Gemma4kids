@@ -1,0 +1,282 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            pointer-events: none;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1 style="margin: 0; letter-spacing: 2px;">MISSION: DEEP SPACE</h1>
+        <p id="status">STATUS: READY FOR COUNTDOWN</p>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('status');
+
+        let width, height;
+        let stars = [];
+        let particles = [];
+        let smokeParticles = [];
+        let frame = 0;
+        let launchProgress = 0; // 0 to 1
+        let rocketY = 0;
+        let shake = 0;
+
+        // Configuration
+        const STAR_COUNT = 400;
+        const SMOKE_COUNT = 50;
+        const PARTICLE_COUNT = 30;
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2;
+                this.speed = Math.random() * 0.5 + 0.1;
+                this.opacity = Math.random();
+            }
+            update() {
+                // As rocket accelerates, stars move downwards faster
+                this.y += this.speed + (launchProgress * 15);
+                if (this.y > height) {
+                    this.y = 0;
+                    this.x = Math.random() * width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Particle {
+            constructor(isFire) {
+                this.isFire = isFire;
+                this.reset();
+            }
+            reset() {
+                this.x = width / 2 + (Math.random() - 0.5) * 20;
+                this.y = height - 150;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = Math.random() * 5 + 5;
+                this.life = 1.0;
+                this.size = Math.random() * 10 + 5;
+                this.color = this.isFire ? `hsl(${Math.random() * 40 + 10}, 100%, 50%)` : '#fff';
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy + (launchProgress * 10);
+                this.life -= 0.02;
+                if (this.life <= 0) this.reset();
+            }
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class Smoke {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = width / 2 + (Math.random() - 0.5) * 40;
+                this.y = height - 150;
+                this.size = Math.random() * 20 + 10;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = Math.random() * 2 + 1;
+                this.life = 1.0;
+                this.opacity = 0.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy + (launchProgress * 5);
+                this.size += 0.5;
+                this.life -= 0.005;
+                if (this.life <= 0) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(150, 150, 150, ${this.life * 0.4})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            stars = [];
+            for (let i = 0;
+i < STAR_COUNT; i++) stars.push(new Star());
+
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle(true));
+
+            smokeParticles = [];
+            for (let i = 0; i < SMOKE_COUNT; i++) smokeParticles.push(new Smoke());
+        }
+
+        function drawRocket() {
+            const centerX = width / 2 + shake;
+            const centerY = height - 200 + (Math.sin(frame * 0.5) * shake);
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+
+            // Flame/Engine Glow
+            const gradient = ctx.createRadialGradient(0, 60, 5, 0, 60, 40 + (launchProgress * 50));
+            gradient.addColorStop(0, 'rgba(255, 200, 0, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(255, 69, 0, 0.4)');
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 70, 50 + (launchProgress * 30), 0, Math.PI * 2);
+            ctx.fill();
+
+            // Rocket Body
+            ctx.fillStyle = '#E0E0E0';
+            ctx.beginPath();
+            ctx.moveTo(-25, 50); // Bottom left
+            ctx.lineTo(25, 50);  // Bottom right
+            ctx.lineTo(25, -60); // Top right
+            ctx.lineTo(0, -100); // Tip
+            ctx.lineTo(-25, -60); // Top left
+            ctx.closePath();
+            ctx.fill();
+
+            // Rocket Detail - Window
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(0, -20, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#87CEEB';
+            ctx.beginPath();
+            ctx.arc(0, -20, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Fins
+            ctx.fillStyle = '#D32F2F';
+            ctx.beginPath();
+            ctx.moveTo(-25, 50);
+            ctx.lineTo(-45, 80);
+            ctx.lineTo(-25, 80);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(25, 50);
+            ctx.lineTo(45, 80);
+            ctx.lineTo(25, 80);
+            ctx.fill();
+
+            // Nose Cone Tip
+            ctx.fillStyle = '#B71C1C';
+            ctx.beginPath();
+            ctx.moveTo(-25, -60);
+            ctx.lineTo(25, -60);
+            ctx.lineTo(0, -100);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function animate() {
+            frame++;
+            
+            // Handle Launch Logic
+            if (frame < 120) {
+                statusText.innerText = "STATUS: T-MINUS " + (120 - frame);
+                statusText.style.color = "#FFD700";
+            } else if (frame < 180) {
+                statusText.innerText = "STATUS: IGNITION...";
+                status
+                statusText.style.color = "#FF4500";
+                launchProgress = Math.min(1, (frame - 120) / 60);
+                shake = Math.random() * 5 * launchProgress;
+            } else {
+                statusText.innerText = "STATUS: ASCENT STAGE ACTIVE";
+                statusText.style.color = "#00FFFF";
+                launchProgress = 1;
+                shake = Math.random() * 2;
+            }
+
+            // Background Gradient (Sky to Space)
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            const skyColor = Math.max(0, 20 - (launchProgress * 20));
+            skyGrad.addColorStop(0, '#000000');
+            skyGrad.addColorStop(1, `rgb(0, ${skyColor}, ${skyColor * 2})`);
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Elements
+            stars.forEach(s => {
+                s.update();
+                s.draw();
+            });
+
+            smokeParticles.forEach(s => {
+                s.update();
+                s.draw();
+            });
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            drawRocket();
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        
+        init();
+        animate();
+    </script>
+</body>
+</html>
+```

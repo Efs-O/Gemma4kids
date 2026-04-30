@@ -1,0 +1,217 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow After Rain</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000510;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+    <script>
+        /**
+         * Animation: Rainbow appearing after rain
+         * Category: ARC / BAND COLOR SCENE & FALLING PARTICLES
+         */
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        document.body.appendChild(canvas);
+
+        let width, height;
+        let raindrops = [];
+        let rainbowArcs = [];
+        let frameCount = 0;
+        let state = 'rain'; // 'rain', 'clearing', 'rainbow'
+        let transitionProgress = 0; // 0 to 1
+
+        const colors = [
+            '#FF0000', // Red
+            '#FF7F00', // Orange
+            '#FFFF00', // Yellow
+            '#00FF00', // Green
+            '#0000FF', // Blue
+            '#4B0082', // Indigo
+            '#9400D3'  // Violet
+        ];
+
+        class Raindrop {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * -height;
+                this.speed = 10 + Math.random() * 15;
+                this.len = 10 + Math.random() * 20;
+                this.opacity = 0.4 + Math.random() * 0.5;
+                this.drift = (Math.random() - 0.5) * 2;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += this.drift;
+
+                if (this.y > height) {
+                    this.init();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(174, 194, 224, ${this.opacity})`;
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + this.drift, this.y + this.len);
+                ctx.stroke();
+            }
+        }
+
+        class RainbowArc {
+            constructor(color, offset) {
+                this.color = color;
+                this.offset = offset; // thickness
+                this.opacity = 0;
+                this.scale = 0;
+            }
+
+            update(progress) {
+                // Fade in and expand
+                this.opacity = progress;
+                this.scale = progress * 1.2;
+                // Pulsing effect
+                this.pulse = Math.sin(frameCount * 0.05) * 0.05;
+            }
+
+            draw() {
+                if (this.opacity <= 0) return;
+
+                const centerX = width / 2;
+                const centerY = height * 0.8;
+                const radiusBase = Math.min(width, height) * 0.4;
+                const radius = (radiusBase + this.offset) * this.scale + this.pulse;
+
+                ctx.beginPath();
+                ctx.lineWidth = 15;
+                ctx.strokeStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                
+                // Draw an arc from left to right
+                ctx.arc(centerX, centerY, radius, Math.PI, 0, false);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Re-initialize raindrops to fill screen
+            raindrops = [];
+            for (let i = 0; i < 120; i++) {
+                raindrops.push(new Raindrop());
+            }
+
+            // Re-initialize rainbow arcs
+            rainbowArcs = [];
+            colors.forEach((color, index) => {
+                rainbowArcs.push(new RainbowArc(color, index * 12));
+            });
+        }
+
+        function animate() {
+            frameCount++;
+
+            // Handle state logic
+            // 0-300: Heavy Rain
+            // 300-500: Transition to Clear
+            // 500-800: Rainbow emerges
+            // 800-1000: Loop
+            if (frameCount < 300) {
+                state = 'rain';
+                transitionProgress = 0;
+            } else if (frameCount < 500) {
+                state = 'clearing';
+                transitionProgress = (frameCount - 300) / 200;
+            } else if (frameCount < 850) {
+                state = 'rainbow';
+                transitionProgress = (frameCount - 500) / 350;
+            } else {
+                frameCount = 0;
+            }
+
+            // Background Gradient Logic
+            let bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+            if (state === 'rain') {
+                bgGrad.addColorStop(0, '#050a1a');
+                bgGrad.addColorStop(1, '#1a2a4a');
+            } else if (state === 'clearing') {
+                // Interpolate from dark blue to bright sky blue
+                const p = transitionProgress;
+                const r = Math.floor(5 + (135 - 5) * p);
+                const g = Math.floor(10 + (206 - 10) * p);
+                const b = Math.floor(26 + (235 - 26) * p);
+                bgGrad.addColorStop(0, `rgb(${r},${g},${b})`);
+                bgGrad.addColorStop(1, '#87ceeb');
+            } else {
+                bgGrad.addColorStop(0, '#87ceeb');
+                bgGrad.addColorStop(1, '#e0f7fa');
+            }
+            
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Raindrops
+            // Make rain density decrease during clearing
+            const rainAlpha = state === 'rain' ? 1 : (1 - transitionProgress);
+            if (rainAlpha > 0.05) {
+                ctx.globalAlpha = rainAlpha;
+                raindrops.forEach(drop => {
+                    drop.update();
+                    drop.draw();
+                });
+                ctx.globalAlpha = 1;
+            }
+
+            // Draw Rainbow
+            if (state === 'rainbow' || state === 'clearing') {
+                const rainbowAlpha = state === 'rainbow' ? transitionProgress : Math.max(0, transitionProgress - 0.5) * 2;
+                rainbowArcs.forEach(arc => {
+                    arc.update(rainbowAlpha);
+                    arc.draw();
+                });
+            }
+
+            // Add some "sunlight" glow if rainbow is present
+            if (state === 'rainbow' || state === 'clearing') {
+                const glow = ctx.createRadialGradient(width/2, height/3, 0, width/2, height/3, width/2);
+                glow.addColorStop(0, `rgba(255, 255, 224, ${transitionProgress * 0.3})`);
+                glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(0,0, width, height);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</head>
+<body>
+</body>
+</html>
+```

@@ -1,0 +1,275 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jolly Clown Juggling Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #ffeb3b; /* Bright sunny yellow */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Simple UI overlay for a circus feel */
+        #title {
+            position: absolute;
+            top: 20px;
+            font-family: 'Arial Black', sans-serif;
+            font-size: 3rem;
+            color: #e91e63;
+            text-shadow: 3px 3px 0px #ffffff, 6px 6px 0px #000000;
+            pointer-events: none;
+            user-select: none;
+        }
+    </style>
+</head>
+        <body>
+
+    <div id="title">CIRCUS FUN!</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let balls = [];
+        let particles = [];
+        const ballCount = 5;
+        const colors = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE', '#40C4FF', '#18FFFF', '#64FFDA', '#B2FF59', '#EEFF41'];
+
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Particle system for "confetti" effect
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 5 + 2;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.01;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // Ball class for juggling
+        class Ball {
+            constructor(id) {
+                this.id = id;
+                this.radius = 25;
+                this.color = colors[id % colors.length];
+                // Using a sine wave pattern to simulate the "toss and catch" loop
+                this.angle = (Math.PI * 2 / ballCount) * id;
+                this.x = width / 2;
+                this.y = height / 2;
+                this.amplitudeX = width * 0.3;
+                this.amplitudeY = height * 0.3;
+                this.speed = 0.02 + (id * 0.005);
+                this.phase = 0;
+            }
+
+            update() {
+                this.phase += this.speed;
+                // The math trick: Using sin/cos with a time offset creates a circular/elliptical path
+                // that looks like objects being tossed in a pattern.
+                this.x = width / 2 + Math.cos(this.phase) * this.amplitudeX;
+                this.y = height * 0.7 + Math.sin(this.phase) * this.amplitudeY - (Math.abs(Math.sin(this.phase * 0.5)) * 100);
+
+                // Add some "bounciness" to the Y axis via an additional sine wave
+                this.y -= Math.sin(this.phase * 2) * 20;
+            }
+
+            draw() {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Shine on ball
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.beginPath();
+                ctx.arc(this.x - 8, this.y - 8, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // The Clown class
+        class Clown {
+            constructor() {
+                this.x = width / 2;
+                this.y = height * 0.75;
+            }
+
+            draw() {
+                const cx = width / 2;
+                const cy = height * 0.8;
+
+                // Draw Body (Simple colorful shirt)
+                ctx.fillStyle = '#FF4081';
+                ctx.beginPath();
+                ctx.ellipse(cx, cy + 150, 100, 150, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw Face
+                ctx.fillStyle = '#FFF9C4'; // Pale skin
+                ctx.beginPath();
+                ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Clown Hair (Colorful pom-poms)
+                const hairColors = ['#F44336', '#2196F3', '#4CAF50', '#FFEB3B', '#E91E63'];
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2;
+                    const hx = cx + Math.cos(angle) * 75;
+                    const hy = cy + Math.sin(angle) * 75;
+                    ctx.fillStyle = hairColors[i % hairColors.length];
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Eyes
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(cx - 30, cy - 10, 8, 0, Math.PI * 2);
+                ctx.arc(cx + 30, cy - 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Nose (Big Red Nose!)
+                ctx.fillStyle = '#FF1744';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 15, 25, 0, Math.PI * 2);
+                ctx.fill();
+                // Nose shine
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(cx - 8, cy + 7, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Mouth (Big Smile)
+                ctx.strokeStyle = '#880E4F';
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 30, 40, 0.2 * Math.PI, 0.8 * Math.PI);
+                ctx.stroke();
+
+                // Arms/Hands (Moving toward balls)
+                this.drawArm(cx - 80, cy + 50, balls[0] ? balls[0].x : cx, balls[0] ? balls[0].y : cy);
+                this.drawArm(cx + 80, cy + 50, balls[1] ? balls[1].x : cx, balls[1] ? balls[1].y : cy);
+            }
+
+            drawArm(startX, startY, targetX, targetY) {
+                ctx.strokeStyle = '#FF4081';
+                ctx.lineWidth = 25;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.quadraticCurveTo((startX + targetX) / 2, startY - 50, targetX, targetY);
+                ctx.stroke();
+
+                // Hand (White glove)
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(targetX, targetY, 15, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize
+        for (let i = 0; i < ballCount; i++) {
+            balls.push(new Ball(i));
+        }
+        const clown = new Clown();
+
+        // Main Animation Loop
+        function animate() {
+            // Clear background with a nice gradient
+            const grad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, width);
+            grad.addColorStop(0, '#fff176');
+            grad.addColorStop(1, '#ffb74d');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw decorative stripes (Circus Tent style)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            for (let i = 0; i < width; i += 100) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i + 50, 0);
+                ctx.lineTo(width / 2, height);
+                ctx.lineTo(i - 50, height);
+                ctx.fill();
+            }
+
+            // Update and Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) particles.splice(i, 1);
+            }
+
+            // Update and Draw Clown
+            clown.draw();
+
+            // Update and Draw Balls
+            balls.forEach(ball => {
+                ball.update();
+                ball.draw();
+
+                // Randomly create confetti when balls move fast or "bounce"
+                if (Math.random() < 0.05) {
+                    particles.push(new Particle(ball.x, ball.y, ball.color));
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
+```

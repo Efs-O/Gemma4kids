@@ -19,14 +19,15 @@ function hasStartedCodeStream(text: string): boolean {
 function getSpeakableText(text: string): string {
   return text
     .replace(/\*Your animation code is in the editor\.\*/gi, '')
+    .replace(/\*Your code is being written in the editor! 🎨\*/gi, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
 function hideHtmlOutput(text: string): string {
-  let next = text.replace(/```(?:html)?\n[\s\S]*?(?:```|$)/gi, '\n\n*Your animation code is in the editor.*\n\n');
-  next = next.replace(/<!DOCTYPE html[\s\S]*$/i, '\n\n*Your animation code is in the editor.*\n');
-  next = next.replace(/<html\b[\s\S]*$/i, '\n\n*Your animation code is in the editor.*\n');
+  let next = text.replace(/```(?:html)?\n[\s\S]*?(?:```|$)/gi, '\n\n*Your code is being written in the editor! 🎨*\n\n');
+  next = next.replace(/<!DOCTYPE html[\s\S]*$/i, '\n\n*Your code is being written in the editor! 🎨*\n');
+  next = next.replace(/<html\b[\s\S]*$/i, '\n\n*Your code is being written in the editor! 🎨*\n');
   next = next.replace(/\n{3,}/g, '\n\n');
   return next.trim();
 }
