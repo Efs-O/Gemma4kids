@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Spinning Horse Carousel</title>
+    <style>
+        /* Define the keyframes for continuous spinning */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a2e; /* Deep space background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Hide anything that spills outside */
+        }
+
+        .carousel-container {
+            width: 80vw;
+            height: 70vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(255, 69, 0, 0.8), 0 0 80px rgba(0, 255, 255, 0.5);
+            background: linear-gradient(135deg, #ff6b6b, #48dbfb, #feca5e, #1dd1a1);
+            /* Apply the spinning animation */
+            animation: spin 15s linear infinite;
+            perspective: 1000px; /* For potential 3D effects */
+        }
+
+        .horse {
+            width: 150px;
+            height: 100px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            /* Each horse will also have a slight rotation based on its position */
+            animation: float 5s ease-in-out infinite alternate;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border: 5px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Stagger the appearance and rotation of the horses */
+        .horse:nth-child(1) {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4); /* Pink/Light */
+            transform: translateZ(0) rotateY(0deg);
+            animation-delay: 0s;
+        }
+
+        .horse:nth-child(2) {
+            background: linear-gradient(135deg, #6b46c1, #7c4dff); /* Purple/Blue */
+            transform: translateZ(0) rotateY(45deg);
+            animation-delay: 1s;
+        }
+
+        .horse:nth-child(3) {
+            background: linear-gradient(225deg, #ffcc66, #ff8a65); /* Orange/Peach */
+            transform: translateZ(0) rotateY(90deg);
+            animation-delay: 2s;
+        }
+
+        .horse:nth-child(4) {
+            background: linear-gradient(315deg, #48dbfb, #1dd1a1); /* Cyan/Teal */
+            transform: translateZ(0) rotateY(135deg);
+            animation-delay: 3s;
+        }
+
+        .horse:nth-child(5) {
+            background: linear-gradient(45deg, #feca5e, #ff6b6b); /* Yellow/Red */
+            transform: translateZ(0) rotateY(180deg);
+            animation-delay: 4s;
+        }
+
+        /* Additional subtle floating effect for visual interest */
+        @keyframes float {
+            0% { transform: translateY(0px) rotateY(0deg); }
+            100% { transform: translateY(-20px) rotateY(180deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container">
+        <!-- Horse 1 -->
+        <div class="horse"></div>
+        <!-- Horse 2 -->
+        <div class="horse"></div>
+        <!-- Horse 3 -->
+        <div class="horse"></div>
+        <!-- Horse 4 -->
+        <div class="horse"></div>
+        <!-- Horse 5 -->
+        <div class="horse"></div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Butterfly Flight</title>
+    <style>
+        body {
+            /* Vivid background matching a bright garden scene */
+            background: linear-gradient(to bottom, #a3e0ff, #e0f7fa);
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Style for Flowers (Static elements providing context) */
+        .flower {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #ff6f91; /* Vivid Pink/Red */
+            box-shadow: 0 0 15px rgba(255, 105, 147, 0.8);
+            animation: pulse 3s infinite alternate;
+        }
+
+        /* Define Pulsing Animation for Flowers */
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.9; }
+            to { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* Style for Butterflies */
+        .butterfly {
+            position: absolute;
+            width: 40px;
+            height: 30px;
+            border-radius: 50% 50% 0 0;
+            /* Base color will be overridden by JS for variety */
+            animation: float 10s linear infinite;
+            pointer-events: none; /* Ensure they don't block interaction */
+        }
+
+        /* Define Floating Animation for Butterflies (Simulating flight) */
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(calc(100vw - 50px), 0) rotate(15deg); }
+            50% { transform: translate(0, calc(100vh - 50px)) rotate(-10deg); }
+            75% { transform: translate(calc(100vw - 50px), 0) rotate(5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Flower Elements -->
+    <div class="flower" style="top: 20%; left: 10%;"></div>
+    <div class="flower" style="top: 40%; left: 80%;"></div>
+    <div class="flower" style="top: 70%; left: 30%;"></div>
+    <div class="flower" style="top: 10%; left: 50%;"></div>
+
+    <!-- Butterfly Elements (JS will populate these) -->
+
+    <script>
+        const butterflyElements = [];
+        const numButterflies = 30;
+        const flowerElements = document.querySelectorAll('.flower');
+
+        // Function to generate a random bright color
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // Function to create and position a butterfly
+        function createButterfly() {
+            const butterfly = document.createElement('div');
+            butterfly.classList.add('butterfly');
+            
+            // Set random size and unique color
+            const size = Math.floor(Math.random() * 15) + 25; // Size between 25px and 40px
+            const color = getRandomColor();
+            
+            butterfly.style.width = `${size}px`;
+            butterfly.style.height = `${size * 0.75}px`;
+            butterfly.style.backgroundColor = color;
+
+            // Initial random position (ensuring they start off-screen or scattered)
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * window.innerHeight;
+            
+            butterfly.style.left = `${startX}px`;
+            butterfly.style.top = `${startY}px`;
+            
+            // Set animation properties dynamically for unique flight paths
+            const duration = (Math.random() * 12) + 8; // Longer duration for slower flight
+            const delay = Math.random() * 5;
+            const animationName = `float-${Math.random()}`;
+
+            butterfly.style.animation = `${animationName} ${duration}s linear infinite`;
+            butterfly.style.animationDelay = `${delay}s`;
+            
+            // Give it a slight initial rotation offset
+            const rotation = Math.random() * 360;
+            butterfly.style.transform = `rotate(${rotation}deg)`;
+            
+            document.body.appendChild(butterfly);
+            butterflyElements.push(butterfly);
+        }
+
+        // Populate the screen with butterflies
+        for (let i = 0; i < numButterflies; i++) {
+            createButterfly();
+        }
+
+        // Ensure the animation applies correctly by setting up the animation keys in CSS (done above)
+    </script>
+
+</body>
+</html>

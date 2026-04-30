@@ -1,0 +1,90 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autumn Leaf Fall Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #a8dadc, #457b9d, #e63946, #f4a261); /* Vivid background gradient */
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        /* Keyframes for the gentle falling motion */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(105vh) rotate(720deg); /* Move down and spin slightly */
+                opacity: 0;
+            }
+        }
+
+        /* Style for the falling leaves */
+        .leaf {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50% 50% 0 0; /* Simple leaf shape */
+            background-color: #ff6b6b; /* Default vivid color */
+            top: -100px; /* Start above the screen */
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            animation: fall linear forwards;
+            pointer-events: none; /* Ignore mouse events */
+        }
+
+        /* Define specific leaf colors and animation delays for varied effect */
+        .leaf:nth-child(1) { background-color: #ffdb58; animation-duration: 6s; left: 10%; }
+        .leaf:nth-child(2) { background-color: #ff8c00; animation-duration: 7s; left: 20%; }
+        .leaf:nth-child(3) { background-color: #e63946; animation-duration: 5.5s; left: 30%; }
+        .leaf:nth-child(4) { background-color: #1d91b6; animation-duration: 8s; left: 40%; }
+        .leaf:nth-child(5) { background-color: #457b9d; animation-duration: 6.5s; left: 50%; }
+        .leaf:nth-child(6) { background-color: #38b000; animation-duration: 7.5s; left: 60%; }
+        .leaf:nth-child(7) { background-color: #e15f5f; animation-duration: 5s; left: 70%; }
+        .leaf:nth-child(8) { background-color: #f9c74f; animation-duration: 6.2s; left: 80%; }
+        .leaf:nth-child(9) { background-color: #b0e0e6; animation-duration: 7.8s; left: 90%; }
+        .leaf:nth-child(10) { background-color: #ff6b6b; animation-duration: 5.8s; left: 10%; }
+
+
+    </style>
+</head>
+<body>
+
+    <!-- Generating 20 falling leaves dynamically for a denser effect -->
+    <script>
+        const container = document.body;
+        const numLeaves = 30;
+
+        for (let i = 0; i < numLeaves; i++) {
+            const leaf = document.createElement('div');
+            leaf.classList.add('leaf');
+
+            // Randomly assign colors from a vibrant palette
+            const colors = [
+                '#ff6b6b', '#ffdb58', '#e63946', '#ff8c00', 
+                '#457b9d', '#38b000', '#1d91b6', '#e15f5f',
+                '#f9c74f', '#b0e0e6', '#f08080'
+            ];
+            
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            leaf.style.backgroundColor = randomColor;
+            
+            // Randomize starting position (X axis) and animation timing
+            leaf.style.left = `${Math.random() * 100}%`;
+            leaf.style.animationDelay = `${Math.random() * 1}s`; // Stagger the start
+            leaf.style.animationDuration = `${4 + Math.random() * 6}s`; // Vary the fall speed
+            
+            container.appendChild(leaf);
+        }
+    </script>
+
+</body>
+</html>
+```

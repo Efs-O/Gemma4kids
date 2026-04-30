@@ -1,0 +1,115 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clown Juggling Balls</title>
+    <style>
+        :root {
+            /* Define bright, vivid colors */
+            --ball-color-1: #FF007F; /* Bright Pink */
+            --ball-color-2: #00FFFF; /* Cyan */
+            --ball-color-3: #FFFF00; /* Bright Yellow */
+            --ball-color-4: #FF4500; /* Orange Red */
+            --clown-color: #FF69B4; /* Hot Pink */
+        }
+
+        body {
+            /* Vivid background matching the fun theme */
+            background: linear-gradient(135deg, #FFC0CB 0%, #ADD8E6 100%);
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .juggler-scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Clown Representation (Simple visual focus) */
+        .clown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 200px;
+            background: var(--clown-color);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        /* Style for the Juggling Balls */
+        .ball {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--ball-color-1); /* Default color */
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+            animation-name bounce;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+            z-index: 5;
+        }
+
+        /* Specific Ball Colors */
+        .ball:nth-child(1) { background-color: var(--ball-color-2); }
+        .ball:nth-child(2) { background-color: var(--ball-color-3); }
+        .ball:nth-child(3) { background-color: var(--ball-color-4); }
+        .ball:nth-child(4) { background-color: #32CD32; } /* Lime Green */
+        .ball:nth-child(5) { background-color: #FFD700; } /* Gold */
+
+        /* Bouncing Animation Definition */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                /* Simulate the bounce effect */
+                transform: translateY(calc(-100px + 10px)); 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="juggler-scene">
+        <div class="clown"></div>
+
+        <!-- Juggling Balls -->
+        <!-- Positioned dynamically to simulate juggling paths -->
+        <div class="ball" style="left: 10%; top: 60vh; animation-delay: 0s;"></div>
+        <div class="ball" style="left: 25%; top: 50vh; animation-delay: 0.2s;"></div>
+        <div class="ball" style="left: 40%; top: 40vh; animation-delay: 0.4s;"></div>
+        <div class="ball" style="left: 55%; top: 70vh; animation-delay: 0.6s;"></div>
+        <div class="ball" style="left: 70%; top: 50vh; animation-delay: 0.8s;"></div>
+        <div class="ball" style="left: 85%; top: 60vh; animation-delay: 1.0s;"></div>
+        <div class="ball" style="left: 30%; top: 75vh; animation-delay: 1.2s;"></div>
+        <div class="ball" style="left: 50%; top: 30vh; animation-delay: 1.4s;"></div>
+        <div class="ball" style="left: 65%; top: 20vh; animation-delay: 1.6s;"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const balls = document.querySelectorAll('.ball');
+            const sceneWidth = window.innerWidth;
+
+            // Dynamic adjustment for better spread and realistic bouncing simulation
+            balls.forEach((ball, index) => {
+                // Adjust the base vertical position slightly based on index to ensure separation
+                const baseTop = (index % 3) * 15; 
+                ball.style.top = `${baseTop + 50 + (index * 10)}%`;
+                
+                // Adjust horizontal position to simulate juggling arcs
+                ball.style.left = `${10 + (index * 15)}%`;
+            });
+        });
+    </script>
+</body>
+</html>
+```

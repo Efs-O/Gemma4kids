@@ -1,0 +1,157 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibrant Spinning Carousel</title>
+    <style>
+        /* General Setup & Background */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ff00cc 0%, #3333ff 100%);
+            overflow: hidden; /* Hides overflow from spinning */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Carousel Container Styling */
+        .carousel-wrapper {
+            width: 90vw;
+            height: 60vh;
+            max-width: 1200px;
+            position: relative;
+            overflow: hidden; /* Crucial: Keeps the elements inside the visible area */
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.5);
+            background-color: #f0f0f0; /* Base color for the structure */
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        /* The actual spinning track/element */
+        .carousel {
+            display: flex;
+            gap: 30px;
+            padding: 20px;
+            /* Apply the animation */
+            animation: spin 20s linear infinite;
+        }
+
+        /* Keyframe Animation for Spinning */
+        @keyframes spin {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                /* Moves the entire set of elements horizontally by enough distance to complete one full rotation */
+                transform: translateX(-50%); 
+            }
+        }
+
+        /* Horse Styling - Reusable component structure */
+        .horse {
+            /* Base dimensions and look */
+            flex-shrink: 0; /* Prevents flex items from shrinking */
+            width: 150px;
+            height: 180px;
+            border-radius: 50% / 10% 10% 20% 20%; /* Gives a curved, body shape */
+            background-size: contain;
+            background-repeat: no-repeat;
+            position: relative;
+            transition: transform 0.5s;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Styling for individual horses to create variety and color */
+        .horse:nth-child(1) {
+            /* Bright Pink/Red Horse */
+            background: linear-gradient(135deg, #ff4d99 0%, #ff8c00 100%);
+            transform: scale(1.1);
+        }
+        .horse:nth-child(2) {
+            /* Electric Blue Horse */
+            background: linear-gradient(135deg, #00bfff 0%, #4169e1 100%);
+            transform: scale(0.95);
+        }
+        .horse:nth-child(3) {
+            /* Vivid Green Horse */
+            background: linear-gradient(135deg, #32cd32 0%, #008000 100%);
+            transform: scale(1.05);
+        }
+        .horse:nth-child(4) {
+            /* Sunny Yellow/Orange Horse */
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+            transform: scale(1.1);
+        }
+        .horse:nth-child(5) {
+            /* Deep Purple Horse */
+            background: linear-gradient(135deg, #9932cc 0%, #8a2be2 100%);
+            transform: scale(0.95);
+        }
+
+        /* Adding details to simulate tack/mane */
+        .horse::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            width: 80%;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.6); /* Mane highlight */
+            border-radius: 5px;
+            z-index: 1;
+        }
+        .horse::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            left: 15%;
+            width: 70%;
+            height: 15px;
+            background-color: rgba(255, 255, 255, 0.8); /* Saddle/Detail */
+            border-radius: 3px;
+            z-index: 2;
+        }
+
+        /* Title Overlay */
+        h1 {
+            position: absolute;
+            top: 50px;
+            text-align: center;
+            color: #fff;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="carousel-wrapper">
+        <h1>🌈 Magical Spinning Carousel 🎠</h1>
+        
+        <div class="carousel">
+            <!-- Using 5 distinct, colorful "horses" -->
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+            
+            <!-- Duplicating elements to make the rotation smooth and continuous -->
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+        </div>
+    </div>
+
+</body>
+</html>
+```

@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e4b-rocket--make-it-faster",
+  "stage": 2,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e4b-f2-rocket",
+  "promptSlug": "rocket",
+  "chip": "Make it faster",
+  "chipSlug": "make-it-faster",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (16 → 16)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (0%)",
+    "CSS-only (no script to parse)"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "40.7",
+  "timestamp": "2026-04-30T08:40:56.823Z"
+}

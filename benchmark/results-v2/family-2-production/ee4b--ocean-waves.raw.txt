@@ -1,0 +1,145 @@
+Oh, a sunny beach with crashing waves! That sounds so beautiful and calming! 🌊☀️ Let's make a vibrant animation that captures the perfect summer day!
+
+I've created a scene with the bright blue sky, golden sand, and deep turquoise waves that crash gently onto the shore. The waves use CSS animations to give them that lovely, rolling, foamy look!
+
+Here is your animated beach scene!
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sunny Beach Waves</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Gradient from Sky (top) to Sand (bottom) */
+    background: linear-gradient(to bottom, 
+        #87CEEB 0%,    /* Sky Blue */
+        #6495ED 40%,   /* Mid-Water Blue */
+        #4682B4 70%,   /* Deep Water Blue */
+        #F4A460 100%   /* Sandy Beach Color */
+    );
+    height: 100vh;
+    width: 100vw;
+}
+
+.beach-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- Wave Styling --- */
+.ocean {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40vh; /* Occupy the lower part for the water */
+    background: linear-gradient(to top, #2c74a6, #4682B4);
+    border-top: 10px solid #1e5e81; /* Deeper water line */
+    animation: waterFlow 10s linear infinite;
+}
+
+/* Keyframes for the overall water movement */
+@keyframes waterFlow {
+    from { background-position: 0 0; }
+    to { background-position: 50px 0; }
+}
+
+/* The white foam effect using pseudo-elements on the water container */
+.ocean::before, .ocean::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center bottom, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 60%);
+    animation: waveCrash 3s linear infinite alternate;
+    opacity: 0;
+}
+
+/* Waves effect 1 (Simulating the crest) */
+.ocean::before {
+    top: -10%;
+    left: 0;
+    animation-delay: 0s;
+    transform: translateX(-100%);
+}
+
+/* Waves effect 2 (A second wave rolling in) */
+.ocean::after {
+    top: -20%;
+    right: 0;
+    animation-delay: 1.5s;
+    transform: translateX(100%);
+}
+
+/* Keyframes for the wave crashing/foam effect */
+@keyframes waveCrash {
+    0% {
+        opacity: 0.1;
+        transform: translateX(-100%) translateY(0);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateX(100%) translateY(0);
+        box-shadow: 0 0 40px rgba(255, 255, 255, 1);
+    }
+    100% {
+        opacity: 0.1;
+        transform: translateX(-100%) translateY(0);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+}
+
+/* Sand Area styling (optional visual separation) */
+.sand {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20vh; /* Height of the dry sand */
+    background-color: #F4A460;
+    z-index: 10;
+}
+
+/* Making the water slightly more defined over the sand line */
+.ocean-foam {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px; /* Area where the wave hits the sand */
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+    z-index: 11;
+    animation: foamHit 2s linear infinite alternate;
+}
+
+@keyframes foamHit {
+    from {
+        opacity: 0.3;
+        transform: translateY(0px);
+    }
+    to {
+        opacity: 0.1;
+        transform: translateY(-10px);
+    }
+}
+
+
+</style>
+</head>
+<body>
+    <div class="beach-scene">
+        <div class="ocean"></div>
+        <div class="ocean-foam"></div>
+        <div class="sand"></div>
+    </div>
+</body>
+</html>
+```
+
+save_animation(html_content="<!DOCTYPE html>\n<html>\n<head>\n<title>Sunny Beach Waves</title>\n<style>\nbody {\n    margin: 0;\n    padding: 0;\n    overflow: hidden;\n    /* Gradient from Sky (top) to Sand (bottom) */\n    background: linear-gradient(to bottom, \n        #87CEEB 0%,    /* Sky Blue */\n        #6495ED 40%,   /* Mid-Water Blue */\n        #4682B4 70%,   /* Deep Water Blue */\n        #F4A460 100%   /* Sandy Beach Color */\n    );\n    height: 100vh;\n    width: 100vw;\n}\n\n.beach-scene {\n    position: relative;\n    width: 100%;\n    height: 100%;\n}\n\n/* --- Wave Styling --- */\n.ocean {\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 100%;\n    height: 40vh; /* Occupy the lower part for the water */\n    background: linear-gradient(to top, #2c74a6, #4682B4);\n    border-top: 10px solid #1e5e81; /* Deeper water line */\n    animation: waterFlow 10s linear infinite;\n}\n\n/* Keyframes for the overall water movement */\n@keyframes waterFlow {\n    from { background-position: 0 0; }\n    to { background-position: 50px 0; }\n}\n\n/* The white foam effect using pseudo-elements on the water container */\n.ocean::before, .ocean::after {\n    content: '';\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    background: radial-gradient(ellipse at center bottom, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 60%);\n    animation: waveCrash 3s linear infinite alternate;\n    opacity: 0;\n}\n\n/* Waves effect 1 (Simulating the crest) */\n.ocean::before {\n    top: -10%;\n    left: 0;\n    animation-delay: 0s;\n    transform: translateX(-100%);\n}\n\n/* Waves effect 2 (A second wave rolling in) */\n.ocean::after {\n    top: -20%;\n    right: 0;\n    animation-delay: 1.5s;\n    transform: translateX(100%);\n}\n\n/* Keyframes for the wave crashing/foam effect */\n@keyframes waveCrash {\n    0% {\n        opacity: 0.1;\n        transform: translateX(-100%) translateY(0);\n        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);\n    }\n    50% {\n        opacity: 0.5;\n        transform: translateX(100%) translateY(0);\n        box-shadow: 0 0 40px rgba(255, 255, 255, 1);\n    }\n    100% {\n        opacity: 0.1;\n        transform: translateX(-100%) translateY(0);\n        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);\n    }\n}\n\n/* Sand Area styling (optional visual separation) */\n.sand {\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 100%;\n    height: 20vh; /* Height of the dry sand */\n    background-color: #F4A460;\n    z-index: 10;\n}\n\n/* Making the water slightly more defined over the sand line */\n.ocean-foam {\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 100%;\n    height: 30px; /* Area where the wave hits the sand */\n    background: linear-gradient(to top, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);\n    z-index: 11;\n    animation: foamHit 2s linear infinite alternate;\n}\n\n@keyframes foamHit {\n    from {\n        opacity: 0.3;\n        transform: translateY(0px);\n    }\n    to {\n        opacity: 0.1;\n        transform: translateY(-10px);\n    }\n}\n\n</style>\n</head>\n<body>\n    <div class=\"beach-scene\">\n        <div class=\"ocean\"></div>\n        <div class=\"ocean-foam\"></div>\n        <div class=\"sand\"></div>\n    </div>\n</body>\n</html>")

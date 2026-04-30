@@ -1,0 +1,183 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunny Beach Waves</title>
+    <style>
+        /* --- Scene Setup --- */
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            /* Bright, sunny background */
+            background: linear-gradient(to bottom, #87CEEB 0%, #FFD700 50%, #4682B4 100%);
+            font-family: sans-serif;
+        }
+
+        /* --- Beach Foreground (Sand) --- */
+        .beach-ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background-color: #F4A460; /* Warm sand color */
+            z-index: 10;
+        }
+
+        /* --- Water Container --- */
+        .ocean-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        /* --- Wave Layer Base --- */
+        .wave-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Base blue water color */
+            background-color: #0077B6; 
+            /* Keyframes for continuous, slow horizontal movement (drift) */
+            animation: drift 30s linear infinite;
+        }
+
+        /* Layer 1: Deeper, slower moving water */
+        .wave-layer:nth-child(1) {
+            background-color: #005F99;
+            animation-duration: 40s;
+        }
+
+        /* Layer 2: Shallower, faster moving water */
+        .wave-layer:nth-child(2) {
+            background-color: #48CAE4;
+            animation-duration: 30s;
+        }
+
+        /* --- Wave Animation (The Crashing Effect) --- */
+        @keyframes drift {
+            0% {
+                background-position: 0% 0;
+            }
+            100% {
+                background-position: 100% 0;
+            }
+        }
+
+        /* Dynamic Wave Crests (Simulating motion via background gradient shifts) */
+        .wave-layer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Create the wave pattern using multiple overlapping gradients */
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0.3) 0%,
+                rgba(255, 255, 255, 0.1) 1%,
+                transparent 1%,
+                transparent 2%
+            );
+            /* Apply the movement */
+            animation: waveMotion 1.5s ease-in-out infinite;
+        }
+
+        @keyframes waveMotion {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                /* Simulate the peak of a wave crest rising */
+                transform: translateY(-20px); 
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        /* --- Foam / Crash Effect (Simulated bursts) --- */
+        .foam {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0); /* Start hidden */
+            width: 100px;
+            height: 100px;
+            background-color: #FFFFFF; /* Bright white foam */
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            animation: foamBurst 1s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes foamBurst {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            10% {
+                opacity: 1;
+            }
+            50% {
+                /* Expand rapidly to simulate a crash */
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -150px) scale(4); /* Move upward and dissipate */
+                opacity: 0;
+            }
+        }
+
+        /* --- Adding Multiple Crash Points --- */
+        .foam:nth-child(1) {
+            left: 10%;
+            animation-delay: 0.5s;
+            animation-duration: 1.2s;
+        }
+        .foam:nth-child(2) {
+            left: 40%;
+            animation-delay: 1.5s;
+            animation-duration: 1.1s;
+        }
+        .foam:nth-child(3) {
+            left: 75%;
+            animation-delay: 2.5s;
+            animation-duration: 1.3s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ocean-container">
+        <!-- Wave Layer 1 (Deeper Water) -->
+        <div class="wave-layer"></div>
+        
+        <!-- Wave Layer 2 (Shallower Water) -->
+        <div class="wave-layer"></div>
+
+        <!-- Simulated Crashing Foam -->
+        <div class="foam"></div>
+        <div class="foam"></div>
+        <div class="foam"></div>
+    </div>
+
+    <!-- Beach Foreground -->
+    <div class="beach-ground"></div>
+
+</body>
+</html>
+```

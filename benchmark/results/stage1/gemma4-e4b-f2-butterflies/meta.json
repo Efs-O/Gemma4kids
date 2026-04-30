@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e4b-f2-butterflies",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 2,
+  "familyLabel": "Production Prompt As-Is",
+  "promptSlug": "butterflies",
+  "promptText": "Make colorful butterflies flying around flowers",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)",
+    "undefined CSS vars: r"
+  ],
+  "durationSec": "79.7",
+  "timestamp": "2026-04-30T08:04:46.406Z"
+}

@@ -1,0 +1,29 @@
+{
+  "runKey": "gemma4-e4b-f3-carousel",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 3,
+  "familyLabel": "Hardcoded-Animation Logic Prompt",
+  "promptSlug": "carousel",
+  "promptText": "Make a colorful spinning carousel with horses",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present",
+    "translateY for circular placement detected"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)",
+    "no rotate() found for carousel"
+  ],
+  "durationSec": "27.9",
+  "timestamp": "2026-04-30T08:13:46.930Z"
+}

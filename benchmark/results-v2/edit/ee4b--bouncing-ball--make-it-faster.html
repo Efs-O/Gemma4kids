@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bouncing Ball</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    /* A super bright, fun background gradient! */
+    background: linear-gradient(to bottom, #89cff0, #4a90e2);
+    overflow: hidden; /* Keeps the ball contained nicely */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.ball {
+    width: 80px;
+    height: 80px;
+    background-color: #ff69b4; /* Bright pink color! */
+    border-radius: 50%;
+    position: absolute;
+    /* Start position near the top center */
+    top: 50px;
+    left: 20%;
+    
+    /* The magic animation! */
+    animation: bounce 1s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Keyframes for the bouncing motion */
+@keyframes bounce {
+    0% {
+        /* Start high */
+        transform: translateY(-100px) translateX(0);
+    }
+    50% {
+        /* Bottom of the bounce */
+        transform: translateY(0) translateX(100px);
+    }
+    100% {
+        /* Back to starting height, slightly moved */
+        transform: translateY(-100px) translateX(0);
+    }
+}
+</style>
+</head>
+<body >
+
+<div class="ball"></div >
+
+</body>
+</html>

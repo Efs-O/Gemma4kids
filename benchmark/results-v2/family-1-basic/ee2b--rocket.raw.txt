@@ -1,0 +1,128 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Rocket Launch</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #00001a; /* Deep space blue/black */
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* --- Star Background --- */
+        #space-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-image: 
+                radial-gradient(circle at 10% 20%, #ffcc00 1px, transparent 1px),
+                radial-gradient(circle at 80% 50%, #00ffff 1px, transparent 1px),
+                radial-gradient(circle at 50% 10%, #ff00ff 1px, transparent 1px),
+                radial-gradient(circle at 30% 85%, #ffffff 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: twinkle 10s linear infinite;
+        }
+
+        @keyframes twinkle {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 1000px; }
+        }
+
+        /* --- Rocket Styling --- */
+        #rocket-container {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform: translate(-50%, 50%);
+            z-index: 10;
+            pointer-events: none; /* Allows interaction if needed, but keeps focus on the animation */
+        }
+
+        #rocket {
+            width: 80px;
+            height: 150px;
+            background: linear-gradient(to top, #ff4500, #ff8c00); /* Orange/Red body */
+            position: relative;
+            border-radius: 10px 10px 50px 50px;
+            box-shadow: 0 0 20px #ffaa00, 0 0 40px #ff4500;
+            animation: launch 3s ease-out forwards;
+            transform-origin: bottom;
+        }
+
+        /* Rocket Nose Tip */
+        #rocket::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 30px;
+            background-color: #ffffff; /* White nose */
+            border-radius: 5px 5px 0 0;
+            border: 2px solid #ffffff;
+        }
+
+        /* --- Flame Effect (The Engine Blast) --- */
+        #flame {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 80px;
+            background: radial-gradient(circle, #ffea00 10%, #ff6600 50%, #ff0000 90%); /* Vivid orange/yellow flame */
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 0 15px #ffaa00, 0 0 30px #ff0000;
+            animation: fire-flicker 0.1s infinite alternate;
+            z-index: 5;
+        }
+
+        @keyframes launch {
+            0% {
+                transform: translate(-50%, 0) scale(0.5);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, 100vh) scale(1); /* Moves up to the top of the screen */
+                opacity: 1;
+            }
+        }
+
+        @keyframes fire-flicker {
+            from {
+                transform: translate(-50%, 0) scaleY(1);
+                filter: brightness(1.2);
+            }
+            to {
+                transform: translate(-50%, 0) scaleY(0.95);
+                filter: brightness(1.8);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="space-background"></div>
+
+    <div id="rocket-container">
+        <div id="rocket">
+            <div id="flame"></div>
+        </div>
+    </div>
+
+</body>
+</html>
+```

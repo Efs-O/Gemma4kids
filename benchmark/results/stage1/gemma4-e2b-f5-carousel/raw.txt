@@ -1,0 +1,104 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Spinning Horse Carousel</title>
+    <style>
+        /* Define vivid colors */
+        :root {
+            --color-red: #ff4d4d;
+            --color-blue: #4d4dff;
+            --color-green: #4dff4d;
+            --color-yellow: #ffff4d;
+            --color-purple: #9d4dff;
+            --carousel-width: 100vw;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e; /* Deep contrasting background */
+            overflow: hidden; /* Hide scrollbars caused by movement */
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Carousel Container */
+        .carousel-container {
+            width: var(--carousel-width);
+            height: 100vh;
+            position: relative;
+            display: flex;
+            /* The magic for continuous spinning movement */
+            animation: spin-carousel 40s linear infinite;
+        }
+
+        /* Keyframes for the spinning motion */
+        @keyframes spin-carousel {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                /* Moves the entire set of horses horizontally */
+                transform: translateX(calc(-100% / 2));
+            }
+        }
+
+        /* Individual Horse Styling */
+        .horse {
+            width: 150px;
+            height: 120px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            /* Ensure the horses are spaced out */
+            flex-shrink: 0;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            /* Adding a subtle rotation for visual interest */
+            animation: float-drift 10s ease-in-out infinite alternate;
+        }
+
+        /* Horse specific styles */
+        .horse:nth-child(1) { background-color: var(--color-red); border: 5px solid #ff9900; }
+        .horse:nth-child(2) { background-color: var(--color-blue); border: 5px solid #00aaff; }
+        .horse:nth-child(3) { background-color: var(--color-green); border: 5px solid #00cc00; }
+        .horse:nth-child(4) { background-color: var(--color-yellow); border: 5px solid #ffcc00; }
+        .horse:nth-child(5) { background-color: var(--color-purple); border: 5px solid #cc99ff; }
+        .horse:nth-child(6) { background-color: #ff66b2; border: 5px solid #ff00ff; }
+
+
+        /* Animation for subtle floating/drifting effect */
+        @keyframes float-drift {
+            from {
+                transform: translateY(-50%) rotate(0deg);
+            }
+            to {
+                transform: translateY(-50%) rotate(180deg);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container">
+        <!-- Horse 1 -->
+        <div class="horse"></div>
+        <!-- Horse 2 -->
+        <div class="horse"></div>
+        <!-- Horse 3 -->
+        <div class="horse"></div>
+        <!-- Horse 4 -->
+        <div class="horse"></div>
+        <!-- Horse 5 -->
+        <div class="horse"></div>
+        <!-- Horse 6 -->
+        <div class="horse"></div>
+    </div>
+
+</body>
+</html>
+```

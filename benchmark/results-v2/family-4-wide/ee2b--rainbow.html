@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow After Rain</title>
+    <style>
+        :root {
+            --rain-color: #a0c4ff; /* Light blue/grey for wet look */
+            --rainbow-start-color: #00ffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e; /* Deep night blue/purple background */
+            overflow: hidden;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        /* --- Rain Simulation (Background Layer) --- */
+        .rain-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.3;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 1px;
+            height: 50px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), transparent);
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0.1;
+            }
+        }
+
+        /* --- Midground: The Wetness (Appears first) --- */
+        .wet-surface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--rain-color);
+            z-index: 2;
+            opacity: 1;
+            animation: wetFade 4s ease-in-out forwards;
+        }
+
+        @keyframes wetFade {
+            0% { background-color: #3a4a6a; }
+            50% { background-color: #4a6a9a; }
+            100% { background-color: #1a1a2e; }
+        }
+
+        /* --- Foreground: The Rainbow Effect --- */
+        .rainbow-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            opacity: 0;
+            animation: rainbowBloom 6s ease-in-out forwards;
+        }
+
+        @keyframes rainbowBloom {
+            0% {
+                opacity: 0;
+                filter: hue-rotate(0deg);
+            }
+            20% {
+                opacity: 1;
+                filter: hue-rotate(0deg); /* Start with red hint */
+            }
+            50% {
+                filter: hue-rotate(180deg); /* Transition through green/yellow */
+            }
+            80% {
+                filter: hue-rotate(360deg); /* Full cycle */
+            }
+            100% {
+                opacity: 1;
+                filter: hue-rotate(720deg); /* Ensure full cycle completes */
+            }
+        }
+
+        /* Layering specific elements for complexity */
+        .color-band {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 100% 0 0 0;
+            opacity: 0;
+            animation: bloom-color 6s ease-out forwards;
+        }
+
+        @keyframes bloom-color {
+            0% { opacity: 0; }
+            5% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+        /* Specific color assignments for layering */
+        .red-layer { background: linear-gradient(to top, rgba(255, 0, 0, 0.4), transparent); animation-delay: 0.5s; }
+        .orange-layer { background: linear-gradient(to top, rgba(255, 165, 0, 0.4), transparent); animation-delay: 1.5s; }
+        .yellow-layer { background: linear-gradient(to top, rgba(255, 255, 0, 0.4), transparent); animation-delay: 2.5s; }
+        .green-layer { background: linear-gradient(to top, rgba(0, 255, 0, 0.4), transparent); animation-delay: 3.5s; }
+        .blue-layer { background: linear-gradient(to top, rgba(0, 0, 255, 0.4), transparent); animation-delay: 4.5s; }
+        .indigo-layer { background: linear-gradient(to top, rgba(75, 0, 130, 0.4), transparent); animation-delay: 5.5s; }
+        .violet-layer { background: linear-gradient(to top, rgba(148, 0, 211, 0.4), transparent); animation-delay: 6.5s; }
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. Rain Simulation (Deep Background/Fastest movement) -->
+    <div class="rain-layer">
+        <!-- Creating many raindrops to simulate a downpour -->
+        <div class="raindrop" style="left: 10%; top: 0; animation-duration: 1s;"></div>
+        <div class="raindrop" style="left: 30%; top: 50px; animation-duration: 1.2s;"></div>
+        <div class="raindrop" style="left: 50%; top: 100px; animation-duration: 0.9s;"></div>
+        <div class="raindrop" style="left: 70%; top: 200px; animation-duration: 1.1s;"></div>
+        <div class="raindrop" style="left: 90%; top: 300px; animation-duration: 1.3s;"></div>
+        <!-- Repeat for density -->
+        <div class="raindrop" style="left: 5%; top: 150px; animation-duration: 0.8s;"></div>
+        <div class="raindrop" style="left: 85%; top: 450px; animation-duration: 1.4s;"></div>
+    </div>
+
+    <!-- 2. The Wet Surface (Midground - Represents the immediate aftermath) -->
+    <div class="wet-surface"></div>
+
+    <!-- 3. The Rainbow Layer (Foreground - Blooms over the wetness) -->
+    <div class="rainbow-effect"></div>
+    <div class="color-band red-layer"></div>
+    <div class="color-band orange-layer"></div>
+    <div class="color-band yellow-layer"></div>
+    <div class="color-band green-layer"></div>
+    <div class="color-band blue-layer"></div>
+    <div class="color-band indigo-layer"></div>
+    <div class="color-band violet-layer"></div>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e2b-rainbow--make-it-slower",
+  "stage": 2,
+  "model": "gemma4:e2b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e2b-f2-rainbow",
+  "promptSlug": "rainbow",
+  "chip": "Make it slower",
+  "chipSlug": "make-it-slower",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (3 → 3)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (0%)",
+    "CSS-only (no script to parse)"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "10.2",
+  "timestamp": "2026-04-30T08:29:42.792Z"
+}

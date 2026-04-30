@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball</title>
+    <style>
+        body {
+            /* Beautiful background! */
+            background: linear-gradient(to bottom, #87CEEB, #6A5ACD); /* Sky blue to light purple */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Hide anything that might go outside */
+        }
+
+        #ball {
+            width: 100px; /* Increased size */
+            height: 100px; /* Increased size */
+            background-color: #FFD700; /* Bright yellow color */
+            border-radius: 50%; /* Makes it a perfect circle */
+            position: absolute;
+            bottom: 40px; /* Start position near the bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            transition: bottom 0.3s ease-out; /* Smooth transition for the bounce effect */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ball"></div>
+
+    <script>
+        const ball = document.getElementById('ball');
+        const body = document.body;
+        const ballSize = 100; // Updated size used for calculations
+
+        function bounceBall() {
+            // Calculate a random bounce height (e.g., bouncing between 100px and 70vh)
+            const minBottom = 40; // Keep it not too close to the bottom
+            const maxBottom = window.innerHeight - ballSize - 40; // Adjusted calculation
+
+            // Generate a random new bottom position
+            let newBottom = Math.floor(Math.random() * (maxBottom - minBottom + 1)) + minBottom;
+
+            // Apply the new position with a slight delay to make the bounce look smoother
+            ball.style.bottom = `${newBottom}px`;
+
+            // Set the next bounce time (keep it quick for fun!)
+            setTimeout(bounceBall, 500); // Bounces every half a second
+        }
+
+        // Start the bouncing action when the page loads!
+        window.onload = function() {
+            // Initial position setup for a good start
+            ball.style.bottom = '40px';
+            
+            // Start the loop!
+            bounceBall();
+        };
+    </script>
+
+</body>
+</html>

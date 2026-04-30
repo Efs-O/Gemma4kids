@@ -1,0 +1,180 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Night Sky Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #00001a; /* Deep space blue/black */
+            overflow: hidden; /* Hide scrollbars caused by large animations */
+            height: 100vh;
+            width: 100vw;
+            cursor: crosshair; /* Fun visual touch */
+            perspective: 1000px;
+        }
+
+        /* General container for star field */
+        .star-field {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- Twinkling Stars --- */
+        .star {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            background-color: #ffffff; /* Bright white core */
+            border-radius: 50%;
+            opacity: 0;
+            box-shadow: 0 0 2px 1px rgba(255, 255, 200, 0.8); /* Slight glow effect */
+            animation: twinkle linear infinite;
+        }
+
+        /* Keyframes for twinkling effect */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.5); }
+            70% { opacity: 0.5; }
+        }
+
+        /* --- Shooting Star Animation --- */
+        @keyframes shoot {
+            0% {
+                transform: translate(calc(var(--start-x)), calc(var(--start-y))) scale(1);
+                opacity: 0.8;
+                width: 2px;
+                height: 2px;
+            }
+            100% {
+                transform: translate(calc(var(--end-x)), calc(var(--end-y))) scale(0.5);
+                opacity: 0;
+                width: 1px;
+                height: 1px;
+            }
+        }
+
+        .shooting-star {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, #ffdd55, transparent); /* Yellow-orange gradient trail */
+            border-radius: 1px;
+            animation: shoot var(--duration) linear forwards;
+            pointer-events: none; /* Ensures stars/trails don't block mouse events */
+            transform: translate(-50%, -50%); /* Center positioning */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="star-field" id="starField">
+        <!-- Stars will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        const starField = document.getElementById('starField');
+        const numStars = 150;
+        const numShootingStars = 3;
+
+        // --- 1. Star Generation ---
+        function createStar() {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            
+            // Random position across the viewport
+            const x = Math.random() * 100vw;
+            const y = Math.random() * 100vh;
+            
+            star.style.left = `${x}px`;
+            star.style.top = `${y}px`;
+            
+            // Randomize animation duration for variation
+            star.style.animationDuration = `${Math.random() * 15 + 10}s`;
+            
+            // Randomize initial delay to stagger twinkling
+            star.style.animationDelay = `${Math.random() * 3}s`;
+
+            return star;
+        }
+
+        function generateStars() {
+            for (let i = 0; i < numStars; i++) {
+                starField.appendChild(createStar());
+            }
+        }
+
+        // --- 2. Shooting Star Generation ---
+        function createShootingStar(startX, startY, endX, endY, duration) {
+            const star = document.createElement('div');
+            star.classList.add('shooting-star');
+            
+            // Set CSS variables for the animation keyframes
+            star.style.setProperty('--start-x', `${startX}px`);
+            star.style.setProperty('--start-y', `${startY}px`);
+            star.style.setProperty('--end-x', `${endX}px`);
+            star.style.setProperty('--end-y', `${endY}px`);
+            star.style.setProperty('--duration', `${duration}s`);
+            
+            // Initial placement (Important for immediate appearance)
+            star.style.left = `${startX}px`;
+            star.style.top = `${startY}px`;
+
+            document.body.appendChild(star);
+
+            // Clean up the element after the animation finishes
+            setTimeout(() => {
+                star.remove();
+            }, (duration * 1000) + 500);
+        }
+
+        function launchShootingStar() {
+            // Random starting point (usually bottom/edge)
+            const startX = Math.random() * 100vw;
+            const startY = Math.random() * 100vh;
+
+            let endX, endY;
+            
+            // Determine a target point far away from the start point
+            if (Math.random() > 0.5) {
+                // Target is towards the upper left quadrant
+                endX = Math.random() * (0.3 * 100vw) + 0;
+                endY = Math.random() * (0.3 * 100vh) + 0;
+            } else {
+                // Target is towards the upper right quadrant
+                endX = Math.random() * (0.7 * 100vw) + 0.3 * 100vw;
+                endY = Math.random() * (0.3 * 100vh) + 0;
+            }
+            
+            // Ensure the target is sufficiently different from the start
+            const dx = Math.abs(endX - startX);
+            const dy = Math.abs(endY - startY);
+
+            // Calculate trajectory based on distance (longer distance = longer duration)
+            const duration = Math.min(2, Math.sqrt(dx * dx + dy * dy) / 100);
+
+            createShootingStar(startX, startY, endX, endY, duration);
+        }
+
+
+        // --- Initialization ---
+        window.onload = function() {
+            // 1. Generate the static field of stars
+            generateStars();
+            
+            // 2. Continuously launch shooting stars
+            setInterval(() => {
+                // Launch multiple stars close together for a shower effect
+                for(let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+                    launchShootingStar();
+                }
+            }, 800); // Launch a group every 800 milliseconds
+        };
+    </script>
+</body>
+</html>
+```

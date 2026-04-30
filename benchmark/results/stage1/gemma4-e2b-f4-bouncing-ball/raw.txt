@@ -1,0 +1,85 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Bouncing Balls</title>
+    <style>
+        /* Wide scene quality setup */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff006e 0%, #00bfff 50%, #ffcc00 100%);
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Base ball styling */
+        .ball {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            animation-name: bounce;
+            animation-iteration-count: infinite;
+        }
+
+        /* Ball 1: Foreground, Fast Bounce (Red) */
+        .ball:nth-child(1) {
+            background-color: #ff416c; /* Vivid Pink */
+            left: 5%;
+            top: 10%;
+            animation-duration: 1.0s;
+            animation-delay: 0s;
+        }
+
+        /* Ball 2: Midground, Slower Bounce (Blue) */
+        .ball:nth-child(2) {
+            background-color: #416cff; /* Vivid Blue */
+            left: 30%;
+            top: 40%;
+            animation-duration: 1.8s;
+            animation-delay: 1.5s;
+        }
+
+        /* Ball 3: Background, Medium Bounce (Yellow) */
+        .ball:nth-child(3) {
+            background-color: #ffe641; /* Vivid Yellow */
+            left: 60%;
+            top: 70%;
+            animation-duration: 2.5s;
+            animation-delay: 3.0s;
+        }
+
+        /* Keyframes for the bouncing motion */
+        @keyframes bounce {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                /* Hit the bottom/peak */
+                transform: translateY(-100px);
+            }
+            100% {
+                /* Return to the start */
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ball"></div>
+        <div class="ball"></div>
+        <div class="ball"></div>
+    </div>
+</body>
+</html>
+```

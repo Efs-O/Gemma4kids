@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e4b-f2-night-sky",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 2,
+  "familyLabel": "Production Prompt As-Is",
+  "promptSlug": "night-sky",
+  "promptText": "Make a night sky with twinkling stars and shooting stars",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "36.2",
+  "timestamp": "2026-04-30T08:08:03.471Z"
+}

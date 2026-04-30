@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Falling Snowflakes</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #000022, #000044); /* Deep, vivid night sky */
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        .snowflake {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            border-radius: 50%;
+            /* Creating a more complex, crystal-like look using borders/shadows */
+            box-shadow: 
+                0 0 5px rgba(255, 255, 255, 0.8),
+                0 0 10px rgba(173, 216, 230, 0.5);
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        /* Keyframes for the gentle falling motion */
+        @keyframes fall {
+            0% {
+                top: -10vh; /* Start just above the screen */
+                left: 50%;
+                transform: translateX(-50%);
+                opacity: 0.5;
+            }
+            100% {
+                top: 100vh; /* End at the bottom of the screen */
+                left: 50%;
+                transform: translateX(-50%);
+                opacity: 0.1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="snowflakeContainer">
+        <!-- Snowflakes will be inserted here by JavaScript -->
+    </div>
+
+    <script>
+        const container = document.getElementById('snowflakeContainer');
+        const numberOfSnowflakes = 80;
+
+        function createSnowflake() {
+            const flake = document.createElement('div');
+            flake.classList.add('snowflake');
+
+            // Random starting position (horizontal spread)
+            const startX = Math.random() * 100;
+
+            // Random duration for staggered falling effect
+            const duration = 10 + Math.random() * 15; // Slower fall for gentleness
+            const delay = Math.random() * 5;
+            
+            // Set initial placement and animation timing
+            flake.style.left = `${startX}vw`;
+            flake.style.animationDuration = `${duration}s`;
+            flake.style.animationDelay = `${delay}s`;
+            
+            // Randomize color for vividness
+            const colors = ['#FFD700', '#00FFFF', '#FF69B4', '#ADD8E6', '#FFFFFF'];
+            flake.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+            container.appendChild(flake);
+        }
+
+        // Generate the snowflakes
+        for (let i = 0; i < numberOfSnowflakes; i++) {
+            createSnowflake();
+        }
+    </script>
+
+</body>
+</html>

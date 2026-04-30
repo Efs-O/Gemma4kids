@@ -1,0 +1,170 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Launch</title>
+    <style>
+        /* Wide scene quality: Full viewport background */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #00001a; /* Deep space blue/black */
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .scene {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* --- Star Background Layer (Slowest Movement) --- */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 1px rgba(255, 255, 255, 0.8);
+            animation: twinkle var(--twinkle-duration, 10s) linear infinite;
+        }
+
+        /* --- Rocket Animation (Foreground) --- */
+        .rocket {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 150px;
+            z-index: 10;
+            animation: launchMotion linear infinite;
+        }
+
+        .rocket::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 40px;
+            background-color: #ff4500; /* Vivid Orange/Red */
+            box-shadow: 0 0 10px #ff8c00, 0 0 20px #ff4500;
+            animation: flamePulse var(--flame-duration, 1.5s) ease-in-out infinite alternate;
+        }
+
+        /* --- Flame/Smoke Animation (Midground) --- */
+        .flame {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 100px;
+            z-index: 9;
+            background: radial-gradient(ellipse at bottom, rgba(255, 165, 0, 0.8) 0%, rgba(255, 69, 0, 0.5) 50%, rgba(255, 0, 0, 0) 100%);
+            animation: smokeTrail var(--smoke-duration, 2s) ease-out infinite alternate;
+        }
+
+        /* --- Keyframe Definitions --- */
+
+        /* Rocket Movement (Foreground - Fast) */
+        @keyframes launchMotion {
+            0% {
+                transform: translate(-50%, 0);
+            }
+            50% {
+                transform: translate(-50%, 150px);
+            }
+            100% {
+                transform: translate(-50%, 0);
+            }
+        }
+
+        /* Flame Pulsing (Midground - Dynamic) */
+        @keyframes flamePulse {
+            from {
+                height: 100px;
+                width: 150px;
+                background-color: #ff8c00;
+            }
+            to {
+                height: 120px;
+                width: 180px;
+                background-color: #ff0000;
+            }
+        }
+
+        /* Smoke Trail (Midground - Slower, wispy) */
+        @keyframes smokeTrail {
+            0% {
+                transform: translate(-50%, 0) scaleY(1);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translate(-50%, 20px) scaleY(1.1);
+                opacity: 0.6;
+            }
+        }
+
+        /* Twinkling Stars (Background - Slow & Subtle) */
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1.0;
+            }
+        }
+
+        /* --- Dynamic Styling & Positioning --- */
+
+        /* Setting up the star density and initial placement */
+        .star:nth-child(1) { --left: 10%; --top: 20%; --twinkle-duration: 15s; background: #f0e6ff; }
+        .star:nth-child(2) { --left: 30%; --top: 5%; --twinkle-duration: 8s; background: #ffff88; }
+        .star:nth-child(3) { --left: 50%; --top: 30%; --twinkle-duration: 12s; background: #ffc700; }
+        .star:nth-child(4) { --left: 70%; --top: 45%; --twinkle-duration: 20s; background: #aaffaa; }
+        .star:nth-child(5) { --left: 90%; --top: 10%; --twinkle-duration: 10s; background: #ff66b2; }
+        .star:nth-child(6) { --left: 5%; --top: 70%; --twinkle-duration: 18s; background: #66b2ff; }
+        .star:nth-child(7) { --left: 85%; --top: 80%; --twinkle-duration: 11s; background: #ffffff; }
+        /* Add more stars dynamically if needed, using JS would be better, but we keep it CSS focused */
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <!-- Background Layer: Stars -->
+        <div class="stars">
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+        </div>
+
+        <!-- Midground Layer: Flame/Smoke -->
+        <div class="flame"></div>
+
+        <!-- Foreground Layer: Rocket -->
+        <div class="rocket"></div>
+    </div>
+</body>
+</html>
+```

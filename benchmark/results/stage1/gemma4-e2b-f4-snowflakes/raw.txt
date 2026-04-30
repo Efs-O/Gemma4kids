@@ -1,0 +1,138 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Falling Snow</title>
+    <style>
+        :root {
+            /* Define bright, vivid colors for snow */
+            --color-snow1: #ffffff;
+            --color-snow2: #a0e7ff; /* Light Cyan/Blue */
+            --color-snow3: #ffb6c1; /* Light Pink/Red */
+            --color-snow4: #e0f7fa; /* Very Light Cyan */
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* Wide scene quality: Deep, vivid background */
+            background: linear-gradient(to bottom, #1a0d2e, #0f1e3e);
+            height: 100vh;
+            width: 100vw;
+            font-family: sans-serif;
+        }
+
+        .snowflake {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation-name: fall;
+            animation-timing-function: linear;
+            /* Default initial positioning (staggered from top) */
+            top: -10%;
+            left: 5%;
+            animation-iteration-count: infinite;
+        }
+
+        /* Define base falling animation */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(100vh) translateX(20vw);
+                opacity: 0.2;
+            }
+        }
+
+        /* --- Layer 1: Faster, Larger, White Snow (Foreground) --- */
+        .snowflake:nth-child(1) {
+            background-color: var(--color-snow1);
+            animation-duration: 6s;
+            animation-delay: 0s;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-name: fastFall;
+        }
+        @keyframes fastFall {
+            0% { transform: translateY(-10vh); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0.1; }
+        }
+
+        .snowflake:nth-child(2) {
+            background-color: var(--color-snow1);
+            animation-duration: 8s;
+            animation-delay: 1.5s;
+            top: 10%;
+            left: 10%;
+            animation-name: slowFall;
+        }
+        @keyframes slowFall {
+            0% { transform: translateY(-5vh); opacity: 0.7; }
+            100% { transform: translateY(100vh); opacity: 0.3; }
+        }
+
+        /* --- Layer 2: Medium Speed, Cyan Snow (Midground) --- */
+        .snowflake:nth-child(3) {
+            background-color: var(--color-snow2);
+            animation-duration: 10s;
+            animation-delay: 3s;
+            top: 5%;
+            left: 80%;
+            animation-name: mediumFall;
+        }
+        @keyframes mediumFall {
+            0% { transform: translateY(-5vh); opacity: 0.6; }
+            100% { transform: translateY(100vh); opacity: 0.2; }
+        }
+
+        /* --- Layer 3: Slower, Pink Snow (Background) --- */
+        .snowflake:nth-child(4) {
+            background-color: var(--color-snow3);
+            animation-duration: 12s;
+            animation-delay: 4.5s;
+            top: 8%;
+            left: 20%;
+            animation-name: superSlowFall;
+        }
+        @keyframes superSlowFall {
+            0% { transform: translateY(-10vh); opacity: 0.4; }
+            100% { transform: translateY(100vh); opacity: 0.1; }
+        }
+
+        /* --- Layer 4: Subtle variation (More elements to ensure density) --- */
+        .snowflake:nth-child(5) {
+            background-color: var(--color-snow4);
+            animation-duration: 7.5s;
+            animation-delay: 0.5s;
+            top: 20%;
+            left: 30%;
+            animation-name: fastFall;
+        }
+        /* Reusing fastFall for variation */
+    </style>
+</head>
+<body>
+    <!-- Generate 12 distinct snowflakes to ensure density and layering -->
+    <div class="snowflake" style="animation-delay: 0.5s; top: 5%; left: 15%;"></div>
+    <div class="snowflake" style="animation-delay: 1.2s; top: 15%; left: 90%;"></div>
+    <div class="snowflake" style="animation-delay: 2.1s; top: 30%; left: 5%; animation-duration: 9s;"></div>
+    <div class="snowflake" style="animation-delay: 3.5s; top: 10%; left: 70%; animation-duration: 11s;"></div>
+    <div class="snowflake" style="animation-delay: 0.1s; top: 8%; left: 35%; animation-duration: 6.5s;"></div>
+    <div class="snowflake" style="animation-delay: 4.0s; top: 25%; left: 85%;"></div>
+    <div class="snowflake" style="animation-delay: 5.0s; top: 5%; left: 50%; animation-duration: 13s;"></div>
+    <div class="snowflake" style="animation-delay: 0.8s; top: 40%; left: 10%; animation-duration: 8.5s;"></div>
+    <div class="snowflake" style="animation-delay: 1.8s; top: 12%; left: 60%;"></div>
+    <div class="snowflake" style="animation-delay: 2.5s; top: 60%; left: 25%;"></div>
+    <div class="snowflake" style="animation-delay: 3.0s; top: 50%; left: 45%; animation-duration: 10.5s;"></div>
+    <div class="snowflake" style="animation-delay: 4.5s; top: 20%; left: 80%; animation-duration: 7s;"></div>
+
+</body>
+</html>
+```

@@ -1,0 +1,139 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Ocean Animation</title>
+    <style>
+        /* Full viewport setup and vivid background */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: #003366; /* Deep Ocean Blue */
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Scene container for positioning elements */
+        .ocean-scene {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Base style for animated elements */
+        .animated-element {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- Fish Styling and Animation --- */
+
+        /* Keyframes for swimming motion */
+        @keyframes swim {
+            0% { transform: translateX(-100vw); }
+            100% { transform: translateX(100vw); }
+        }
+
+        /* Fish 1: Bright Red Angelfish (Midground) */
+        .fish-1 {
+            width: 80px;
+            height: 30px;
+            background-color: #FF4500; /* Vivid Orange-Red */
+            border-radius: 15px;
+            top: 40vh;
+            left: -150px;
+            animation: swim 15s linear infinite;
+            animation-delay: 1s;
+        }
+
+        /* Fish 2: Electric Blue Clownfish (Foreground) */
+        .fish-2 {
+            width: 60px;
+            height: 25px;
+            background-color: #00FFFF; /* Electric Cyan */
+            border-radius: 10px;
+            top: 60vh;
+            left: -200px;
+            animation: swim 10s linear infinite reverse; /* Opposite direction */
+            animation-delay: 3s;
+        }
+
+        /* Fish 3: Neon Green Seahorse (Midground/Slower) */
+        .fish-3 {
+            width: 90px;
+            height: 35px;
+            background-color: #39FF14; /* Neon Green */
+            border-radius: 20px;
+            top: 30vh;
+            left: -300px;
+            animation: swim 20s linear infinite;
+            animation-delay: 5s;
+        }
+
+
+        /* --- Bubble Styling and Animation --- */
+
+        /* Keyframes for floating motion */
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-10vh) scale(1.2); opacity: 0.8; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* Bubble 1: Large, Slow Ascent (Background Layer) */
+        .bubble-1 {
+            width: 60px;
+            height: 60px;
+            background-color: #FFFFFF; /* White/Light */
+            border-radius: 50%;
+            top: 50vh;
+            left: 5%;
+            animation: float 18s ease-in-out infinite;
+            animation-delay: 0.5s;
+        }
+
+        /* Bubble 2: Medium, Fast Drift (Midground Layer) */
+        .bubble-2 {
+            width: 40px;
+            height: 40px;
+            background-color: #FFD700; /* Gold/Yellow */
+            border-radius: 50%;
+            top: 35vh;
+            left: 80%;
+            animation: float 12s ease-in-out infinite alternate;
+            animation-delay: 2s;
+        }
+
+        /* Bubble 3: Small, Rapid Flicker (Foreground Layer) */
+        .bubble-3 {
+            width: 20px;
+            height: 20px;
+            background-color: #00FF7F; /* Spring Green */
+            border-radius: 50%;
+            top: 75vh;
+            left: 25%;
+            animation: float 8s ease-in-out infinite;
+            animation-delay: 4s;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="ocean-scene">
+        <!-- Fish Elements (Layered Depth) -->
+        <div class="animated-element fish-1"></div>
+        <div class="animated-element fish-2"></div>
+        <div class="animated-element fish-3"></div>
+
+        <!-- Bubble Elements (Floating Dynamics) -->
+        <div class="animated-element bubble-1"></div>
+        <div class="animated-element bubble-2"></div>
+        <div class="animated-element bubble-3"></div>
+    </div>
+</body>
+</html>
+```

@@ -103,7 +103,22 @@ export function auditHtml(html: string): HtmlAuditResult {
     }),
   );
 
-  // 6. Sanitise the <html> opening tag - strip garbage tokens, normalise lang.
+  // 6. Strip bare CSS units from JS arithmetic (e.g. 100vw → 100, 5s → 5).
+  // Gemma occasionally writes CSS measurement syntax directly in JS expressions
+  // (Math.random() * 100vw, `${-20px}px`, `${Math.random() * 5s}s`), causing
+  // "Identifier directly after number" parse errors.
+  out = out.replace(/(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi, (_, open: string, body: string, close: string) => {
+    const fixed = body.replace(
+      /\b(\d+(?:\.\d+)?)(px|vw|vh|em|rem|ms|s)\b/g,
+      (_m: string, num: string, unit: string) => {
+        fixes.push(`JS CSS unit stripped: ${num}${unit} -> ${num}`);
+        return num;
+      },
+    );
+    return `${open}${fixed}${close}`;
+  });
+
+  // 7. Sanitise the <html> opening tag - strip garbage tokens, normalise lang.
   out = out.replace(/<html([^>]*)>/i, (_match, attrs: string) => {
     const validAttrs: string[] = [];
     const attrRe = /\b([a-zA-Z][a-zA-Z0-9_:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;

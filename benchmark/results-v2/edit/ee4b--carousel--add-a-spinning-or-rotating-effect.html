@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Spinning Carousel</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #a8dadc, #457a98); /* Sky blue to deeper blue gradient for a magical feel */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Keeps everything inside the visible area */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+
+        .carousel-container {
+            width: 80vw;
+            max-width: 900px;
+            height: 400px;
+            background-color: #f7e6c8; /* Light wood color for the carousel base */
+            border: 15px solid #a0522d; /* Rich brown wood frame */
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end; /* Horses should sit at the bottom */
+            padding-bottom: 20px;
+            position: relative;
+            /* The actual spinning effect will be applied to the inner content */
+        }
+
+        .carousel-scenery {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            width: 100%;
+            height: 100%;
+            animation: spin 20s linear infinite; /* The continuous spinning animation */
+        }
+
+        /* Keyframes for the spinning motion */
+        @keyframes spin {
+            from {
+                transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+            }
+            to {
+                /* By moving it significantly far right and back to start, we create a loop */
+                transform: translateY(0) translateX(calc(100vw + 200px)) scale(1) rotate(360deg);
+            }
+        }
+
+        .horse {
+            position: relative;
+            cursor: pointer;
+            /* Make the horses stand tall */
+            transform: translateY(20px); 
+            transition: transform 0.3s ease;
+        }
+
+        .horse:hover {
+            transform: translateY(-10px) scale(1.05); /* Little lift when hovering */
+            z-index: 10;
+        }
+
+        /* Simple representation of a horse shape using multiple divs */
+        .horse-body {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #ff7e50, #feb47b); /* Orange to light brown gradient body */
+            border-radius: 50% 50% 10px 10px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .horse-neck {
+            width: 50px;
+            height: 60px;
+            background-color: #e67e22; /* A richer brown for the neck */
+            border-radius: 50% 50% 10px 10px;
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            z-index: 3;
+        }
+
+        .horse-head {
+            width: 40px;
+            height: 45px;
+            background-color: #c0392b; /* Reddish brown for the head */
+            border-radius: 50% 50% 25% 25%;
+            position: absolute;
+            top: 15px;
+            left: 65px;
+            z-index: 4;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .horse-eye {
+            width: 8px;
+            height: 8px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+        }
+
+        .horse-ear {
+            width: 15px;
+            height: 20px;
+            background-color: #8b4513; /* Darker brown for detail */
+            border-radius: 50% 50% 0 0;
+            position: absolute;
+            top: -5px;
+            left: 10px;
+            z-index: 5;
+        }
+
+        /* Special color variations for different horses */
+        .horse:nth-child(1) .horse-body { background: linear-gradient(135deg, #f1c40f, #e67e22); } /* Gold/Orange */
+        .horse:nth-child(2) .horse-body { background: linear-gradient(135deg, #9b59b6, #8e44ad); } /* Purple */
+        .horse:nth-child(3) .horse-body { background: linear-gradient(135deg, #2ecc71, #27ae60); } /* Green */
+        .horse:nth-child(4) .horse-body { background: linear-gradient(135deg, #e74c3c, #c0392b); } /* Red */
+        .horse:nth-child(5) .horse-body { background: linear-gradient(135deg, #3498db, #2980b9); } /* Blue */
+
+        /* Decorative ground line */
+        .carousel-ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(to top, #d2b48c, #a0522d); /* Ground texture */
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="carousel-container">
+        <div class="carousel-scenery">
+            <!-- Horse 1: Gold/Orange -->
+            <div class="horse" style="margin-right: 10%;">
+                <div class="horse-body"></div>
+                <div class="horse-neck"></div>
+                <div class="horse-head">
+                    <div class="horse-eye"></div>
+                    <div class="horse-ear"></div>
+                </div>
+            </div>
+            
+            <!-- Horse 2: Purple -->
+            <div class="horse" style="margin-right: 10%;">
+                <div class="horse-body"></div>
+                <div class="horse-neck"></div>
+                <div class="horse-head">
+                    <div class="horse-eye"></div>
+                    <div class="horse-ear"></div>
+                </div>
+            </div>
+
+            <!-- Horse 3: Green -->
+            <div class="horse" style="margin-right: 10%;">
+                <div class="horse-body"></div>
+                <div class="horse-neck"></div>
+                <div class="horse-head">
+                    <div class="horse-eye"></div>
+                    <div class="horse-ear"></div>
+                </div>
+            </div>
+
+            <!-- Horse 4: Red -->
+            <div class="horse" style="margin-right: 10%;">
+                <div class="horse-body"></div>
+                <div class="horse-neck"></div>
+                <div class="horse-head">
+                    <div class="horse-eye"></div>
+                    <div class="horse-ear"></div>
+                </div>
+            </div>
+
+            <!-- Horse 5: Blue -->
+            <div class="horse" style="margin-left: 10%;">
+                <div class="horse-body"></div>
+                <div class="horse-neck"></div>
+                <div class="horse-head">
+                    <div class="horse-eye"></div>
+                    <div class="horse-ear"></div>
+                </div>
+            </div>
+            
+            <!-- To make the scroll continuous, we repeat the structure -->
+            <div class="horse" style="margin-right: 10%;">
+                <div class="horse-body"></div>
+                <div class="horse-neck"></div>
+                <div class="horse-head">
+                    <div class="horse-eye"></div>
+                    <div class="horse-ear"></div>
+                </div>
+            </div>
+            <div class="horse" style="margin-right: 10%;">
+                <div class="horse-body"></div>
+                <div class="horse-neck"></div>
+                <div class="horse-head">
+                    <div class="horse-eye"></div>
+                    <div class="horse-ear"></div>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-ground"></div>
+    </div>
+</body>
+</html>

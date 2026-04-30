@@ -1,0 +1,164 @@
+I have updated the `colors` array within the `createExplosion` function to include more bright, rainbow-like hues.
+
+I changed the following line:
+In `createExplosion(x, y)`:
+`const colors = ['#FF144B', '#FF8C00', '#00FFFF', '#ADFF2F', '#FFD700', '#EE82EE'];`
+to
+`const colors = ['#FF144B', '#FF8C00', '#00FFFF', '#ADFF2F', '#FFD700', '#EE82EE', '#0000FF', '#39FF14', '#FF00FF'];`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fireworks</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #0f0c2b, #302b6a); /* Deep night gradient */
+            overflow: hidden;
+            cursor: crosshair;
+            margin: 0;
+            height: 100vh;
+        }
+
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--spark-color);
+            opacity: 1;
+            transform: translate(-50%, -50%);
+            animation: explode 1.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Keyframe for the explosion effect */
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            10% {
+                transform: translate(calc(var(--x-offset) * 1px), calc(var(--y-offset) * 1px)) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(calc(var(--x-offset) * 1px), calc(var(--y-offset) * 1px)) scale(1.5);
+                /* Fall slightly to create trailing effect */
+                transform: translate(calc(var(--x-offset) * 1px), calc(var(--y-offset) * 1px)) translateY(10px);
+            }
+        }
+
+        /* Simple initial "rocket" trail effect (optional, makes it look more active) */
+        .rocket-trail {
+            position: absolute;
+            width: 2px;
+            height: 50px;
+            background: linear-gradient(to bottom, yellow, orange);
+            border-radius: 5px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const body = document.body;
+
+        // Helper function to get a random vivid color
+        function getRandomColor() {
+            const colors = ['#FF5733', '#33FF57', '#3357FF', '#FFBD33', '#A933FF', '#FF33A1'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Function to create the explosion (the main effect)
+        function createExplosion(x, y) {
+            const colors = ['#FF144B', '#FF8C00', '#00FFFF', '#ADFF2F', '#FFD700', '#EE82EE', '#0000FF', '#39FF14', '#FF00FF'];
+            
+            for (let i = 0; i < 30; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'spark';
+                
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                spark.style.setProperty('--spark-color', color);
+                
+                // Random spread directions (simulating an explosion)
+                const angle = Math.random() * 2 * Math.PI;
+                const distance = Math.random() * 150 + 50; // Explosion radius between 50px and 200px
+                
+                // Calculate offsets for CSS animation positioning
+                const xOffset = Math.cos(angle) * distance;
+                const yOffset = Math.sin(angle) * distance;
+
+                spark.style.setProperty('--x-offset', `${xOffset}px`);
+                spark.style.setProperty('--y-offset', `${yOffset}px`);
+                
+                // Set initial position at the target point
+                spark.style.left = `${x}px`;
+                spark.style.top = `${y}px`;
+                
+                body.appendChild(spark);
+
+                // Clean up the spark after its animation ends (1.5s + little buffer)
+                setTimeout(() => {
+                    spark.remove();
+                }, 1600);
+            }
+        }
+
+        // Event listener for mouse clicks (user interaction)
+        body.addEventListener('click', (e) => {
+            createExplosion(e.clientX, e.clientY);
+        });
+        
+        // Auto-fire fireworks periodically
+        function launchFirework() {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * (window.innerHeight * 0.8); // Keep them mostly in the upper area
+            
+            // 1. Simulate the rocket rising (Optional visual flair)
+            const rocket = document.createElement('div');
+            rocket.className = 'rocket-trail';
+            rocket.style.left = `${x}px`;
+            rocket.style.top = `${window.innerHeight}px`; // Start from bottom
+            body.appendChild(rocket);
+
+            // Animate the rocket up to the explosion point
+            setTimeout(() => {
+                rocket.style.transition = 'top 2s ease-out, opacity 1s ease-out';
+                rocket.style.top = `${y}px`;
+                rocket.style.opacity = '0';
+            }, 10);
+
+            // 2. Create the explosion when the rocket reaches the peak
+            setTimeout(() => {
+                createExplosion(x, y);
+                rocket.remove(); // Remove the trail element
+            }, 2100); 
+        }
+
+        // Fire a firework every 1.5 to 3 seconds
+        setInterval(launchFirework, Math.random() * 1500 + 1500);
+
+    </script>
+</body>
+</html>
+```

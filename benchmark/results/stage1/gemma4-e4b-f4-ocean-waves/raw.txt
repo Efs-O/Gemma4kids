@@ -1,0 +1,174 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Animated Ocean Crash</title>
+    <style>
+        /* Global Setup & Background */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Bright Sky Blue */
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        /* The Scene Container */
+        .scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- Layers --- */
+
+        /* 1. Sky/Sun reflection (Background Depth) */
+        .sky-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%; /* Top half */
+            background: linear-gradient(to bottom, #FFD700 0%, #ADD8E6 100%);
+            z-index: 1;
+        }
+        
+        /* 2. Distant Ocean Waves (Background/Midground) */
+        .wave-bg {
+            position: absolute;
+            bottom: 20%; /* Starts above the visible wet sand line */
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: radial-gradient(ellipse at bottom center, rgba(0, 150, 255, 0.7) 0%, rgba(0, 100, 200, 0.5) 70%, transparent 100%);
+            z-index: 5;
+            animation: waveMoveBg 15s linear infinite;
+            transform: translateX(-10%); /* Start slightly off-screen for looping illusion */
+        }
+
+        /* 3. Main Cresting Wave (Midground Focus) */
+        .wave-main {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(to bottom, rgba(30, 190, 190, 0.9) 0%, rgba(0, 100, 200, 0.8) 70%, transparent 100%);
+            z-index: 10;
+            animation: waveCrash 6s cubic-bezier(0.3, 0.8, 0.4, 1.1) infinite;
+            /* Initial slight offset for visual depth */
+            transform: translateY(5px); 
+        }
+
+        /* 4. Crashing Foam/Spray (Foreground Emphasis) */
+        .foam-spray {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 15%;
+            background: radial-gradient(circle at 10% 100%, rgba(255, 255, 200, 0.9) 0%, transparent 60%);
+            z-index: 15;
+            animation: foamBubble 3s ease-out infinite;
+        }
+
+        /* 5. Beach Sand (Grounding Element) */
+        .sand {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20%;
+            background-color: #FFEB99; /* Vivid yellow sand */
+            z-index: 20;
+        }
+
+        /* ====================================
+           KEYFRAME ANIMATIONS
+           ==================================== */
+
+        /* Background wave motion (Slow, large scale movement) */
+        @keyframes waveMoveBg {
+            0% {
+                transform: translateX(-10%) translateY(0);
+            }
+            50% {
+                transform: translateX(100%) translateY(0);
+            }
+            100% {
+                transform: translateX(10%) translateY(0);
+            }
+        }
+
+        /* Main wave crashing animation (Cyclical rise and fall) */
+        @keyframes waveCrash {
+            0% {
+                transform: translateY(0) scaleY(1);
+                opacity: 0.8;
+            }
+            20% {
+                transform: translateY(-10px) scaleY(1.2); /* Peak */
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(5px) scaleY(0.9); /* Starting to recede */
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(0) scaleY(1);
+                opacity: 0.8;
+            }
+        }
+
+        /* Foreground foam/spray animation (Bubbling and dissipating) */
+        @keyframes foamBubble {
+            0% {
+                transform: translateX(-100%) scale(0.5);
+                opacity: 0.8;
+            }
+            25% {
+                transform: translateX(100%) scale(1.2);
+                opacity: 1;
+            }
+            50% {
+                transform: translateX(100%) scale(1.0);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateX(-100%) scale(0.5);
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <!-- Layer 1: Sky (Background) -->
+        <div class="sky-gradient"></div>
+        
+        <!-- Layer 2: Distant Waves (Background - Slow) -->
+        <div class="wave-bg"></div>
+
+        <!-- Layer 3: Main Cresting Wave (Midground - Primary Focus) -->
+        <div class="wave-main"></div>
+
+        <!-- Layer 4: Crashing Foam/Spray (Foreground - Quickest/Brightest) -->
+        <div class="foam-spray"></div>
+
+        <!-- Layer 5: Sand (Grounding element) -->
+        <div class="sand"></div>
+    </div>
+
+    <script>
+        // Simple JavaScript to adjust the appearance slightly on load if needed, 
+        // though CSS handles the main animation loop.
+        window.onload = function() {
+            console.log("Ocean simulation loaded. Waves are crashing!");
+        };
+    </script>
+</body>
+</html>
+```

@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e4b-f3-snowflakes",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 3,
+  "familyLabel": "Hardcoded-Animation Logic Prompt",
+  "promptSlug": "snowflakes",
+  "promptText": "Make snowflakes gently falling from the sky",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present",
+    "sufficient element/spawn count detected"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)"
+  ],
+  "durationSec": "40.7",
+  "timestamp": "2026-04-30T08:11:09.192Z"
+}

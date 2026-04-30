@@ -1,0 +1,167 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twinkling Starfield with Shooting Stars</title>
+    <style>
+        :root {
+            --space-dark: #000011;
+            --space-glow: #000033;
+            --star-color: #FFFFCC;
+            --shooting-star-color: #FFD700;
+        }
+
+        body {
+            background: linear-gradient(to bottom, var(--space-dark) 0%, var(--space-glow) 100%);
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            /* Setting the background to mimic a deep, velvety night sky */
+        }
+
+        .starfield {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        /* Keyframes for twinkling effect */
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+                text-shadow: 0 0 5px var(--star-color);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(1.2);
+                text-shadow: 0 0 1px var(--star-color);
+            }
+        }
+
+        .star {
+            position: absolute;
+            background-color: var(--star-color);
+            border-radius: 50%;
+            animation: twinkle 4s ease-in-out infinite;
+            opacity: 0; /* Initial opacity set by JS for better randomness */
+        }
+
+        /* Keyframes for a shooting star effect */
+        @keyframes shoot {
+            0% {
+                transform: translate(calc(var(--start-x) - 5px), calc(var(--start-y) - 5px)) scale(1);
+                opacity: 1;
+            }
+            100% {
+                /* Moves far across and down */
+                transform: translate(calc(var(--end-x) + 5px), calc(var(--end-y) + 5px)) scale(0.5);
+                opacity: 0;
+                /* Trail effect simulation by fading out */
+            }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 3px;
+            height: 2px;
+            background: linear-gradient(to right, var(--shooting-star-color), transparent);
+            animation: shoot 3s linear forwards;
+            z-index: 10; /* Ensure it's above background stars */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="starfield" id="starfield">
+        <!-- Stars and shooting stars will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        const starfield = document.getElementById('starfield');
+        const numStars = 150;
+        const numShoots = 6;
+
+        // --- Star Generation ---
+        function generateStars() {
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random size between 1px and 3px
+                const size = Math.random() * 2 + 1; 
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+
+                // Random position across the viewport
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                
+                star.style.left = `${x}px`;
+                star.style.top = `${y}px`;
+
+                // Random animation delay and duration for staggered twinkling
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                star.style.animationDuration = `${Math.random() * 3 + 2}s`; 
+                
+                starfield.appendChild(star);
+            }
+        }
+
+        // --- Shooting Star Generation ---
+        function generateShootingStar(index) {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            
+            // Define random trajectory parameters
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * window.innerHeight;
+            
+            const endX = startX + (Math.random() > 0.5 ? 100 + Math.random() * 150 : -(100 + Math.random() * 150));
+            const endY = startY + (Math.random() > 0.5 ? -200 - Math.random() * 200 : 200 + Math.random() * 200);
+
+            // Set CSS variables for the animation path
+            star.style.setProperty('--start-x', startX);
+            star.style.setProperty('--start-y', startY);
+            star.style.setProperty('--end-x', endX);
+            star.style.setProperty('--end-y', endY);
+            
+            // Stagger the launch times
+            const delay = index * 0.8; 
+            star.style.animationDelay = `${delay}s`;
+            star.style.animationDuration = `${Math.random() * 1.5 + 1.5}s`; // 1.5s to 3s lifespan
+            
+            starfield.appendChild(star);
+        }
+
+        // --- Initialization ---
+        function initializeStarfield() {
+            // 1. Generate base twinkling stars
+            generateStars();
+            
+            // 2. Generate multiple sequential shooting stars
+            for (let i = 0; i < numShoots; i++) {
+                // Use a small delay to stagger the launches
+                setTimeout(() => {
+                    generateShootingStar(i);
+                }, i * 1500); // Launch a new star every 1.5 seconds
+            }
+        }
+
+        // Run initialization when the window loads
+        window.onload = initializeStarfield;
+        
+        // Handle window resizing to ensure elements scale correctly (though animation logic is mostly fixed)
+        window.addEventListener('resize', () => {
+             // Re-running initialization on resize can cause visual flicker, 
+             // so we only adjust star positions if needed, but for simplicity here, we rely on initial load.
+        });
+    </script>
+
+</body>
+</html>
+```

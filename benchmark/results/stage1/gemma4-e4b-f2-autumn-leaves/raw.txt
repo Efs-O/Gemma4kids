@@ -1,0 +1,148 @@
+That sounds like a gorgeous idea! Autumn leaves falling is so pretty to watch. I will make them colorful and gently drifting down like magic. 🍁🍂✨
+
+Here is the animation for you!
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Autumn Leaves</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #a9d18e 0%, #ffc3a0 100%);
+            overflow: hidden; /* Hides leaves that might fall slightly off-screen */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        .scene-title {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            color: rgba(0, 0, 0, 0.2);
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+            z-index: 1;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: fall linear infinite;
+            opacity: 0.8;
+            /* Giving a slight rotation and position variety */
+            transform: rotate(0deg);
+            z-index: 2;
+        }
+
+        /* Styling the individual leaves with different shapes/colors for variety */
+        .leaf:nth-child(1) {
+            left: 10%;
+            top: 0;
+            color: #ff6f61; /* Bright Coral Red */
+            background-image: radial-gradient(circle, rgba(255, 111, 97, 0.8) 0%, rgba(255, 100, 80, 0.5) 70%);
+            animation-duration: 10s;
+            animation-delay: 0s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .leaf:nth-child(2) {
+            left: 25%;
+            top: -5%;
+            color: #ffd900; /* Golden Yellow */
+            background-image: linear-gradient(45deg, rgba(255, 217, 0, 0.8) 0%, rgba(255, 220, 0, 0.7) 100%);
+            animation-duration: 15s;
+            animation-delay: 2s;
+            width: 60px;
+            height: 40px;
+            transform: rotate(10deg);
+        }
+
+        .leaf:nth-child(3) {
+            left: 40%;
+            top: 0;
+            color: #ff8c00; /* Deep Orange */
+            background-image: radial-gradient(circle, rgba(255, 140, 0, 0.8) 0%, rgba(255, 165, 0, 0.6) 100%);
+            animation-duration: 8s;
+            animation-delay: 4s;
+            width: 30px;
+            height: 30px;
+            transform: rotate(-15deg);
+        }
+
+        .leaf:nth-child(4) {
+            left: 60%;
+            top: -10%;
+            color: #cc3366; /* Deep Magenta/Red */
+            background-image: linear-gradient(135deg, rgba(204, 51, 102, 0.8) 0%, rgba(180, 30, 80, 0.7) 100%);
+            animation-duration: 12s;
+            animation-delay: 1s;
+            width: 55px;
+            height: 50px;
+            transform: rotate(5deg);
+        }
+
+        .leaf:nth-child(5) {
+            left: 75%;
+            top: -2%;
+            color: #ff7f50; /* Coral */
+            background-image: radial-gradient(circle, rgba(255, 127, 80, 0.8) 0%, rgba(255, 160, 80, 0.7) 100%);
+            animation-duration: 18s;
+            animation-delay: 0.5s;
+            width: 45px;
+            height: 45px;
+        }
+
+        .leaf:nth-child(6) {
+            left: 90%;
+            top: 0;
+            color: #daa520; /* Golden Brown */
+            background-image: linear-gradient(135deg, rgba(218, 165, 32, 0.8) 0%, rgba(220, 180, 50, 0.7) 100%);
+            animation-duration: 11s;
+            animation-delay: 3s;
+            width: 35px;
+            height: 35px;
+            transform: rotate(-5deg);
+        }
+
+        /* Keyframes for the falling motion */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0) rotate(0deg);
+                opacity: 0.8;
+            }
+            100% {
+                /* Moves it down the screen, and slowly drifts left/right while falling */
+                transform: translateY(110vh) translateX(15vw) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-title">Autumn Leaves Fall</div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+</body>
+</html>
+```
+
+I made sure each leaf has a slightly different color, size, and fall speed to make it look super natural! The background also changes to a nice, soft sky-meets-earth gradient.
+
+Here is the code saved for you!
+
+<execute_tool>save_animation</execute_tool>
+<execute_tool>open_in_browser</execute_tool>
