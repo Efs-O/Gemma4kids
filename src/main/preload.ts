@@ -15,4 +15,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('tts-speak', text, lang),
   ttsListVoices: () =>
     ipcRenderer.invoke('tts-list-voices'),
+  llamaCppHealthCheck: (config: LlamaCppConfig) =>
+    ipcRenderer.invoke('llama-cpp-health-check', config),
+  llamaCppListModels: (config: LlamaCppConfig) =>
+    ipcRenderer.invoke('llama-cpp-list-models', config),
+  llamaCppStartStream: (requestId: string, config: LlamaCppConfig, request: Record<string, unknown>) =>
+    ipcRenderer.invoke('llama-cpp-start-stream', { requestId, config, request }),
+  llamaCppAbortStream: (requestId: string) =>
+    ipcRenderer.invoke('llama-cpp-abort-stream', { requestId }),
+  onLlamaCppStreamEvent: (listener: (event: LlamaCppStreamEvent) => void) => {
+    const wrapped = (_event: unknown, payload: LlamaCppStreamEvent) => listener(payload);
+    ipcRenderer.on('llama-cpp-stream-event', wrapped);
+    return () => {
+      ipcRenderer.removeListener('llama-cpp-stream-event', wrapped);
+    };
+  },
 });

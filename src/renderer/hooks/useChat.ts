@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
-import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
 import { CREATE_SYSTEM_PROMPT, EDIT_SYSTEM_PROMPT, SIMPLE_SYSTEM_PROMPT, SISTER_MESSAGE } from '../prompts';
 import type { ModelTier } from '../utils/pickCodingModel';
+import type { LLMRuntimeAdapter } from '../services/OllamaService';
 import {
   OLLAMA_CHAT_PROFILE,
   OLLAMA_CHAT_WORKSTATION_CTX,
@@ -12,8 +12,6 @@ import {
 } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
 import { isGemma426b, isGemma431b } from '../utils/pickCodingModel';
-
-const OLLAMA_BASE = 'http://localhost:11434';
 const INLINE_TOOL_QUOTE = '<|"|>';
 
 const SIMPLE_MOTION_KEYWORDS = [
@@ -198,7 +196,12 @@ export interface UseChatResult {
   injectContext: (text: string) => void;
 }
 
-export function useChat(model: string, thinkEnabled: boolean, modelTier: ModelTier = 'full'): UseChatResult {
+export function useChat(
+  runtimeAdapter: LLMRuntimeAdapter,
+  model: string,
+  thinkEnabled: boolean,
+  modelTier: ModelTier = 'full',
+): UseChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingText, setStreamingText] = useState('');
   const [streamingThinking, setStreamingThinking] = useState('');
@@ -237,8 +240,7 @@ export function useChat(model: string, thinkEnabled: boolean, modelTier: ModelTi
       let loopError: Error | null = null;
 
       await new Promise<void>((resolve) => {
-        streamOllamaNativeChat(
-          OLLAMA_BASE,
+        runtimeAdapter.streamChat(
           {
             model,
             messages: buildRequestMessages(history, modelTier),
@@ -432,7 +434,7 @@ export function useChat(model: string, thinkEnabled: boolean, modelTier: ModelTi
       setStatus('idle');
       return;
     }
-  }, [model, thinkEnabled, modelTier]);
+  }, [model, thinkEnabled, modelTier, runtimeAdapter]);
 
   const sendMessage = useCallback((text: string) => {
     // Layer 1: instant keyword block — no model call, no streaming.

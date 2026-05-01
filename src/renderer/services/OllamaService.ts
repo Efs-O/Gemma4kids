@@ -1,6 +1,67 @@
 import { OLLAMA_TRANSCRIBE_PROFILE } from '../ollamaConstants';
+import type { StreamHandlers } from '../llm/OpenAIClient';
+import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
+import type { ChatMessage, ToolDefinition } from '../llm/types';
 
 const OLLAMA_BASE = 'http://localhost:11434';
+
+export type RuntimeKind = 'ollama' | 'llama_cpp';
+
+export interface RuntimeModelInfo {
+  runtime: RuntimeKind;
+  family: string | null;
+  label: string;
+  id: string;
+}
+
+export interface RuntimeHealth {
+  ok: boolean;
+  state?: string;
+  error?: string;
+  message?: string;
+  details?: string[];
+}
+
+export interface RuntimeCapabilities {
+  supportsThinking: boolean;
+  supportsTools: boolean;
+  supportsMultimodal: boolean;
+  supportsTranscription: boolean;
+}
+
+export interface RuntimeStreamParams {
+  model: string;
+  messages: ChatMessage[];
+  tools?: ToolDefinition[];
+  think: boolean;
+  temperature: number;
+  topP: number;
+  topK: number;
+  numCtx: number;
+  numPredict: number;
+}
+
+export interface LLMRuntimeAdapter {
+  readonly runtime: RuntimeKind;
+  readonly capabilities: RuntimeCapabilities;
+  healthCheck(): Promise<RuntimeHealth>;
+  listModels(): Promise<RuntimeModelInfo[]>;
+  warmupCodingModel(model: string): void;
+  streamChat(
+    params: RuntimeStreamParams,
+    handlers: StreamHandlers,
+    signal?: AbortSignal,
+    onContextUsage?: (promptTokens: number, evalTokens: number) => void,
+  ): Promise<void>;
+  transcribe?(audioBase64: string, model?: string, keepAlive?: 0 | string, languageHint?: string): Promise<string>;
+}
+
+export interface LlamaCppRuntimeConfig {
+  serverPath: string;
+  modelPath: string;
+  port: number;
+  gpuLayers: number;
+}
 
 interface OllamaTagsResponse {
   models: Array<{ name: string }>;
@@ -28,6 +89,35 @@ async function fetchTags(timeoutMs: number): Promise<OllamaTagsResponse> {
 export async function getModels(): Promise<string[]> {
   const data = await fetchTags(5000);
   return data.models.map(m => m.name);
+}
+
+export async function healthCheck(): Promise<RuntimeHealth> {
+  try {
+    await fetchTags(5000);
+    return { ok: true };
+  } catch (error) {
+    const formatted = formatOllamaError(error);
+    return { ok: false, error: formatted.message };
+  }
+}
+
+function inferModelFamily(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.includes('e2b')) return 'e2b';
+  if (lower.includes('e4b')) return 'e4b';
+  if (lower.includes('26b')) return 'e26b';
+  if (lower.includes('31b')) return 'e31b';
+  return null;
+}
+
+export async function listRuntimeModels(): Promise<RuntimeModelInfo[]> {
+  const models = await getModels();
+  return models.map((name) => ({
+    runtime: 'ollama',
+    family: inferModelFamily(name),
+    label: name,
+    id: name,
+  }));
 }
 
 /** Fire-and-forget: loads the coding model into VRAM so the first prompt is instant. */
@@ -144,4 +234,133 @@ export async function transcribe(
   const text = (data.message?.content ?? '').trim();
   if (!text) throw new Error('Empty transcription returned');
   return text;
+}
+
+export const ollamaAdapter: LLMRuntimeAdapter = {
+  runtime: 'ollama',
+  capabilities: {
+    supportsThinking: true,
+    supportsTools: true,
+    supportsMultimodal: true,
+    supportsTranscription: true,
+  },
+  healthCheck,
+  listModels: listRuntimeModels,
+  warmupCodingModel,
+  streamChat: (params, handlers, signal, onContextUsage) =>
+    streamOllamaNativeChat(OLLAMA_BASE, params, handlers, signal, onContextUsage),
+  transcribe,
+};
+
+function mapLlamaToolCall(raw: {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}): { id: string; type: 'function'; function: { name: string; arguments: string } } {
+  return raw;
+}
+
+export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntimeAdapter {
+  return {
+    runtime: 'llama_cpp',
+    capabilities: {
+      supportsThinking: false,
+      supportsTools: true,
+      supportsMultimodal: false,
+      supportsTranscription: false,
+    },
+    healthCheck: async () => window.electronAPI.llamaCppHealthCheck(config),
+    listModels: async () => {
+      const result = await window.electronAPI.llamaCppListModels(config);
+      if (!result.success) {
+        throw new Error(result.error ?? 'Could not list llama.cpp models.');
+      }
+      return result.models.map((model) => ({
+        runtime: 'llama_cpp' as const,
+        family: null,
+        label: model.label,
+        id: model.id,
+      }));
+    },
+    warmupCodingModel: () => {
+      // The main-process manager keeps llama-server warm once started.
+    },
+    streamChat: async (params, handlers, signal) => {
+      const requestId = `llama_${crypto.randomUUID()}`;
+
+      await new Promise<void>((resolve) => {
+        let finished = false;
+        const abortHandler = () => {
+          void window.electronAPI.llamaCppAbortStream(requestId);
+        };
+        const finish = () => {
+          cleanup();
+          signal?.removeEventListener('abort', abortHandler);
+        };
+        const cleanup = window.electronAPI.onLlamaCppStreamEvent((event) => {
+          if (event.requestId !== requestId || finished) return;
+
+          if (event.type === 'token' && event.token) {
+            handlers.onToken(event.token);
+            return;
+          }
+
+          if (event.type === 'thinking' && event.thinking && handlers.onThinkingToken) {
+            handlers.onThinkingToken(event.thinking);
+            return;
+          }
+
+          if (event.type === 'tool_calls' && event.toolCalls && handlers.onToolCalls) {
+            handlers.onToolCalls(event.toolCalls.map(mapLlamaToolCall));
+            return;
+          }
+
+          if (event.type === 'done') {
+            finished = true;
+            finish();
+            handlers.onDone(event.finishReason ?? null);
+            resolve();
+            return;
+          }
+
+          if (event.type === 'error') {
+            finished = true;
+            finish();
+            handlers.onError(new Error(event.error ?? 'Unknown llama.cpp error.'));
+            resolve();
+          }
+        });
+
+        signal?.addEventListener('abort', abortHandler, { once: true });
+
+        void window.electronAPI.llamaCppStartStream(requestId, config, {
+          model: params.model,
+          messages: params.messages,
+          tools: params.tools,
+          max_tokens: params.numPredict,
+          temperature: params.temperature,
+          top_p: params.topP,
+          top_k: params.topK,
+          stream: true,
+        }).then((result) => {
+          if (!result.success && !finished) {
+            finished = true;
+            finish();
+            handlers.onError(new Error(result.error ?? 'Could not start llama.cpp chat stream.'));
+            resolve();
+          }
+        }).catch((error) => {
+          if (!finished) {
+            finished = true;
+            finish();
+            handlers.onError(error instanceof Error ? error : new Error(String(error)));
+            resolve();
+          }
+        });
+      });
+    },
+  };
 }

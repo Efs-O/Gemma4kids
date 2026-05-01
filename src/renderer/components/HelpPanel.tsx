@@ -2,9 +2,10 @@ import React from 'react';
 
 interface Props {
   onClose: () => void;
+  onOpenSetupAssistant: () => void;
 }
 
-export function HelpPanel({ onClose }: Props) {
+export function HelpPanel({ onClose, onOpenSetupAssistant }: Props) {
   return (
     <div className="help-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Help">
       <div className="help-panel" onClick={e => e.stopPropagation()}>
@@ -47,6 +48,12 @@ export function HelpPanel({ onClose }: Props) {
           <section className="help-section">
             <h3>Model selector</h3>
             <p>Choose which Gemma model answers you. <strong>gemma4:31b</strong> and <strong>gemma4:26b</strong> make the richest animations (need a powerful computer). <strong>gemma4:e4b</strong> is faster and smaller. <strong>gemma4:e2b</strong> works on older computers with less memory.</p>
+          </section>
+
+          <section className="help-section">
+            <h3>Setup Assistant</h3>
+            <p>Need to review your runtime setup again? Open the setup assistant to revisit the welcome steps and runtime choice.</p>
+            <button className="help-action" onClick={onOpenSetupAssistant}>Open Setup Assistant</button>
           </section>
 
           <section className="help-section">
