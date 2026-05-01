@@ -6,13 +6,14 @@ interface Props {
   onSend: (text: string) => void;
   onCancel: () => void;
   e4bAvailable: boolean;
+  greekTranscribeModel: string | null;
   transcribeModel: string;
   codingModel: string;
   ctxUsedPct?: number;
   onClearContext?: () => void;
 }
 
-export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeModel, codingModel, ctxUsedPct = 0, onClearContext }: Props) {
+export function InputRow({ status, onSend, onCancel, e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, ctxUsedPct = 0, onClearContext }: Props) {
   const [text, setText] = useState('');
 
   function handleSend() {
@@ -60,6 +61,7 @@ export function InputRow({ status, onSend, onCancel, e4bAvailable, transcribeMod
         )}
         <VoiceInput
           e4bAvailable={e4bAvailable}
+          greekTranscribeModel={greekTranscribeModel}
           transcribeModel={transcribeModel}
           codingModel={codingModel}
           onTranscription={onSend}

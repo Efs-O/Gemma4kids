@@ -79,5 +79,19 @@ export function getModelTier(name: string): ModelTier {
 /** Exact Ollama name for STT, or default string if none pulled yet. */
 export function pickTranscribeModel(models: string[]): string {
   const e4b = models.find(isGemma4EdgeE4b);
-  return e4b ?? 'gemma4:e4b';
+  const e2b = models.find(isGemma4EdgeE2b);
+  return e4b ?? e2b ?? 'gemma4:e4b';
+}
+
+/**
+ * Greek STT fallback: prefer E2B when available.
+ * Current local tests show E4B is stronger for German/English, but Greek audio
+ * is less unstable on E2B. Keep this helper isolated so we can remove it if a
+ * future Gemma/Ollama update fixes Greek ASR quality on E4B.
+ */
+export function pickGreekTranscribeModel(models: string[]): string | null {
+  const e2b = models.find(isGemma4EdgeE2b);
+  if (e2b) return e2b;
+  const e4b = models.find(isGemma4EdgeE4b);
+  return e4b ?? null;
 }

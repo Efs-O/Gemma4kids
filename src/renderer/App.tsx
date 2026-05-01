@@ -13,6 +13,7 @@ import {
   isGemma426b,
   isGemma431b,
   pickCodingModel,
+  pickGreekTranscribeModel,
   pickTranscribeModel,
   sortGemma4CodingModelsSmallestFirst,
   getModelTier,
@@ -30,7 +31,8 @@ export default function App() {
 
   const autoModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
-  const e4bAvailable = useMemo(() => models.some(isGemma4EdgeE4b), [models]);
+  const greekTranscribeModel = useMemo(() => pickGreekTranscribeModel(models), [models]);
+  const voiceInputAvailable = useMemo(() => models.some(isGemma4EdgeE4b) || models.some(isGemma4EdgeE2b), [models]);
   const gemmaModels = useMemo(
     () =>
       sortGemma4CodingModelsSmallestFirst(
@@ -393,7 +395,8 @@ export default function App() {
               onSend={sendMessage}
               onCancel={cancel}
               onRetry={retry}
-              e4bAvailable={e4bAvailable}
+              e4bAvailable={voiceInputAvailable}
+              greekTranscribeModel={greekTranscribeModel}
               transcribeModel={transcribeModel}
               codingModel={codingModel}
               showThinking={showThinking}
