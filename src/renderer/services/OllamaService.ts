@@ -49,6 +49,14 @@ export interface EncodedAudioPayload {
   durationSeconds: number;
 }
 
+function buildTranscribePrompt(languageHint?: string): string {
+  const hint = (languageHint ?? '').trim().toLowerCase();
+  if (hint.startsWith('el')) {
+    return 'The spoken language is Greek (el-GR). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Return only Greek characters. Never translate. Never transliterate. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
+  return 'Transcribe exactly what is spoken in the audio. Keep the original language and script exactly as spoken. Never translate. Never transliterate. If the speaker uses Greek, return Greek characters. Output only the transcription text, with no newlines. Write numbers as digits.';
+}
+
 /**
  * Convert any browser audio blob (WebM/Ogg/etc.) to a 16kHz mono WAV with a
  * proper RIFF header — required by Ollama's Gemma4 audio workaround.
@@ -110,6 +118,7 @@ export async function transcribe(
   audioBase64: string,
   model: string = 'gemma4:e4b',
   keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+  languageHint?: string,
 ): Promise<string> {
   const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
     method: 'POST',
@@ -120,7 +129,7 @@ export async function transcribe(
         role: 'user',
         // Audio must come before text prompt per Ollama workaround
         images: [audioBase64],
-        content: 'Transcribe the speech in the audio. Output only the transcription text, no newlines. Write numbers as digits.',
+        content: buildTranscribePrompt(languageHint),
       }],
       think: OLLAMA_TRANSCRIBE_PROFILE.think,
       keep_alive: keepAlive,

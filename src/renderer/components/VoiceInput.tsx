@@ -10,13 +10,14 @@ function estimateWarmKeepAlive(durationSeconds: number): string {
 
 interface Props {
   e4bAvailable: boolean;
+  greekTranscribeModel: string | null;
   transcribeModel: string;
   codingModel: string;
   onTranscription: (text: string) => void;
   disabled?: boolean;
 }
 
-export function VoiceInput({ e4bAvailable, transcribeModel, codingModel, onTranscription, disabled }: Props) {
+export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, onTranscription, disabled }: Props) {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const activeStreamRef = useRef<MediaStream | null>(null);
@@ -57,10 +58,19 @@ export function VoiceInput({ e4bAvailable, transcribeModel, codingModel, onTrans
     setVoiceStateSafe('transcribing');
     try {
       const encoded = await audioBlobToWav16k(blob);
-      const keepAlive = transcribeModel === codingModel
+      const languageHint = navigator.languages?.[0] ?? navigator.language;
+      // Revisit this override if future Gemma/Ollama releases improve Greek ASR
+      // on E4B. Current local tests on both synthetic and real Greek audio show
+      // E2B stays in Greek script more reliably, while E4B often drifts into
+      // mixed or non-Greek scripts.
+      const activeTranscribeModel =
+        languageHint.toLowerCase().startsWith('el') && greekTranscribeModel
+          ? greekTranscribeModel
+          : transcribeModel;
+      const keepAlive = activeTranscribeModel === codingModel
         ? estimateWarmKeepAlive(encoded.durationSeconds)
         : 0;
-      const text = await transcribe(encoded.audioBase64, transcribeModel, keepAlive);
+      const text = await transcribe(encoded.audioBase64, activeTranscribeModel, keepAlive, languageHint);
       setVoiceStateSafe('idle');
       // Short delay gives E4B a moment to release VRAM before the coding model starts.
       clearTimer(deliverTimerRef);
@@ -90,7 +100,7 @@ export function VoiceInput({ e4bAvailable, transcribeModel, codingModel, onTrans
         }, 3000);
       }
     }
-  }, [clearTimer, codingModel, onTranscription, setVoiceStateSafe, transcribeModel]);
+  }, [clearTimer, codingModel, greekTranscribeModel, onTranscription, setVoiceStateSafe, transcribeModel]);
 
   const startRecording = useCallback(async () => {
     try {
@@ -162,7 +172,7 @@ export function VoiceInput({ e4bAvailable, transcribeModel, codingModel, onTrans
     return (
       <button
         className="btn-mic btn-mic-disabled"
-        title="Install gemma4:e4b to use voice input"
+        title="Install gemma4:e4b or gemma4:e2b to use voice input"
         disabled
       >
         🎤

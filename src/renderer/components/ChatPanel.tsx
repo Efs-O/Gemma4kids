@@ -79,6 +79,7 @@ interface Props {
   onCancel: () => void;
   onRetry: () => void;
   e4bAvailable: boolean;
+  greekTranscribeModel: string | null;
   transcribeModel: string;
   codingModel: string;
   showThinking: boolean;
@@ -98,6 +99,7 @@ export function ChatPanel({
   onCancel,
   onRetry,
   e4bAvailable,
+  greekTranscribeModel,
   transcribeModel,
   codingModel,
   showThinking,
@@ -263,14 +265,15 @@ export function ChatPanel({
           </button>
         </div>
       )}
-      <InputRow
-        status={status}
-        onSend={onSend}
-        onCancel={onCancel}
-        e4bAvailable={e4bAvailable}
-        transcribeModel={transcribeModel}
-        codingModel={codingModel}
-        ctxUsedPct={ctxUsedPct}
+        <InputRow
+          status={status}
+          onSend={onSend}
+          onCancel={onCancel}
+          e4bAvailable={e4bAvailable}
+          greekTranscribeModel={greekTranscribeModel}
+          transcribeModel={transcribeModel}
+          codingModel={codingModel}
+          ctxUsedPct={ctxUsedPct}
         onClearContext={onClearContext}
       />
     </div>
