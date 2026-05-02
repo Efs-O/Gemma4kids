@@ -61,6 +61,8 @@ export interface LlamaCppRuntimeConfig {
   modelPath: string;
   port: number;
   gpuLayers: number;
+  numCtx: number;
+  numPredict: number;
 }
 
 interface OllamaTagsResponse {

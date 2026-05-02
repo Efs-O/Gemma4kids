@@ -189,7 +189,7 @@ export interface UseChatResult {
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
   ctxUsedPct: number;
-  sendMessage: (text: string) => void;
+  sendMessage: (input: string | { text: string; images?: string[] }) => void;
   cancel: () => void;
   retry: () => void;
   clearContext: () => void;
@@ -201,6 +201,7 @@ export function useChat(
   model: string,
   thinkEnabled: boolean,
   modelTier: ModelTier = 'full',
+  runtimeLimits?: { numCtx?: number; numPredict?: number },
 ): UseChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingText, setStreamingText] = useState('');
@@ -218,12 +219,22 @@ export function useChat(
   // Incremented on clearContext so an in-flight runLoop knows not to write stale history.
   const clearIdRef = useRef(0);
 
+  function normalizeMessageInput(input: string | { text: string; images?: string[] }): { text: string; images?: string[] } {
+    if (typeof input === 'string') return { text: input };
+    return {
+      text: input.text,
+      images: input.images?.filter((image) => image.trim().length > 0),
+    };
+  }
+
   const runLoop = useCallback(async (startHistory: ChatMessage[], token: CancellationToken) => {
     const myClearId = clearIdRef.current;
     let history = startHistory;
     const workstationLarge = isGemma426b(model) || isGemma431b(model);
-    const numCtx = workstationLarge ? OLLAMA_CHAT_WORKSTATION_CTX : OLLAMA_CHAT_PROFILE.numCtx;
-    const numPredict = workstationLarge ? OLLAMA_CHAT_WORKSTATION_PREDICT : OLLAMA_CHAT_PROFILE.numPredict;
+    const defaultNumCtx = workstationLarge ? OLLAMA_CHAT_WORKSTATION_CTX : OLLAMA_CHAT_PROFILE.numCtx;
+    const defaultNumPredict = workstationLarge ? OLLAMA_CHAT_WORKSTATION_PREDICT : OLLAMA_CHAT_PROFILE.numPredict;
+    const numCtx = runtimeLimits?.numCtx ?? defaultNumCtx;
+    const numPredict = runtimeLimits?.numPredict ?? defaultNumPredict;
 
     while (true) {
       // Guard re-entry: abort may have fired during a tool dispatch IPC round-trip.
@@ -434,12 +445,13 @@ export function useChat(
       setStatus('idle');
       return;
     }
-  }, [model, thinkEnabled, modelTier, runtimeAdapter]);
+  }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict]);
 
-  const sendMessage = useCallback((text: string) => {
+  const sendMessage = useCallback((input: string | { text: string; images?: string[] }) => {
+    const { text, images } = normalizeMessageInput(input);
     // Layer 1: instant keyword block — no model call, no streaming.
     if (modelTier === 'simple' && isSimpleMotionKeyword(text)) {
-      const userMsg: ChatMessage = { role: 'user', content: text };
+      const userMsg: ChatMessage = { role: 'user', content: text, images };
       const sisterMsg: ChatMessage = { role: 'assistant', content: SISTER_MESSAGE[detectLang(text)] };
       const updated = [...historyRef.current, userMsg, sisterMsg];
       historyRef.current = updated;
@@ -455,7 +467,7 @@ export function useChat(
     setStreamingThinking('');
     setLatestCode(null);
 
-    const userMsg: ChatMessage = { role: 'user', content: text };
+    const userMsg: ChatMessage = { role: 'user', content: text, images };
     const updated = [...historyRef.current, userMsg];
     historyRef.current = updated;
     setMessages(updated);

@@ -75,7 +75,7 @@ interface Props {
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
   hasCode: boolean;
-  onSend: (text: string) => void;
+  onSend: (input: string | { text: string; images?: string[] }) => void;
   onCancel: () => void;
   onRetry: () => void;
   e4bAvailable: boolean;

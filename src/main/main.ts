@@ -6,7 +6,6 @@ import { pathToFileURL } from 'url';
 import { randomUUID } from 'crypto';
 import {
   OLLAMA_CHAT_PROFILE,
-  OLLAMA_CHAT_WORKSTATION_CTX,
 } from '../renderer/ollamaConstants';
 
 interface LlamaCppConfig {
@@ -14,6 +13,8 @@ interface LlamaCppConfig {
   modelPath: string;
   port: number;
   gpuLayers: number;
+  numCtx: number;
+  numPredict: number;
 }
 
 interface LlamaCppHealthResult {
@@ -72,6 +73,8 @@ function runtimeConfigKey(config: LlamaCppConfig): string {
     modelPath: config.modelPath.trim(),
     port: config.port,
     gpuLayers: config.gpuLayers,
+    numCtx: config.numCtx,
+    numPredict: config.numPredict,
   });
 }
 
@@ -151,6 +154,12 @@ function validateLlamaConfig(config: LlamaCppConfig): LlamaCppHealthResult | nul
   if (!Number.isInteger(config.port) || config.port < 1024 || config.port > 65535) {
     return buildHealthResult(false, 'invalid_port', 'Pick a port between 1024 and 65535.', `Invalid llama.cpp port: ${String(config.port)}`);
   }
+  if (!Number.isInteger(config.numCtx) || config.numCtx < 4096 || config.numCtx > 262144) {
+    return buildHealthResult(false, 'invalid_ctx', 'Pick a context length between 4096 and 262144.', `Invalid llama.cpp context length: ${String(config.numCtx)}`);
+  }
+  if (!Number.isInteger(config.numPredict) || config.numPredict < 256 || config.numPredict > 131072) {
+    return buildHealthResult(false, 'invalid_predict', 'Pick generation tokens between 256 and 131072.', `Invalid llama.cpp generation token limit: ${String(config.numPredict)}`);
+  }
   if (!fs.existsSync(modelPath)) {
     return buildHealthResult(false, 'model_missing', 'I could not find that GGUF model file.', `Model path does not exist: ${modelPath}`);
   }
@@ -163,14 +172,6 @@ function getLlamaStartupTimeoutMs(modelPath: string): number {
     return LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS;
   }
   return LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS;
-}
-
-function getLlamaCtxSize(modelPath: string): number {
-  const lower = modelPath.toLowerCase();
-  if (lower.includes('31b') || lower.includes('26b')) {
-    return OLLAMA_CHAT_WORKSTATION_CTX;
-  }
-  return OLLAMA_CHAT_PROFILE.numCtx;
 }
 
 function resolveLlamaServerCommand(serverPath: string): { command: string; args: string[] } {
@@ -302,7 +303,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
   }
 
   const gpuLayers = config.gpuLayers === -1 ? 'all' : String(config.gpuLayers);
-  const ctxSize = getLlamaCtxSize(config.modelPath);
+  const ctxSize = config.numCtx;
   const spawnArgs = [
     ...commandInfo.args,
     '-m',

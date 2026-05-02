@@ -47,6 +47,9 @@ function messagesForOllamaApi(messages: ChatMessage[]): Record<string, unknown>[
     } else {
       row.content = m.content ?? '';
     }
+    if (m.role === 'user' && Array.isArray(m.images) && m.images.length > 0) {
+      row.images = m.images;
+    }
     return row;
   });
 }
