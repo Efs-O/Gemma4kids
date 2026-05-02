@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('delete-animation', { filename }),
   openInBrowser: (filename: string) =>
     ipcRenderer.invoke('open-in-browser', { filename }),
+  setOllamaCleanupTargets: (runtime: 'ollama' | 'llama_cpp', models: string[]) =>
+    ipcRenderer.invoke('set-ollama-cleanup-targets', { runtime, models }),
   ttsSpeak: (text: string, lang?: string) =>
     ipcRenderer.invoke('tts-speak', text, lang),
   ttsListVoices: () =>

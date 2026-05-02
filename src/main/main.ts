@@ -4,6 +4,10 @@ import path from 'path';
 import fs from 'fs';
 import { pathToFileURL } from 'url';
 import { randomUUID } from 'crypto';
+import {
+  OLLAMA_CHAT_PROFILE,
+  OLLAMA_CHAT_WORKSTATION_CTX,
+} from '../renderer/ollamaConstants';
 
 interface LlamaCppConfig {
   serverPath: string;
@@ -46,15 +50,21 @@ interface ManagedLlamaServer {
   logPath: string;
 }
 
+interface OllamaCleanupState {
+  runtime: 'ollama' | 'llama_cpp';
+  models: string[];
+}
+
 const LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS = 240000;
-const LLAMA_DEFAULT_CTX_SIZE = 4096;
 const LLAMA_DEFAULT_BATCH_SIZE = 512;
 const LLAMA_DEFAULT_CACHE_TYPE = 'q8_0';
 const LLAMA_RUNTIME_LOG = 'llama-cpp-runtime.log';
 const managedAbortControllers = new Map<string, AbortController>();
 let managedLlamaServer: ManagedLlamaServer | null = null;
 let managedLlamaStartup: { configKey: string; promise: Promise<LlamaCppHealthResult> } | null = null;
+let isQuittingAfterCleanup = false;
+let ollamaCleanupState: OllamaCleanupState = { runtime: 'ollama', models: [] };
 
 function runtimeConfigKey(config: LlamaCppConfig): string {
   return JSON.stringify({
@@ -155,6 +165,14 @@ function getLlamaStartupTimeoutMs(modelPath: string): number {
   return LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS;
 }
 
+function getLlamaCtxSize(modelPath: string): number {
+  const lower = modelPath.toLowerCase();
+  if (lower.includes('31b') || lower.includes('26b')) {
+    return OLLAMA_CHAT_WORKSTATION_CTX;
+  }
+  return OLLAMA_CHAT_PROFILE.numCtx;
+}
+
 function resolveLlamaServerCommand(serverPath: string): { command: string; args: string[] } {
   const trimmed = serverPath.trim();
   if (!trimmed) {
@@ -214,6 +232,36 @@ async function stopManagedLlamaServer(): Promise<void> {
   });
 }
 
+async function unloadOllamaModels(models: string[]): Promise<void> {
+  const uniqueModels = [...new Set(models.map((model) => model.trim()).filter(Boolean))];
+  if (uniqueModels.length === 0) return;
+
+  const logPath = getLlamaRuntimeLogPath();
+  for (const model of uniqueModels) {
+    appendLlamaRuntimeLog(logPath, `[ollama:unload:start] model=${model}`);
+    try {
+      const response = await fetch('http://127.0.0.1:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          keep_alive: 0,
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
+      appendLlamaRuntimeLog(
+        logPath,
+        `[ollama:unload:done] model=${model} status=${String(response.status)} ok=${String(response.ok)}`,
+      );
+    } catch (error) {
+      appendLlamaRuntimeLog(
+        logPath,
+        `[ollama:unload:error] model=${model} message=${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+}
+
 async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCppHealthResult> {
   const invalid = validateLlamaConfig(config);
   if (invalid) return invalid;
@@ -254,6 +302,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
   }
 
   const gpuLayers = config.gpuLayers === -1 ? 'all' : String(config.gpuLayers);
+  const ctxSize = getLlamaCtxSize(config.modelPath);
   const spawnArgs = [
     ...commandInfo.args,
     '-m',
@@ -266,7 +315,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     '--reasoning',
     'off',
     '--ctx-size',
-    String(LLAMA_DEFAULT_CTX_SIZE),
+    String(ctxSize),
     '--batch-size',
     String(LLAMA_DEFAULT_BATCH_SIZE),
     '--parallel',
@@ -281,6 +330,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     gpuLayers,
   ];
   const logPath = resetLlamaRuntimeLog();
+  appendLlamaRuntimeLog(logPath, `[spawn:config] ctx_size=${String(ctxSize)} startup_timeout_s=${String(Math.round(startupTimeoutMs / 1000))}`);
   appendLlamaRuntimeLog(logPath, `[spawn] ${commandInfo.command} ${spawnArgs.join(' ')}`);
   const proc = spawn(
     commandInfo.command,
@@ -712,12 +762,23 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', (event) => {
+  if (isQuittingAfterCleanup) {
+    return;
+  }
+
+  event.preventDefault();
   for (const controller of managedAbortControllers.values()) {
     controller.abort();
   }
   managedAbortControllers.clear();
-  void stopManagedLlamaServer();
+  const cleanupPromise = ollamaCleanupState.runtime === 'ollama'
+    ? unloadOllamaModels(ollamaCleanupState.models)
+    : stopManagedLlamaServer();
+  void cleanupPromise.finally(() => {
+    isQuittingAfterCleanup = true;
+    app.quit();
+  });
 });
 
 // --- Animation IPC handlers ---
@@ -884,6 +945,14 @@ ipcMain.handle('tts-speak', async (_event, text: string, lang?: string): Promise
 
 ipcMain.handle('tts-list-voices', async () => {
   return scanVoices().map(({ model: _m, sampleRate, name, lang }) => ({ name, lang, sampleRate }));
+});
+
+ipcMain.handle('set-ollama-cleanup-targets', async (_event, payload: OllamaCleanupState) => {
+  ollamaCleanupState = {
+    runtime: payload.runtime,
+    models: [...new Set(payload.models.map((model) => model.trim()).filter(Boolean))],
+  };
+  return { success: true };
 });
 
 // --- llama.cpp IPC handlers ---

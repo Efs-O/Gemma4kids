@@ -310,6 +310,10 @@ export default function App() {
     if (userModel && models.includes(userModel)) return userModel;
     return autoModel;
   }, [userModel, models, autoModel]);
+  const ollamaCleanupModels = useMemo(() => {
+    const collected = [codingModel, transcribeModel, greekTranscribeModel ?? ''];
+    return [...new Set(collected.map((model) => model.trim()).filter(Boolean))];
+  }, [codingModel, greekTranscribeModel, transcribeModel]);
 
   const modelTier = useMemo(() => getModelTier(codingModel), [codingModel]);
 
@@ -362,6 +366,11 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('g4k-chat-width', String(chatWidth));
   }, [chatWidth]);
+
+  useEffect(() => {
+    const modelsForCleanup = runtimeInUse === 'ollama' ? ollamaCleanupModels : [];
+    void window.electronAPI.setOllamaCleanupTargets(runtimeInUse, modelsForCleanup);
+  }, [ollamaCleanupModels, runtimeInUse]);
 
   const draggingTarget = useRef<'sidebar' | 'chat' | null>(null);
   const dragStartX = useRef(0);
