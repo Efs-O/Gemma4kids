@@ -110,7 +110,8 @@ export function ChatPanel({
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const userScrolledUpRef = useRef(false);
-  const autoScrollingRef = useRef(false);
+  /** True only while we assign scrollTop — ignore synthetic scroll events for stick-to-bottom heuristics. */
+  const programmaticScrollRef = useRef(false);
   const scrollRafRef = useRef<number | null>(null);
   const tts = useMemo(() => createTTSService(), []);
 
@@ -126,11 +127,25 @@ export function ChatPanel({
   );
 
   const handleScroll = useCallback(() => {
-    if (autoScrollingRef.current) return;
+    if (programmaticScrollRef.current) return;
     const el = listRef.current;
     if (!el) return;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
     userScrolledUpRef.current = !nearBottom;
+  }, []);
+
+  /** Wheel is user-driven; scroll-up pauses stick-to-bottom during streaming. */
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const el = listRef.current;
+    if (!el) return;
+    if (e.deltaY < 0) {
+      userScrolledUpRef.current = true;
+      return;
+    }
+    if (e.deltaY > 0) {
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+      if (nearBottom) userScrolledUpRef.current = false;
+    }
   }, []);
 
   // Smoothly animate scrollTop toward scrollHeight using rAF so rapid
@@ -143,26 +158,19 @@ export function ChatPanel({
       if (!el || userScrolledUpRef.current) return;
       const target = el.scrollHeight - el.clientHeight;
       const diff = target - el.scrollTop;
-      if (diff <= 0) {
-        autoScrollingRef.current = false;
-        return;
-      }
-      autoScrollingRef.current = true;
+      if (diff <= 0) return;
       // Ease toward target: jump most of the gap each frame.
+      programmaticScrollRef.current = true;
       el.scrollTop += diff * 0.3;
+      programmaticScrollRef.current = false;
       // If still not there, keep animating.
-      if (diff > 2) {
-        scheduleScroll();
-      } else {
-        autoScrollingRef.current = false;
-      }
+      if (diff > 2) scheduleScroll();
     });
   }, []);
 
   // New message turn → always scroll to bottom and re-enable auto-scroll.
   useEffect(() => {
     userScrolledUpRef.current = false;
-    autoScrollingRef.current = false;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
@@ -195,18 +203,19 @@ export function ChatPanel({
   useEffect(() => {
     if (!showChips) return;
     userScrolledUpRef.current = false;
-    autoScrollingRef.current = true;
     requestAnimationFrame(() => {
       const el = listRef.current;
-      if (el) el.scrollTop = el.scrollHeight;
-      autoScrollingRef.current = false;
+      if (!el) return;
+      programmaticScrollRef.current = true;
+      el.scrollTop = el.scrollHeight;
+      programmaticScrollRef.current = false;
     });
   }, [showChips]);
 
   return (
     <div className="chat-panel">
       <div className="chat-label">💬 Chat with Gemma</div>
-      <div className="message-list" ref={listRef} onScroll={handleScroll}>
+      <div className="message-list" ref={listRef} onScroll={handleScroll} onWheel={handleWheel}>
         {visible.length === 0 && !hasStreamingMessage && (
           <div className="chat-empty">
             Hi! I'm Gemma, your coding buddy! 🎉<br />

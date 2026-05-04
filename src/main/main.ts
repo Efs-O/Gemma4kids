@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell, Menu, session } from 'electron';
+import type { BrowserWindowConstructorOptions } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -180,20 +181,40 @@ function resolveLlamaServerCommand(serverPath: string): { command: string; args:
     throw new Error('llama-server binary path is empty.');
   }
 
-  if (path.isAbsolute(trimmed)) {
-    if (fs.existsSync(trimmed)) {
-      return { command: trimmed, args: [] };
-    }
-    if (process.platform === 'win32' && !path.extname(trimmed)) {
-      const withExe = `${trimmed}.exe`;
-      if (fs.existsSync(withExe)) {
-        return { command: withExe, args: [] };
-      }
-    }
-    throw new Error(`llama-server binary not found at ${trimmed}`);
+  if (!path.isAbsolute(trimmed)) {
+    return { command: trimmed, args: [] };
   }
 
-  return { command: trimmed, args: [] };
+  const candidates: string[] = [];
+  if (fs.existsSync(trimmed)) {
+    const st = fs.statSync(trimmed);
+    if (st.isFile()) {
+      candidates.push(trimmed);
+    } else if (st.isDirectory()) {
+      const exeName = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server';
+      candidates.push(path.join(trimmed, exeName));
+    }
+  } else {
+    candidates.push(trimmed);
+    if (process.platform === 'win32' && !path.extname(trimmed)) {
+      candidates.push(`${trimmed}.exe`);
+    }
+  }
+
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return { command: candidate, args: [] };
+      }
+    } catch {
+      // ignore stat errors for candidate
+    }
+  }
+
+  throw new Error(
+    `llama-server binary not found at ${trimmed}. Use the path to the llama-server program ` +
+      `(on Windows, often ...\\bin\\llama-server.exe), not only the source or build folder.)`,
+  );
 }
 
 async function canReachLlamaServer(port: number, timeoutMs: number): Promise<boolean> {
@@ -339,6 +360,13 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
   );
 
+  /** spawn() can fail with ENOENT etc.; that emits 'error' and must be handled or Electron main crashes. */
+  let spawnProcessError: string | null = null;
+  proc.once('error', (err) => {
+    spawnProcessError = err.message;
+    appendLlamaRuntimeLog(logPath, `[spawn:error] ${err.message}`);
+  });
+
   let stdout = '';
   let stderr = '';
   proc.stdout.on('data', (chunk: Buffer) => {
@@ -366,6 +394,16 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
 
   const startedAt = Date.now();
   while (Date.now() - startedAt < startupTimeoutMs) {
+    if (spawnProcessError !== null) {
+      managedLlamaServer = null;
+      return buildHealthResult(
+        false,
+        'binary_missing',
+        'Could not start llama-server. Check that the path is the real program (llama-server.exe on Windows).',
+        spawnProcessError,
+        [`Command: ${commandInfo.command}`, `Log file: ${logPath}`],
+      );
+    }
     if (proc.exitCode !== null) {
       managedLlamaServer = null;
       return buildHealthResult(
@@ -715,8 +753,27 @@ function sanitizeHtmlForSave(input: string): string {
   return html;
 }
 
+/** Window/taskbar icon: dev = repo assets/; packaged = assets bundled next to package.json (electron-builder.yml). */
+function resolveAppIconPath(): string | undefined {
+  const base = app.isPackaged
+    ? path.join(app.getAppPath(), 'assets')
+    : path.join(__dirname, '..', '..', 'assets');
+  const names =
+    process.platform === 'win32'
+      ? (['icon.ico', 'icon.png'] as const)
+      : process.platform === 'darwin'
+        ? (['icon.icns', 'icon.png'] as const)
+        : (['icon.png', 'icon.ico'] as const);
+  for (const name of names) {
+    const full = path.join(base, name);
+    if (fs.existsSync(full)) return full;
+  }
+  return undefined;
+}
+
 function createWindow(): void {
-  const win = new BrowserWindow({
+  const iconPath = resolveAppIconPath();
+  const options: BrowserWindowConstructorOptions = {
     width: 1200,
     height: 800,
     minWidth: 900,
@@ -727,7 +784,11 @@ function createWindow(): void {
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
     },
-  });
+  };
+  if (iconPath !== undefined) {
+    options.icon = iconPath;
+  }
+  const win = new BrowserWindow(options);
 
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
 
@@ -747,6 +808,9 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.gemma4kids.app');
+  }
   Menu.setApplicationMenu(null);
   ensureAnimationsDir();
   // Allow microphone access from the local file:// renderer.

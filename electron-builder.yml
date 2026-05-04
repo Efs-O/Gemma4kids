@@ -7,6 +7,8 @@ files:
   - dist/**
   - "!dist/**/*.map"
   - package.json
+  # Runtime window/taskbar icon (main process); PNG is enough — add icon.ico for sharper Windows taskbar
+  - assets/icon.png
 
 directories:
   buildResources: assets
