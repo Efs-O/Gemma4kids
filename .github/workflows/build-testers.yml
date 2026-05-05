@@ -1,13 +1,22 @@
 name: Build Tester Packages
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: packaging-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-windows:
+    timeout-minutes: 30
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -34,9 +43,12 @@ jobs:
             release/latest.yml
 
   build-macos:
+    timeout-minutes: 30
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -64,9 +76,12 @@ jobs:
             release/*.zip
 
   build-linux:
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
