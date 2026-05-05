@@ -1067,6 +1067,12 @@ body {
   padding: 8px;
 }
 
+.runtime-card-logo-llama {
+  width: 84px;
+  height: 84px;
+  padding: 6px;
+}
+
 .runtime-card:hover {
   transform: translateY(-2px);
   border-color: #7c3aed;
@@ -1144,7 +1150,8 @@ body {
   font-weight: 700;
 }
 
-.setup-field input {
+.setup-field input,
+.setup-field select {
   min-height: 46px;
   border: 1.5px solid #d8b4fe;
   border-radius: 12px;
@@ -1155,7 +1162,24 @@ body {
   font-family: inherit;
 }
 
-.setup-field input:focus {
+.setup-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #7c3aed 50%),
+    linear-gradient(135deg, #7c3aed 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+.setup-field input:focus,
+.setup-field select:focus {
   outline: none;
   border-color: #7c3aed;
 }

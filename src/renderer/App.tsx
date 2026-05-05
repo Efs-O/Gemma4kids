@@ -11,7 +11,7 @@ import { AppHeader } from './components/AppHeader';
 import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
 import type { LlamaCppRuntimeConfig, RuntimeKind } from './services/OllamaService';
-import { getConfiguredLlamaPathForModel, LLAMA_GPU_LAYERS_KEY, LLAMA_MODEL_PRESETS, LLAMA_NUM_CTX_KEY, LLAMA_NUM_PREDICT_KEY, LLAMA_PORT_KEY, LLAMA_SERVER_PATH_KEY, persistLlamaModelPaths, readLlamaCppSetupConfig, readSelectedRuntime, RUNTIME_SELECTED_KEY, type LlamaCppSetupConfig, type LlamaModelPresetId } from './config/llamaSetup';
+import { DEFAULT_LLAMA_CACHE_TYPE, getConfiguredLlamaPathForModel, LLAMA_CACHE_TYPE_K_KEY, LLAMA_CACHE_TYPE_V_KEY, LLAMA_GPU_LAYERS_KEY, LLAMA_MODEL_PRESETS, LLAMA_NUM_CTX_KEY, LLAMA_NUM_PREDICT_KEY, LLAMA_PORT_KEY, LLAMA_SERVER_PATH_KEY, persistLlamaModelPaths, readLlamaCppSetupConfig, readSelectedRuntime, RUNTIME_SELECTED_KEY, type LlamaCppSetupConfig, type LlamaModelPresetId } from './config/llamaSetup';
 import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, pickCodingModel, pickGreekTranscribeModel, pickTranscribeModel, sortGemma4CodingModelsSmallestFirst, getModelTier } from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
 
@@ -26,6 +26,11 @@ export default function App() {
   const [llamaSetup, setLlamaSetup] = useState<LlamaCppSetupConfig>(() => readLlamaCppSetupConfig());
   const [showSetupAssistant, setShowSetupAssistant] = useState(true);
   const [userModel, setUserModel] = useState('');
+  const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem('g4k-chat-think');
+    return stored == null ? true : stored === 'true';
+  });
+  const [showThinking, setShowThinking] = useState<boolean>(() => localStorage.getItem('g4k-show-thinking') === 'true');
 
   const llamaCodingModels = useMemo(() => sortGemma4CodingModelsSmallestFirst(LLAMA_MODEL_PRESETS.map((preset) => preset.modelTag)), []);
   const activeLlamaModel = useMemo(() => (userModel && llamaCodingModels.includes(userModel)) ? userModel : pickCodingModel(llamaCodingModels), [llamaCodingModels, userModel]);
@@ -36,7 +41,10 @@ export default function App() {
     gpuLayers: llamaSetup.gpuLayers,
     numCtx: llamaSetup.numCtx,
     numPredict: llamaSetup.numPredict,
-  }), [activeLlamaModel, llamaSetup]);
+    cacheTypeK: llamaSetup.cacheTypeK.trim() || DEFAULT_LLAMA_CACHE_TYPE,
+    cacheTypeV: llamaSetup.cacheTypeV.trim() || DEFAULT_LLAMA_CACHE_TYPE,
+    reasoningEnabled: chatThinkEnabled,
+  }), [activeLlamaModel, chatThinkEnabled, llamaSetup]);
 
   const { runtime: runtimeInUse, adapter: runtimeAdapter, status: runtimeStatus, models, errorMsg: runtimeErrorMsg, recheck } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
 
@@ -52,11 +60,6 @@ export default function App() {
       )
   ), [llamaCodingModels, models, runtimeInUse]);
 
-  const [chatThinkEnabled, setChatThinkEnabled] = useState<boolean>(() => {
-    const stored = localStorage.getItem('g4k-chat-think');
-    return stored == null ? true : stored === 'true';
-  });
-  const [showThinking, setShowThinking] = useState<boolean>(() => localStorage.getItem('g4k-show-thinking') === 'true');
   const codingModel = useMemo(() => {
     if (runtimeInUse === 'llama_cpp') return activeLlamaModel;
     if (userModel && models.includes(userModel)) return userModel;
@@ -182,6 +185,8 @@ export default function App() {
       localStorage.setItem(LLAMA_GPU_LAYERS_KEY, String(next.gpuLayers));
       localStorage.setItem(LLAMA_NUM_CTX_KEY, String(next.numCtx));
       localStorage.setItem(LLAMA_NUM_PREDICT_KEY, String(next.numPredict));
+      localStorage.setItem(LLAMA_CACHE_TYPE_K_KEY, next.cacheTypeK.trim() || DEFAULT_LLAMA_CACHE_TYPE);
+      localStorage.setItem(LLAMA_CACHE_TYPE_V_KEY, next.cacheTypeV.trim() || DEFAULT_LLAMA_CACHE_TYPE);
       return next;
     });
   }, []);

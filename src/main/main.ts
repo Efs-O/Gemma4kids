@@ -16,6 +16,9 @@ interface LlamaCppConfig {
   gpuLayers: number;
   numCtx: number;
   numPredict: number;
+  cacheTypeK: string;
+  cacheTypeV: string;
+  reasoningEnabled: boolean;
 }
 
 interface LlamaCppHealthResult {
@@ -60,7 +63,6 @@ interface OllamaCleanupState {
 const LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS = 240000;
 const LLAMA_DEFAULT_BATCH_SIZE = 512;
-const LLAMA_DEFAULT_CACHE_TYPE = 'q8_0';
 const LLAMA_RUNTIME_LOG = 'llama-cpp-runtime.log';
 const managedAbortControllers = new Map<string, AbortController>();
 let managedLlamaServer: ManagedLlamaServer | null = null;
@@ -76,6 +78,9 @@ function runtimeConfigKey(config: LlamaCppConfig): string {
     gpuLayers: config.gpuLayers,
     numCtx: config.numCtx,
     numPredict: config.numPredict,
+    cacheTypeK: config.cacheTypeK.trim(),
+    cacheTypeV: config.cacheTypeV.trim(),
+    reasoningEnabled: config.reasoningEnabled,
   });
 }
 
@@ -160,6 +165,12 @@ function validateLlamaConfig(config: LlamaCppConfig): LlamaCppHealthResult | nul
   }
   if (!Number.isInteger(config.numPredict) || config.numPredict < 256 || config.numPredict > 131072) {
     return buildHealthResult(false, 'invalid_predict', 'Pick generation tokens between 256 and 131072.', `Invalid llama.cpp generation token limit: ${String(config.numPredict)}`);
+  }
+  if (!config.cacheTypeK.trim()) {
+    return buildHealthResult(false, 'invalid_cache_type', 'Pick a cache type for K.', 'llama.cpp cacheTypeK is empty.');
+  }
+  if (!config.cacheTypeV.trim()) {
+    return buildHealthResult(false, 'invalid_cache_type', 'Pick a cache type for V.', 'llama.cpp cacheTypeV is empty.');
   }
   if (!fs.existsSync(modelPath)) {
     return buildHealthResult(false, 'model_missing', 'I could not find that GGUF model file.', `Model path does not exist: ${modelPath}`);
@@ -325,6 +336,8 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
 
   const gpuLayers = config.gpuLayers === -1 ? 'all' : String(config.gpuLayers);
   const ctxSize = config.numCtx;
+  const cacheTypeK = config.cacheTypeK.trim();
+  const cacheTypeV = config.cacheTypeV.trim();
   const spawnArgs = [
     ...commandInfo.args,
     '-m',
@@ -334,8 +347,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     '--port',
     String(config.port),
     '--jinja',
-    '--reasoning',
-    'off',
+    ...(config.reasoningEnabled ? [] : ['--reasoning', 'off']),
     '--ctx-size',
     String(ctxSize),
     '--batch-size',
@@ -343,9 +355,9 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     '--parallel',
     '1',
     '--cache-type-k',
-    LLAMA_DEFAULT_CACHE_TYPE,
+    cacheTypeK,
     '--cache-type-v',
-    LLAMA_DEFAULT_CACHE_TYPE,
+    cacheTypeV,
     '--flash-attn',
     'on',
     '--n-gpu-layers',
@@ -922,23 +934,23 @@ ipcMain.handle('open-in-browser', async (_event, { filename }: { filename: strin
 
 // --- TTS helpers ---
 
-function findPiperBinary(): string | null {
+function ttsSearchRoots(): string[] {
   const appRoot = app.getAppPath();
   const userData = app.getPath('userData');
+  const resourceRoot = process.resourcesPath;
+  return [...new Set([resourceRoot, appRoot, userData].map((value) => value.trim()).filter(Boolean))];
+}
+
+function findPiperBinary(): string | null {
   const ext = process.platform === 'win32' ? '.exe' : '';
-  const candidates = [
-    path.join(appRoot, 'piper', `piper${ext}`),
-    path.join(userData, 'piper', `piper${ext}`),
-  ];
+  const candidates = ttsSearchRoots().map((root) => path.join(root, 'piper', `piper${ext}`));
   return candidates.find(p => fs.existsSync(p)) ?? null;
 }
 
 interface VoiceInfo { model: string; sampleRate: number; name: string; lang: string; }
 
 function scanVoices(): VoiceInfo[] {
-  const appRoot = app.getAppPath();
-  const userData = app.getPath('userData');
-  const dirs = [path.join(appRoot, 'voices'), path.join(userData, 'voices')];
+  const dirs = ttsSearchRoots().map((root) => path.join(root, 'voices'));
   const found: VoiceInfo[] = [];
 
   for (const dir of dirs) {
@@ -981,10 +993,10 @@ function buildWavHeader(pcmLength: number, sampleRate: number): Buffer {
 
 ipcMain.handle('tts-speak', async (_event, text: string, lang?: string): Promise<Buffer> => {
   const binary = findPiperBinary();
-  if (!binary) throw new Error('Piper binary not found. Place piper.exe in <project>/piper/');
+  if (!binary) throw new Error('Piper binary not found. Put the bundled piper files in resources/piper or the dev copy in <project>/piper/.');
 
   const voices = scanVoices();
-  if (voices.length === 0) throw new Error('No voice models found. Run: npm run download-voices');
+  if (voices.length === 0) throw new Error('No voice models found. Put bundled voice files in resources/voices or run: npm run download-voices');
 
   // Select voice by text language hint → fallback English → fallback first available
   const hint = (lang ?? 'en').slice(0, 2).toLowerCase();

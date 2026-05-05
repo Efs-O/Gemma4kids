@@ -7,8 +7,13 @@ files:
   - dist/**
   - "!dist/**/*.map"
   - package.json
-  # Runtime window/taskbar icon (main process); PNG is enough — add icon.ico for sharper Windows taskbar
   - assets/icon.png
+
+extraResources:
+  - from: piper
+    to: piper
+  - from: voices
+    to: voices
 
 directories:
   buildResources: assets
@@ -36,7 +41,6 @@ mac:
   category: public.app-category.education
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  # Unsigned - judges are pre-warned in SETUP.md
   hardenedRuntime: false
   target:
     - target: dmg

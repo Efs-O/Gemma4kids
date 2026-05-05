@@ -63,6 +63,9 @@ export interface LlamaCppRuntimeConfig {
   gpuLayers: number;
   numCtx: number;
   numPredict: number;
+  cacheTypeK: string;
+  cacheTypeV: string;
+  reasoningEnabled: boolean;
 }
 
 interface OllamaTagsResponse {
@@ -269,7 +272,7 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
   return {
     runtime: 'llama_cpp',
     capabilities: {
-      supportsThinking: false,
+      supportsThinking: true,
       supportsTools: true,
       supportsMultimodal: false,
       supportsTranscription: false,

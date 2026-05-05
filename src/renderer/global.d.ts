@@ -8,6 +8,9 @@ declare global {
     gpuLayers: number;
     numCtx: number;
     numPredict: number;
+    cacheTypeK: string;
+    cacheTypeV: string;
+    reasoningEnabled: boolean;
   }
 
   interface LlamaCppHealthResult {

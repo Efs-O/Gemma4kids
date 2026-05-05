@@ -32,6 +32,26 @@ interface Props {
   onClearContext?: () => void;
 }
 
+function AttachIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="5" width="16" height="14" rx="3" />
+      <circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none" />
+      <path d="M7 16l3.5-3.5a1.5 1.5 0 0 1 2.1 0L15 15l1-1a1.5 1.5 0 0 1 2.1 0L19 15" />
+    </svg>
+  );
+}
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -144,16 +164,18 @@ export function InputRow({
   const meterClass = remaining > 50 ? 'ctx-meter ctx-meter-green'
     : remaining > 20 ? 'ctx-meter ctx-meter-orange'
     : 'ctx-meter ctx-meter-red';
-  const meterTitle = remaining > 50 ? "We're good — plenty of space!"
-    : remaining > 20 ? 'Context is filling up — think about starting fresh soon'
-    : 'Almost full — click to start a fresh chat!';
+  const meterTitle = remaining > 50 ? "We're good - plenty of space!"
+    : remaining > 20 ? 'Context is filling up - think about starting fresh soon'
+    : 'Almost full - click to start a fresh chat!';
 
   return (
     <div className="input-row">
       {attachment && (
         <div className="input-attachment-preview">
           {previewFailed ? (
-            <div className="input-attachment-fallback" aria-hidden="true">🖼</div>
+            <div className="input-attachment-fallback" aria-hidden="true">
+              <AttachIcon />
+            </div>
           ) : (
             <img
               className="input-attachment-thumb"
@@ -173,7 +195,7 @@ export function InputRow({
             disabled={status === 'streaming'}
             title="Remove picture"
           >
-            ×
+            x
           </button>
         </div>
       )}
@@ -206,7 +228,7 @@ export function InputRow({
             disabled={status === 'streaming'}
             title="Attach a picture"
           >
-            🖼
+            <AttachIcon />
           </button>
           <VoiceInput
             e4bAvailable={e4bAvailable}
@@ -231,8 +253,8 @@ export function InputRow({
             </button>
           )}
           {status === 'streaming'
-            ? <button className="btn-cancel" onClick={onCancel}>⏹ Stop</button>
-            : <button className="btn-send" onClick={handleSend} disabled={!text.trim()}>Send ➤</button>
+            ? <button className="btn-cancel" onClick={onCancel}>Stop</button>
+            : <button className="btn-send" onClick={handleSend} disabled={!text.trim()}>Send</button>
           }
         </div>
       </div>

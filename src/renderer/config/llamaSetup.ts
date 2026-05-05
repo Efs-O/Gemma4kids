@@ -12,7 +12,11 @@ export const LLAMA_SERVER_PATH_KEY = 'runtime.llama_cpp.serverPath';
 const LEGACY_LLAMA_MODEL_PATH_KEY = 'runtime.llama_cpp.modelPath';
 export const LLAMA_PORT_KEY = 'runtime.llama_cpp.port';
 export const LLAMA_GPU_LAYERS_KEY = 'runtime.llama_cpp.gpuLayers';
+export const LLAMA_CACHE_TYPE_K_KEY = 'runtime.llama_cpp.cacheTypeK';
+export const LLAMA_CACHE_TYPE_V_KEY = 'runtime.llama_cpp.cacheTypeV';
 export const DEFAULT_LLAMA_HUB_ROOT = 'N:\\.cache\\huggingface\\hub';
+export const DEFAULT_LLAMA_CACHE_TYPE = 'f16';
+export const LLAMA_CACHE_TYPE_OPTIONS = ['f16', 'bf16', 'q8_0', 'q5_1', 'q5_0', 'q4_1', 'q4_0', 'iq4_nl'] as const;
 
 export const LLAMA_MODEL_PRESETS = [
   {
@@ -59,6 +63,8 @@ export interface LlamaCppSetupConfig {
   gpuLayers: number;
   numCtx: number;
   numPredict: number;
+  cacheTypeK: string;
+  cacheTypeV: string;
 }
 
 export const LLAMA_MODEL_PATH_KEYS: Record<LlamaModelPresetId, string> = {
@@ -155,6 +161,8 @@ export function readLlamaCppSetupConfig(): LlamaCppSetupConfig {
     gpuLayers: readStoredNumber(LLAMA_GPU_LAYERS_KEY, -1),
     numCtx: readStoredNumber(LLAMA_NUM_CTX_KEY, OLLAMA_CHAT_WORKSTATION_CTX),
     numPredict: readStoredNumber(LLAMA_NUM_PREDICT_KEY, OLLAMA_CHAT_WORKSTATION_PREDICT),
+    cacheTypeK: localStorage.getItem(LLAMA_CACHE_TYPE_K_KEY) ?? DEFAULT_LLAMA_CACHE_TYPE,
+    cacheTypeV: localStorage.getItem(LLAMA_CACHE_TYPE_V_KEY) ?? DEFAULT_LLAMA_CACHE_TYPE,
   };
 }
 

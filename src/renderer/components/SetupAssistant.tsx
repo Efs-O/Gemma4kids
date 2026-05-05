@@ -1,6 +1,8 @@
 import React from 'react';
 import type { RuntimeKind } from '../services/OllamaService';
 import {
+  DEFAULT_LLAMA_CACHE_TYPE,
+  LLAMA_CACHE_TYPE_OPTIONS,
   LLAMA_MODEL_PRESETS,
   type LlamaCppSetupConfig,
   type LlamaModelPresetId,
@@ -56,7 +58,7 @@ export function SetupAssistant({
             onClick={() => onRuntimeChange('llama_cpp')}
             type="button"
           >
-            <img className="runtime-card-logo" src={LLAMA_LOGO_SRC} alt="llama.cpp logo" />
+            <img className="runtime-card-logo runtime-card-logo-llama" src={LLAMA_LOGO_SRC} alt="llama.cpp logo" />
             <span className="runtime-card-title">llama.cpp</span>
             <span className="runtime-card-tag runtime-card-tag-advanced">Advanced</span>
             <span className="runtime-card-copy">Manual binary path, one persistent GGUF path per Gemma size, and deeper control. Gemma4kids will start the local server when this runtime is selected.</span>
@@ -139,6 +141,28 @@ export function SetupAssistant({
                   onChange={(event) => onLlamaSetupChange({ gpuLayers: Number.parseInt(event.target.value, 10) || -1 })}
                   min={-1}
                 />
+              </label>
+              <label className="setup-field">
+                <span>Cache Type K</span>
+                <select
+                  value={llamaSetup.cacheTypeK || DEFAULT_LLAMA_CACHE_TYPE}
+                  onChange={(event) => onLlamaSetupChange({ cacheTypeK: event.target.value })}
+                >
+                  {LLAMA_CACHE_TYPE_OPTIONS.map((cacheType) => (
+                    <option key={cacheType} value={cacheType}>{cacheType}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="setup-field">
+                <span>Cache Type V</span>
+                <select
+                  value={llamaSetup.cacheTypeV || DEFAULT_LLAMA_CACHE_TYPE}
+                  onChange={(event) => onLlamaSetupChange({ cacheTypeV: event.target.value })}
+                >
+                  {LLAMA_CACHE_TYPE_OPTIONS.map((cacheType) => (
+                    <option key={cacheType} value={cacheType}>{cacheType}</option>
+                  ))}
+                </select>
               </label>
             </div>
           </div>
