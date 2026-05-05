@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e2b-fireworks--add-falling-confetti-in-many-colors",
+  "stage": 2,
+  "model": "gemma4:e2b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e2b-f2-fireworks",
+  "promptSlug": "fireworks",
+  "chip": "Add falling confetti in many colors",
+  "chipSlug": "add-falling-confetti-in-many-colors",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (1 → 1)",
+    "background color/gradient preserved",
+    "JS parses OK"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "61% content change — possible full replacement instead of targeted edit"
+  ],
+  "durationSec": "14.7",
+  "timestamp": "2026-04-30T08:29:04.463Z"
+}

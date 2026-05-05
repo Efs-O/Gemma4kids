@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Bouncing Ball</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1a1a2e; /* Deep vivid background */
+            overflow: hidden; /* Hide anything that might spill outside */
+        }
+
+        .ball {
+            width: 80px;
+            height: 80px;
+            background-color: #ff6b6b; /* Bright Red */
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0; /* Start at the bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 1s ease-in-out infinite alternate; /* Animation definition */
+        }
+
+        /* Define the bouncing motion */
+        @keyframes bounce {
+            0% {
+                bottom: 0; /* Resting on the floor */
+            }
+            100% {
+                bottom: 100vh; /* Reached the top boundary */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ball"></div>
+
+</body>
+</html>

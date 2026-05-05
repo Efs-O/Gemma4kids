@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Bouncing Ball</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Hide scrollbars */
+            background-color: #1a1a2e; /* Deep vibrant background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #ball {
+            width: 80px;
+            height: 80px;
+            background-color: #ff6b6b; /* Vivid Red */
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 107, 107, 0.7);
+            transition: background-color 0.1s; /* Smooth color feedback */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ball"></div>
+
+    <script>
+        const ballElement = document.getElementById('ball');
+
+        // Physics variables
+        let positionY = 50; // Starting position relative to viewport center
+        let velocityY = 3;  // Initial vertical speed
+        const gravity = 0.2; // Effect of gravity
+        const floor = window.innerHeight;
+        const ballSize = 80; // Used for boundary checking
+
+        function animateBall() {
+            // 1. Apply gravity to velocity (simulate falling)
+            velocityY += gravity;
+            positionY += velocityY;
+
+            // 2. Check for collision with the floor
+            if (positionY + ballSize > floor) {
+                // Reverse direction (bounce)
+                velocityY *= -1; // Flip the velocity
+                positionY = floor - ballSize; // Correct position to prevent sticking
+            }
+            
+            // 3. Check for collision with the ceiling (optional, for visual effect)
+            if (positionY < 0) {
+                velocityY *= -1; // Flip the velocity
+                positionY = 0; // Correct position
+            }
+
+            // 4. Apply the new position to the element's style
+            // We use top position based on the viewport relative system
+            ballElement.style.top = `${positionY}px`;
+
+            // Request the next frame for smooth animation
+            requestAnimationFrame(animateBall);
+        }
+
+        // Start the animation loop
+        animateBall();
+    </script>
+
+</body>
+</html>

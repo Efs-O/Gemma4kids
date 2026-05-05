@@ -1,0 +1,251 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Neon Carousel</title>
+    <style>
+        :root {
+            --bg-color: #0a0a2e;
+            --gold: #ffd700;
+            --accent: #ff00ff;
+            --cyan: #00ffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1200px;
+        }
+
+        /* Starry Background */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1b1b4d 0%, #050510 100%);
+            z-index: -2;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: twinkle var(--d) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* The Carousel Stage */
+        .scene {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+            transform: rotateX(-10deg);
+        }
+
+        /* The Central Pole */
+        .pole {
+            position: absolute;
+            width: 20px;
+            height: 600px;
+            background: linear-gradient(to right, #ffd700, #fff, #ffd700);
+            transform: translateZ(0px);
+            z-index: 5;
+            border-radius: 10px;
+        }
+
+        /* The Rotating Ring */
+        .carousel-ring {
+            position: absolute;
+            width: 0;
+            height: 0;
+            transform-style: preserve-3d;
+            animation: spin 15s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        /* The Horse Container */
+        .horse-wrapper {
+            position: absolute;
+            transform-style: preserve-3d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: bob 2s ease-in-out infinite;
+        }
+
+        @keyframes bob {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+
+        /* The Horse Visuals (CSS Art) */
+        .horse {
+            position: relative;
+            width: 60px;
+            height: 40px;
+            background: var(--horse-color, #ff00ff);
+            border-radius: 50% 50% 40% 40%;
+            box-shadow: 0 0 20px var(--horse-color);
+            transform-style: preserve-3d;
+        }
+
+        /* Horse Head */
+        .horse::before {
+            content: '';
+            position: absolute;
+            top: -25px;
+            left: 40px;
+            width: 30px;
+            height: 35px;
+            background: var(--horse-string, #ff00ff);
+            border-radius: 50% 50% 20% 20%;
+            transform: rotate(20deg);
+            box-shadow: 0 0 15px var(--horse-string);
+        }
+
+        /* Horse Legs */
+        .horse::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 10px;
+            width: 4px;
+            height: 20px;
+            background: white;
+            box-shadow: 25px 0 0 white, 10px 0 0 white, 40px 0 0 white;
+        }
+
+        /* The Vertical Pole for each horse */
+        .horse-pole {
+            position: absolute;
+            width: 4px;
+            height: 250px;
+            background: linear-gradient(to bottom, #ffd700, #ffffff, #ffd700);
+            top: -120px;
+            left: 28px;
+            z-index: -1;
+        }
+
+        /* The Canopy/Roof */
+        .roof {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border: 15px dashed var(--gold);
+            border-radius: 50%;
+            transform: rotateX(90deg) translateZ(150px);
+            animation: spin 8s linear infinite reverse;
+            box-shadow: 0 0 50px var(--accent);
+        }
+
+        .roof-top {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, var(--gold), var(--accent));
+            border-radius: 50%;
+            transform: translateZ(250px);
+            box-shadow: 0 0 100px var(--gold);
+        }
+
+        /* The Floor */
+        .floor {
+            position: absolute;
+            width: 1000px;
+            height: 1000px;
+            background: repeating-conic-gradient(
+                from 0deg,
+                #222 0deg 30deg,
+                #333 30deg 60deg
+            );
+            transform: rotateX(90deg) translateZ(-250px);
+            border-radius: 50%;
+            border: 10px solid var(--gold);
+            box-shadow: 0 0 100px rgba(255, 215, 0, 0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="starfield"></div>
+
+    <div class="scene">
+        <div class="floor"></div>
+        <div class="pole"></div>
+        <div class="roof-top"></div>
+        <div class="roof"></div>
+        
+        <div class="carousel-ring" id="carouselRing">
+            <!-- Horses will be injected here by JS -->
+        </div>
+    </div>
+
+    <script>
+        const ring = document.getElementById('carouselRing');
+        const starfield = document.getElementById('starfield');
+        const horseCount = 12;
+        const radius = 250;
+        const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff3300', '#33ff00', '#ff0066', '#00ffcc'];
+
+        // Create Stars
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3 + 'px';
+            star.style.width = size;
+far           star.style.height = size;
+            star.style.top = Math.random() * 100 + '%';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.setProperty('--d', (Math.random() * 3 + 2) + 's');
+            starfield.appendChild(star);
+        }
+
+        // Create Horses
+        for (let i = 0; i < horseCount; i++) {
+            const angle = (i / horseCount) * 360;
+            const color = colors[i % colors.length];
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'horse-wrapper';
+            
+            // Position horse in a circle
+            // We rotate the wrapper, then translate it out from the center
+            wrapper.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+            
+            // Add a small delay to the bobbing for a wave effect
+            wrapper.style.animationDelay = (i * 0.1) + 's';
+
+            wrapper.innerHTML = `
+                <div class="horse-pole"></div>
+                <div class="horse" style="--horse-color: ${color}; --horse-string: ${color};"></div>
+            `;
+            
+            ring.appendChild(wrapper);
+        }
+    </script>
+</body>
+</html>
+```

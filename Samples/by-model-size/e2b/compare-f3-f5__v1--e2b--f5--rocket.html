@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch to Space</title>
+    <style>
+        /* --- Global Styles & Setup --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #00001a; /* Deep space blue/black */
+            overflow: hidden; /* Hide scrollbars */
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+        }
+
+        /* --- Starfield Background --- */
+        .starfield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Create a dense, twinkling effect using multiple background stars */
+            background-image: 
+                radial-gradient(circle at 10% 20%, #ffffff 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, #ffff00 1px, transparent 1px),
+                radial-gradient(circle at 80% 10%, #ffaa00 1px, transparent 1px),
+                radial-gradient(circle at 20% 90%, #00ffff 1px, transparent 1px);
+            background-size: 100px 100px;
+            animation: twinkle 60s linear infinite;
+        }
+
+        @keyframes twinkle {
+            0% { background-position: 0 0; }
+            100% { background-position: 10000px 10000px; }
+        }
+
+        /* --- Rocket Styling --- */
+        .rocket {
+            position: absolute;
+            bottom: 50px; /* Start near the bottom of the screen */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 150px;
+            background: linear-gradient(to top, #ff4d4d, #ffaa00); /* Vivid orange/red gradient */
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 0 20px rgba(255, 60, 60, 0.8), 0 0 40px rgba(255, 170, 0, 0.5);
+            z-index: 10;
+            animation: launchSequence 4s ease-out forwards;
+        }
+
+        /* Rocket Body */
+        .rocket::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 50px;
+            background-color: #ffffff; /* White nose cone */
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 0 15px #ffffff;
+        }
+
+
+        /* --- Flame Effect --- */
+        .flame {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 80px;
+            background: radial-gradient(circle, #ffdd00 0%, #ff8800 50%, #ff4d4d 100%);
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 0 20px #ffaa00;
+            animation: flameBurn 1s ease-out forwards;
+            z-index: 5;
+        }
+
+        @keyframes flameBurn {
+            0% {
+                height: 0;
+                transform: translate(-50%, 0) scaleY(0.1);
+                opacity: 1;
+            }
+            50% {
+                height: 150px;
+                transform: translate(-50%, -10px) scaleY(1);
+            }
+            100% {
+                height: 0;
+                transform: translate(-50%, -50px) scaleY(0.1);
+                opacity: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background Stars -->
+    <div class="starfield"></div>
+
+    <!-- The Rocket -->
+    <div class="rocket">
+        <!-- Flame Effect -->
+        <div class="flame"></div>
+    </div>
+
+</body>
+</html>

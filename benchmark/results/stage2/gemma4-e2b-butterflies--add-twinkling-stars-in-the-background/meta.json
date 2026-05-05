@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e2b-butterflies--add-twinkling-stars-in-the-background",
+  "stage": 2,
+  "model": "gemma4:e2b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e2b-f2-butterflies",
+  "promptSlug": "butterflies",
+  "chip": "Add twinkling stars in the background",
+  "chipSlug": "add-twinkling-stars-in-the-background",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "background color/gradient preserved",
+    "content change ratio acceptable (23%)",
+    "JS parses OK"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "element count shifted significantly: 9 → 15"
+  ],
+  "durationSec": "22.7",
+  "timestamp": "2026-04-30T08:30:22.997Z"
+}

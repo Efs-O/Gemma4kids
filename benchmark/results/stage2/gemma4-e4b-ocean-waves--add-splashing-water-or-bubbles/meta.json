@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e4b-ocean-waves--add-splashing-water-or-bubbles",
+  "stage": 2,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e4b-f2-ocean-waves",
+  "promptSlug": "ocean-waves",
+  "chip": "Add splashing water or bubbles",
+  "chipSlug": "add-splashing-water-or-bubbles",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (10 → 13)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (26%)",
+    "CSS-only (no script to parse)"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "31.0",
+  "timestamp": "2026-04-30T08:41:27.805Z"
+}

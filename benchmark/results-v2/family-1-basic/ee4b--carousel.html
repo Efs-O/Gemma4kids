@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Spinning Carousel</title>
+    <style>
+        /* Global Reset and Background */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff; /* Light sky blue base */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            perspective: 1000px; /* For 3D effect */
+        }
+
+        /* The Carousel Container - This will spin */
+        .carousel-container {
+            width: 80vw;
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Crucial: Use transform-style and transform-origin for spinning */
+            transform-style: preserve-3d;
+            /* Apply the continuous spinning animation */
+            animation: spin 30s linear infinite;
+            position: relative;
+        }
+
+        /* Keyframe Animation for Spinning */
+        @keyframes spin {
+            from {
+                transform: rotateY(0deg);
+            }
+            to {
+                transform: rotateY(360deg);
+            }
+        }
+
+        /* Individual Horse Styling */
+        .horse {
+            position: absolute;
+            width: 180px;
+            height: 150px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            top: 50%;
+            transform: translateY(-50%);
+            /* Subtle shadow and lift effect */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.5s;
+            /* Z-index stacking ensures they appear layered */
+            z-index: 10;
+        }
+        
+        /* --- Horse Specific Styling (CSS representation of a horse shape) --- */
+        /* To simplify, we'll use colored divs to suggest a horse body and mane/tail */
+
+        .horse::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 70%;
+            height: 80%;
+            border-radius: 50% / 10% 10%; /* Curved body approximation */
+            background-color: inherit; /* Takes color from the parent class */
+            border: 4px solid rgba(0, 0, 0, 0.1);
+        }
+        .horse::after {
+            content: '';
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            width: 20px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.1); /* Mane suggestion */
+            border-radius: 0 50% 50% 0;
+        }
+
+        /* --- Positioning the Horses (Spaced evenly around a circle illusion) --- */
+
+        /* Horse 1: Red/Gold */
+        .horse-1 {
+            left: 0%;
+            transform: translate(-50%, -50%) rotateY(0deg) translateZ(0px);
+            background: linear-gradient(135deg, #ff4500, #ffa500);
+            transform: translate(-50%, -50%) rotateY(0deg) translateZ(0px);
+        }
+
+        /* Horse 2: Blue/Cyan */
+        .horse-2 {
+            left: 25%;
+            transform: translate(-50%, -50%) rotateY(120deg) translateZ(0px);
+            background: linear-gradient(135deg, #1e90ff, #00ced1);
+            transform: translate(-50%, -50%) rotateY(120deg) translateZ(0px);
+        }
+
+        /* Horse 3: Purple/Pink */
+        .horse-3 {
+            left: 50%;
+            transform: translate(-50%, -50%) rotateY(240deg) translateZ(0px);
+            background: linear-gradient(135deg, #8a2be2, #ff69b4);
+            transform: translate(-50%, -50%) rotateY(240deg) translateZ(0px);
+        }
+
+        /* Horse 4: Green/Yellow */
+        .horse-4 {
+            left: 75%;
+            transform: translate(-50%, -50%) rotateY(360deg) translateZ(0px);
+            background: linear-gradient(135deg, #32cd32, #ffd700);
+            transform: translate(-50%, -50%) rotateY(360deg) translateZ(0px);
+        }
+
+        /* Adjusting the display mechanism for a true carousel feel */
+        /* We use transforms on the individual elements, but ensure the container handles the overall spin */
+        .horse {
+             /* Overriding the simple positioning to make them appear correctly in a circle relative to the center */
+            width: 150px;
+            height: 130px;
+            border-radius: 25% 25% 50% 50%;
+            background-color: #fff; /* Base layer */
+            top: 50%;
+            transform: translateY(-50%);
+            /* We rely heavily on the relative positioning and the global container spin */
+            z-index: 1;
+        }
+        
+        /* Re-applying specific positioning using absolute positioning relative to the container, which is easier to manage for angular spacing */
+        .carousel-container {
+            /* Resetting complex transform positioning for simpler CSS placement */
+            transform: rotateY(0deg); /* Let the animation handle the spin */
+            /* Ensure children are positioned relative to this container */
+            position: relative; 
+        }
+
+        /* Resetting individual horse transforms and placing them explicitly using computed rotation for visual appeal */
+        .horse-1 { left: -25%; transform: rotateY(0deg) translate(-50%, -50%); }
+        .horse-2 { left: 0%; transform: rotateY(120deg) translate(-50%, -50%); }
+        .horse-3 { left: 25%; transform: rotateY(240deg) translate(-50%, -50%); }
+        .horse-4 { left: 50%; transform: rotateY(360deg) translate(-50%, -50%); }
+
+        /* Final refinement for the visual effect: Making the horses sit on a circular base */
+        .carousel-container::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 10%;
+            background: repeating-linear-gradient(90deg, 
+                #ffc0cb, #ffc0cb 10px, #ff6347 10px, #ff6347 20px);
+            bottom: 0;
+            border-radius: 10px;
+            z-index: 1;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container">
+        <!-- Horse 1: Red/Orange -->
+        <div class="horse horse-1" style="background: linear-gradient(135deg, #ff4500, #ffa500); transform: rotateY(0deg) translate(-100%, -50%); left: 0;">
+            <!-- Pseudo-elements handle the shape details -->
+        </div>
+        
+        <!-- Horse 2: Blue/Cyan -->
+        <div class="horse horse-2" style="background: linear-gradient(135deg, #1e90ff, #00ced1); transform: rotateY(120deg) translate(0%, -50%); left: 25%;"></div>
+        
+        <!-- Horse 3: Purple/Pink -->
+        <div class="horse horse-3" style="background: linear-gradient(135deg, #8a2be2, #ff69b4); transform: rotateY(240deg) translate(25%, -50%); left: 50%;"></div>
+        
+        <!-- Horse 4: Green/Yellow -->
+        <div class="horse horse-4" style="background: linear-gradient(135deg, #32cd32, #ffd700); transform: rotateY(360deg) translate(50%, -50%); left: 75%;"></div>
+    </div>
+
+</body>
+</html>

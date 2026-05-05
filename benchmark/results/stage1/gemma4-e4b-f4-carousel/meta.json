@@ -1,0 +1,29 @@
+{
+  "runKey": "gemma4-e4b-f4-carousel",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 4,
+  "familyLabel": "Wide General Animation Prompt",
+  "promptSlug": "carousel",
+  "promptText": "Make a colorful spinning carousel with horses",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present",
+    "2 distinct @keyframes defined",
+    "11 div elements in body"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)"
+  ],
+  "durationSec": "27.5",
+  "timestamp": "2026-04-30T08:19:56.102Z"
+}

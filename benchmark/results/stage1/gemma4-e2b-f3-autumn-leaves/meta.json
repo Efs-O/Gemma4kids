@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e2b-f3-autumn-leaves",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 3,
+  "familyLabel": "Hardcoded-Animation Logic Prompt",
+  "promptSlug": "autumn-leaves",
+  "promptText": "Make colorful autumn leaves gently falling from trees",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "low element count (1 inline, no large JS loop found)",
+    "leaf drift missing rotation or fall motion"
+  ],
+  "durationSec": "14.7",
+  "timestamp": "2026-04-30T07:49:10.323Z"
+}

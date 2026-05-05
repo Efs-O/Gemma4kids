@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Night Sky</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a001a; /* Deep night blue/purple */
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        .sky-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000011;
+        }
+
+        /* --- Stars Layer (Background/Midground) --- */
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0; /* Start hidden, rely on animation */
+            animation: twinkle 10s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0.3; transform: scale(0.9); }
+        }
+
+        /* Generating stars using JS/CSS for density */
+        .star:nth-child(n) {
+            /* Random placement and size generation handled by JS for density */
+        }
+
+
+        /* --- Shooting Stars Layer (Foreground) --- */
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 100, 255, 0.9));
+            border-radius: 1px;
+            animation: shoot 4s linear forwards;
+        }
+
+        @keyframes shoot {
+            0% {
+                left: -10%;
+                top: calc(50% + 50px);
+                opacity: 1;
+            }
+            100% {
+                left: 110%;
+                top: calc(50% + 50px);
+                opacity: 0;
+            }
+        }
+
+        /* Layering adjustments for depth */
+        .star:nth-child(odd) {
+            animation-duration: 15s; /* Slower twinkling for background stars */
+        }
+        .star:nth-child(even) {
+            animation-duration: 8s; /* Faster twinkling for midground stars */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sky-container">
+        <!-- Stars will be injected here by JavaScript -->
+        <div id="stars-container"></div>
+        <!-- Shooting stars will be injected here by JavaScript -->
+        <div id="shooting-stars-container"></div>
+    </div>
+
+    <script>
+        const starsContainer = document.getElementById('stars-container');
+        const shootingStarsContainer = document.getElementById('shooting-stars-container');
+
+        const numStars = 200;
+        const numShootingStars = 10;
+
+        // 1. Generate Stars (Background/Midground)
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random positioning and sizing
+            const x = Math.random() * 100;
+            const y = Math.random() * 100;
+            const size = Math.random() * 3 + 1; // Size between 1 and 4px
+            
+            star.style.left = `${x}vw`;
+            star.style.top = `${y}vh`;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            
+            // Varying colors for distinction (vivid blues, pinks, whites)
+            const colorChoices = ['#ffffff', '#ffcc00', '#ff66ff', '#66ffff', '#ff9900'];
+            star.style.backgroundColor = colorChoices[Math.floor(Math.random() * colorChoices.length)];
+
+            // Vary animation delays/timing for layering effect
+            const delay = Math.random() * 5; // Delay up to 5 seconds
+            const duration = 10 + Math.random() * 10; // Duration 10s to 20s
+            
+            star.style.animationDelay = `${delay}s`;
+            star.style.animationDuration = `${duration}s`;
+
+            starsContainer.appendChild(star);
+        }
+
+        // 2. Generate Shooting Stars (Foreground)
+        for (let i = 0; i < numShootingStars; i++) {
+            const shoot = document.createElement('div');
+            shoot.className = 'shooting-star';
+            
+            // Random starting position (horizontally)
+            const startX = Math.random() * 100;
+            
+            // Random duration and delay for staggered entry
+            const duration = 3 + Math.random() * 3; // 3s to 6s
+            const delay = Math.random() * 2; // 0s to 2s
+            
+            shoot.style.left = `${startX}vw`;
+            shoot.style.animationDuration = `${duration}s`;
+            shoot.style.animationDelay = `${delay}s`;
+            
+            // Varying colors for the trails
+            const colorChoices = ['#ff00ff', '#ffff00', '#00ffff'];
+            shoot.style.background = `linear-gradient(to right, ${colorChoices[Math.floor(Math.random() * colorChoices.length)]}, rgba(255, 255, 255, 0.5))`;
+
+
+            shootingStarsContainer.appendChild(shoot);
+        }
+
+    </script>
+</body>
+</html>

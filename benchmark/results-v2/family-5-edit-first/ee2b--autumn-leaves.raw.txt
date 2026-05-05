@@ -1,0 +1,109 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autumn Leaf Fall Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #87CEEB, #F0F8FF); /* Light sky blue background */
+            overflow: hidden; /* Hide elements that fall outside the viewport initially */
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        /* Define the container for the falling effect */
+        .fall-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Style for a single falling leaf */
+        .leaf {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: hsl(30, 100%, 50%); /* Vivid autumn color base */
+            border-radius: 50% 50% 0 0;
+            opacity: 0.9;
+            pointer-events: none; /* Ensure leaves don't block interaction */
+            animation: fall linear infinite;
+            z-index: 10;
+        }
+
+        /* Define the falling animation */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) translateX(20vw) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Style for the visual representation of the 'trees' (static anchor points) */
+        .tree {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: #4CAF50; /* Green trunk placeholder */
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+        }
+
+        /* Generating the leaves using JavaScript for dynamic placement and timing */
+        /* We will use JS to inject the leaves, but the CSS handles the motion. */
+
+    </style>
+</head>
+<body>
+
+    <div class="fall-container">
+        <!-- Tree Anchors (Optional visual guide) -->
+        <div class="tree" style="left: 10%; top: 40%;"></div>
+        <div class="tree" style="left: 40%; top: 50%;"></div>
+        <div class="tree" style="left: 70%; top: 45%;"></div>
+    </div>
+
+    <script>
+        const fallContainer = document.querySelector('.fall-container');
+        const numberOfLeaves = 150;
+
+        function createFallingLeaf() {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+
+            // Set initial random position (start high up)
+            const startX = Math.random() * 100;
+            leaf.style.left = `${startX}vw`;
+            
+            // Set initial starting delay to stagger the fall
+            const delay = Math.random() * 5; // Stagger start time slightly
+
+            // Apply specific animation timing based on delay
+            leaf.style.animationDelay = `${delay}s`;
+            
+            // Set unique fall duration and horizontal drift (to simulate falling from different spots)
+            leaf.style.animationDuration = `${3 + Math.random() * 4}s`; // Fall time between 3s and 7s
+            leaf.style.transform = `translateX(${Math.random() * 100 - 50}vw) rotate(${Math.random() * 360}deg)`;
+            
+            fallContainer.appendChild(leaf);
+        }
+
+        // Generate the leaves
+        for (let i = 0; i < numberOfLeaves; i++) {
+            createFallingLeaf();
+        }
+    </script>
+
+</body>
+</html>
+```

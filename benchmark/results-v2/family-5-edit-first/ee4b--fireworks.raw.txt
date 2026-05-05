@@ -1,0 +1,170 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Fireworks Display</title>
+    <style>
+        /* General Setup & Night Sky */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Crucial to keep fireworks contained */
+            background-color: #0a0a2a; /* Deep, dark night sky blue/black */
+            cursor: crosshair;
+            height: 100%;
+            width: 100%;
+            font-family: sans-serif;
+        }
+
+        /* Container for all fireworks/particles */
+        #fireworks-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to pass through to body if needed */
+        }
+
+        /* Individual Particle Styling */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            will-change: transform, opacity; /* Optimization hint for the browser */
+            pointer-events: none; /* Ensure particles don't interfere with mouse events */
+            animation-fill-mode: forwards;
+        }
+
+        /* Keyframes for the fading, spreading motion */
+        @keyframes expandAndFade {
+            0% {
+                opacity: 1;
+                transform: scale(1) translate(0, 0);
+            }
+            100% {
+                opacity: 0;
+                /* Particles drift away and shrink slightly */
+                transform: scale(0.2) translate(var(--end-x), var(--end-y));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="fireworks-container">
+        <!-- Fireworks will be drawn here by JavaScript -->
+    </div>
+
+    <script>
+        const container = document.getElementById('fireworks-container');
+        const NUM_PARTICLES = 50; // Particles per burst
+        const EXPLOSION_LIFESPAN = 1.5; // Seconds the burst lasts
+
+        // Vivid color palette for fireworks
+        const COLORS = [
+            '#ff4136', // Bright Red
+            '#ff851b', // Orange
+            '#ffdc00', // Gold/Yellow
+            '#2ecc40', // Lime Green
+            '#0074d9', // Bright Blue
+            '#b10dc9'  // Vivid Purple
+        ];
+
+        /**
+         * Creates a single, fading, expanding particle element.
+         * @param {number} x - Initial X position.
+         * @param {number} y - Initial Y position.
+         * @param {string} color - Background color of the particle.
+         * @returns {HTMLElement} The created particle div.
+         */
+        function createParticle(x, y, color) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.width = `${Math.random() * 5 + 3}px`; // Size between 3px and 8px
+            particle.style.height = particle.style.width;
+            particle.style.backgroundColor = color;
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+            
+            // Initial transform setup for the animation keyframe to use
+            particle.style.transform = 'translate(0, 0) scale(1)';
+            
+            return particle;
+        }
+
+        /**
+         * Simulates a single firework explosion at a given point.
+         * @param {number} x - The X coordinate of the explosion.
+         * @param {number} y - The Y coordinate of the explosion.
+         */
+        function explode(x, y) {
+            // Clean up previous particles immediately to prevent memory buildup
+            container.innerHTML = '';
+
+            for (let i = 0; i < NUM_PARTICLES; i++) {
+                // 1. Select a random color
+                const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+                // 2. Create the particle
+                const particle = createParticle(x, y, color);
+                container.appendChild(particle);
+
+                // 3. Calculate random destination vector (spreading effect)
+                // Max spread distance (in pixels)
+                const spreadMagnitude = Math.random() * 150 + 100; 
+                const angle = Math.random() * Math.PI * 2; // Full circle in radians
+                
+                // Calculate endpoint coordinates relative to the explosion center
+                const endX = Math.cos(angle) * spreadMagnitude;
+                const endY = Math.sin(angle) * spreadMagnitude;
+
+                // 4. Apply CSS Animation properties
+                const finalDuration = Math.random() * 0.5 + 1.0; // 1.0s to 1.5s duration
+                
+                particle.style.setProperty('--end-x', `${endX}px`);
+                particle.style.setProperty('--end-y', `${endY}px`);
+                
+                // Apply the animation styling
+                particle.style.animation = `expandAndFade ${finalDuration}s ${Math.random() * 0.5}s linear forwards`;
+                
+                // Stagger start time slightly for better visual effect
+                particle.style.animationDelay = `${Math.random() * 0.1}s`;
+            }
+        }
+
+        // --- Event Listeners and Animation Loop ---
+
+        /**
+         * Handles mouse clicks to trigger fireworks manually.
+         */
+        document.addEventListener('click', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            explode(mouseX, mouseY);
+        });
+
+        /**
+         * Animation Loop: Periodically triggers random fireworks to simulate a display.
+         */
+        function launchRandomFirework() {
+            // Select random coordinates across the screen width/height
+            const randomX = Math.random() * window.innerWidth;
+            const randomY = Math.random() * window.innerHeight * 0.6; // Keep explosions away from the bottom 'ground' area
+
+            explode(randomX, randomY);
+        }
+
+        // Initial burst when the page loads (visible immediately)
+        window.onload = () => {
+            // Trigger a few initial bursts to fill the screen right away
+            setTimeout(() => explode(window.innerWidth * 0.2, window.innerHeight * 0.3), 100);
+            setTimeout(() => explode(window.innerWidth * 0.8, window.innerHeight * 4 * 0.3), 500);
+
+            // Set interval for continuous, ambient fireworks
+            setInterval(launchRandomFirework, 1000 + Math.random() * 2000); // Fireworks every 1 to 3 seconds
+        };
+
+    </script>
+</body>
+</html>
+```

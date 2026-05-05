@@ -1,0 +1,200 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autumn Leaf Fall Animation</title>
+    <style>
+        :root {
+            /* Vivid Autumn Colors */
+            --color-red: #D32F2F;      /* Crimson */
+            --color-orange: #F57C00;  /* Deep Orange */
+            --color-yellow: #FFB300;  /* Gold/Amber */
+            --color-brown: #795548;   /* Deep Brown */
+            --bg-color: #81D4FA;       /* Light Sky Blue background */
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            /* Creates a subtle 'sky' depth */
+            font-family: sans-serif;
+        }
+
+        /* The container for all leaves */
+        #leaf-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 50px; /* Base size */
+            height: 50px;
+            /* Irregular, leaf-like shape using border-radius and slight skew */
+            background-color: inherit; /* Color set individually */
+            border-radius: 50% 30% 30% 50% / 60% 40% 40% 60%;
+            opacity: 0.8;
+            pointer-events: none; /* Ensures leaves don't block clicks */
+            z-index: 10;
+            
+            /* Initial state: Positioned at the top, ready to fall */
+            transform: translateY(0) translateX(0) rotate(0deg);
+            
+            /* Apply the fall animation */
+            animation: fall linear infinite;
+        }
+
+        /* Keyframe Animation: The falling motion */
+        @keyframes fall {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0.9;
+            }
+            100% {
+                /* Fall far down, while drifting slightly left or right */
+                transform: translateY(150vh) translateX(var(--drift)) rotate(var(--rotation));
+                opacity: 0;
+            }
+        }
+
+        /* Helper classes for varied colors and delays */
+
+        /* Red Leaves */
+        .leaf-r { background-color: var(--color-red); }
+        
+        /* Orange Leaves */
+        .leaf-o { background-color: var(--color-orange); }
+
+        /* Yellow/Gold Leaves */
+        .leaf-y { background-color: var(--color-yellow); }
+
+        /* Brown Leaves */
+        .leaf-b { background-color: var(--color-brown); }
+
+        /* ------------------------------------------------------ */
+        /* STYLING INSTANCES FOR VARIABILITY */
+        /* We must assign unique animation properties to each instance */
+        /* ------------------------------------------------------ */
+
+        /* Leaf 1 (Red, slow, drifting right) */
+        .l1 {
+            left: 10%; top: 0;
+            --drift: 150px;
+            --rotation: 10deg;
+            animation-duration: 12s;
+            animation-delay: 0s;
+            animation-timing-function: ease-out;
+        }
+        
+        /* Leaf 2 (Orange, medium, drifting left) */
+        .l2 {
+            left: 25%; top: -10%;
+            --drift: -100px;
+            --rotation: -5deg;
+            animation-duration: 15s;
+            animation-delay: 1s;
+            animation-timing-function: ease-in;
+        }
+
+        /* Leaf 3 (Yellow, fast, vertical) */
+        .l3 {
+            left: 40%; top: 0;
+            --drift: 0px;
+            --rotation: 0deg;
+            animation-duration: 10s;
+            animation-delay: 2s;
+            animation-timing-function: linear;
+        }
+
+        /* Leaf 4 (Brown, very slow, slight curl) */
+        .l4 {
+            left: 60%; top: -20%;
+            --drift: 50px;
+            --rotation: 20deg;
+            animation-duration: 20s;
+            animation-delay: 0.5s;
+            animation-timing-function: ease-in-out;
+        }
+
+        /* Leaf 5 (Red, medium, scattered) */
+        .l5 {
+            left: 80%; top: 5%;
+            --drift: -50px;
+            --rotation: 15deg;
+            animation-duration: 13s;
+            animation-delay: 0.5s;
+            animation-timing-function: ease-out;
+        }
+        
+        /* Leaf 6 (Orange, fast, high drift) */
+        .l6 {
+            left: 5%; top: -5%;
+            --drift: 200px;
+            --rotation: -10deg;
+            animation-duration: 9s;
+            animation-delay: 0s;
+            animation-timing-function: linear;
+        }
+
+        /* Leaf 7 (Yellow, medium, random fall) */
+        .l7 {
+            left: 75%; top: 10%;
+            --drift: 80px;
+            --rotation: 5deg;
+            animation-duration: 16s;
+            animation-delay: 1.5s;
+            animation-timing-function: ease-in-out;
+        }
+
+        /* Leaf 8 (Mixed colors for density) */
+        .l8 {
+            left: 33%; top: -15%;
+            --drift: -70px;
+            --rotation: -25deg;
+            animation-duration: 11s;
+            animation-delay: 0.2s;
+            animation-timing-function: ease-out;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="leaf-container">
+        <!-- Initial "Tree" area implied by starting leaves at the top -->
+        
+        <!-- Group 1: Red -->
+        <div class="leaf leaf-r l1"></div>
+        
+        <!-- Group 2: Orange -->
+        <div class="leaf leaf-o l2"></div>
+
+        <!-- Group 3: Yellow/Gold -->
+        <div class="leaf leaf-y l3"></div>
+        
+        <!-- Group 4: Brown -->
+        <div class="leaf leaf-b l4"></div>
+
+        <!-- Group 5: Red -->
+        <div class="leaf leaf-r l5"></div>
+        
+        <!-- Group 6: Orange -->
+        <div class="leaf leaf-o l6"></div>
+
+        <!-- Group 7: Yellow/Gold -->
+        <div class="leaf leaf-y l7"></div>
+
+        <!-- Group 8: Mixed (Let's make this one use red color) -->
+        <div class="leaf leaf-r l8"></div>
+    </div>
+
+</body>
+</html>
+```

@@ -1,0 +1,28 @@
+{
+  "runKey": "gemma4-e2b-f2-clown",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 2,
+  "familyLabel": "Production Prompt As-Is",
+  "promptSlug": "clown",
+  "promptText": "Make a fun clown juggling colorful bouncing balls",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)",
+    "undefined CSS vars: bounce-duration"
+  ],
+  "durationSec": "32.7",
+  "timestamp": "2026-04-30T07:46:40.546Z"
+}

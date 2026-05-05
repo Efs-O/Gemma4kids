@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot Air Balloon</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #4CAF50; /* Base ground/context, though we aim for sky focus */
+        }
+
+        .sky {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #87CEEB, #ADD8E6); /* Light blue to sky blue */
+        }
+
+        .balloon-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            margin: 50px;
+        }
+
+        /* The Balloon Envelope (Basket shape simplified into an oval) */
+        .balloon {
+            width: 250px;
+            height: 350px;
+            border-radius: 50% 50% 10% 10%;
+            background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500); /* Bright yellow/orange balloon */
+            border: 8px solid #D2691E; /* Brown rim */
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* The Balloon Neck/Top */
+        .balloon::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 50px;
+            background: linear-gradient(to top, #FF69B4, #FF1493); /* Pink top */
+            border-radius: 50% 50% 0 0;
+            border-bottom: 15px solid #D2691E;
+            z-index: 11;
+        }
+
+        /* The Basket (simplified) */
+        .basket {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 80px;
+            background-color: #8B4513; /* Darker wood color */
+            border-radius: 10px;
+            border-top: 10px solid #A0522D;
+            z-index: 5;
+        }
+
+        /* Simple representation of the string/handle */
+        .string {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 50px;
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="sky">
+        <div class="balloon-container">
+            <div class="balloon">
+                <div class="basket"></div>
+                <div class="string"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

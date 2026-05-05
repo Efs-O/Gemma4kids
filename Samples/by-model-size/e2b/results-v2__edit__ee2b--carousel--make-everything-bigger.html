@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinning Horse Carousel</title>
+    <style>
+        :root {
+            --carousel-size: 600px;
+            --horse-color-1: #FF6347; /* Tomato */
+            --horse-color-2: #46B450; /* Green */
+            --horse-color-3: #4169E1; /* Royal Blue */
+            --carousel-bg-start: #FFFACD; /* Lemon Chiffon */
+            --carousel-bg-end: #F08080; /* Light Coral */
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(to bottom, hsl(200, 90%, 55%), hsl(30, 100%, 60%)); /* Sky blue to light blue gradient */
+        }
+
+        .carousel-container {
+            width: var(--carousel-size);
+            height: var(--carousel-size);
+            position: relative;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, hsl(200, 90%, 55%), hsl(220, 100%, 75%), hsl(240, 100%, 90%));
+            animation: spin 20s infinite linear; /* Slow, continuous spin */
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .horse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(0deg); /* Center the horse initially */
+            width: 100px;
+            height: 160px;
+            border-radius: 10px;
+            border: 5px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Positioning the horses around the circle */
+        .horse:nth-child(1) {
+            background-color: var(--horse-color-1);
+            transform: translate(-50%, -50%) rotate(0deg) translateX(200px);
+        }
+
+        .horse:nth-child(2) {
+            background-color: var(--horse-color-2);
+            transform: translate(-50%, -50%) rotate(60deg) translateX(200px);
+        }
+
+        .horse:nth-child(3) {
+            background-color: var(--horse-color-3);
+            transform: translate(-50%, -50%) rotate(120deg) translateX(200px);
+        }
+        
+        /* Adding more horses for extra color */
+        .horse:nth-child(4) {
+            background-color: #FFD700; /* Gold */
+            transform: translate(-50%, -50%) rotate(180deg) translateX(200px);
+        }
+
+        .horse:nth-child(5) {
+            background-color: #10B981; /* Emerald Green */
+            transform: translate(-50%, -50%) rotate(240deg) translateX(200px);
+        }
+
+        .horse:nth-child(6) {
+            background-color: #7C3AED; /* Violet */
+            transform: translate(-50%, -50%) rotate(300deg) translateX(200px);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container">
+        <div class="horse">Horse 1</div>
+        <div class="horse">Horse 2</div>
+        <div class="horse">Horse 3</div>
+        <div class="horse">Horse 4</div>
+        <div class="horse">Horse 5</div>
+        <div class="horse">Horse 6</div>
+    </div>
+
+</body>
+</html>

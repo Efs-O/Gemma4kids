@@ -1,0 +1,189 @@
+Oh, that sounds like such a beautiful scene! Animated ocean waves on a sunny beach will look amazing! 🌊☀️
+
+I can create a lovely animation using pure CSS to make the water roll in and crash right on the sand. I'll make sure the colors are bright and cheerful!
+
+Here is the complete code for your animated beach scene:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Waves Beach</title>
+    <style>
+        :root {
+            /* Vivid Colors */
+            --sky-color: #87CEEB; /* Bright Sky Blue */
+            --deep-sea-color: #0077be; /* Medium Ocean Blue */
+            --crashing-color: #1e90ff; /* Dodger Blue for waves */
+            --sand-color: #f4a460; /* Sandy Brown/Orange */
+            --sun-glow: #ffd700; /* Bright Gold */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Keeps the wave motion contained */
+            background: linear-gradient(to bottom, var(--sky-color) 0%, #4682b4 60%, var(--sand-color) 100%);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            align-items: center;
+        }
+
+        /* --- Sky Area (Just for ambiance) --- */
+        #sky {
+            background: linear-gradient(to bottom, var(--sky-color) 0%, #4682b4 70%);
+            height: 70vh;
+            width: 100%;
+            position: relative;
+        }
+
+        /* --- Sun --- */
+        .sun {
+            position: absolute;
+            top: 10vh;
+            left: 10vw;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, var(--sun-glow) 0%, rgba(255, 165, 0, 0.5) 50%, transparent 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 50px 20px rgba(255, 215, 0, 0.8);
+            z-index: 1;
+        }
+
+        /* --- Water Area --- */
+        #water-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30vh; /* Defines the water height area */
+            background-color: rgba(0, 123, 190, 0.8); /* Base deep water color */
+            z-index: 10;
+            overflow: hidden; /* Crucial: keeps the waves inside */
+        }
+
+        /* --- Wave Animation --- */
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+            animation: waveMove linear infinite;
+            opacity: 0.8;
+        }
+
+        /* Multiple waves for complexity */
+        .wave:nth-child(1) {
+            transform: translateY(10px);
+            animation-duration: 5s;
+            animation-delay: 0s;
+        }
+
+        .wave:nth-child(2) {
+            transform: translateY(30px);
+            animation-duration: 6s;
+            animation-delay: -1s;
+            opacity: 0.9;
+        }
+
+        .wave:nth-child(3) {
+            transform: translateY(50px);
+            animation-duration: 7s;
+            animation-delay: -2s;
+            opacity: 0.7;
+        }
+
+        @keyframes waveMove {
+            0% {
+                transform: translateX(-100%) translateY(0);
+            }
+            100% {
+                transform: translateX(100%) translateY(0);
+            }
+        }
+        
+        /* Special animation for the wave crest/crash effect */
+        @keyframes waveCrest {
+            0% {
+                transform: scaleY(0.8) translateY(10px);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scaleY(1.1) translateY(-5px);
+                opacity: 1;
+            }
+            100% {
+                transform: scaleY(0.8) translateY(10px);
+                opacity: 0.4;
+            }
+        }
+
+        /* Applying the crest animation specifically to simulate crashing */
+        .crash-effect {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 15%;
+            background: rgba(30, 144, 255, 0.8); /* Brighter blue for the crash */
+            animation: waveCrest 2s linear infinite;
+            animation-timing-function: ease-in-out;
+            /* Staggering the crash timing */
+        }
+        
+        .crash-effect:nth-child(1) {
+            animation-delay: 0s;
+        }
+        .crash-effect:nth-child(2) {
+            animation-delay: 1.5s;
+        }
+        .crash-effect:nth-child(3) {
+            animation-delay: 3s;
+        }
+
+
+        /* --- Sand Area --- */
+        #sand {
+            flex-grow: 1; /* Takes up remaining space */
+            background: linear-gradient(to top, var(--sand-color) 0%, rgba(255, 165, 0, 0.1) 100%);
+            z-index: 5;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Sky and Sun -->
+    <div id="sky">
+        <div class="sun"></div>
+    </div>
+
+    <!-- Water Container and Waves -->
+    <div id="water-container">
+        <!-- Base wave illusion layers -->
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        
+        <!-- Visible crash/foam effects -->
+        <div class="crash-effect"></div>
+        <div class="crash-effect"></div>
+        <div class="crash-effect"></div>
+    </div>
+
+    <!-- Sand Area -->
+    <div id="sand"></div>
+</body>
+</html>
+```
+
+I put the blue wave layers in the background to give the *idea* of the constant rolling ocean, and then I added the `.crash-effect` elements with a separate, more dramatic animation to simulate the actual *crash* foam on the sand! I also added a sunny glow in the sky!
+
+Let me know what you think! We could add some gentle seagulls flying, or maybe some little colorful fish swimming around next? ✨🎨
+
+**Code Save:**
+save_animation(html_content="<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Ocean Waves Beach</title>\n    <style>\n        :root {\n            /* Vivid Colors */\n            --sky-color: #87CEEB; /* Bright Sky Blue */\n            --deep-sea-color: #0077be; /* Medium Ocean Blue */\n            --crashing-color: #1e90ff; /* Dodger Blue for waves */\n            --sand-color: #f4a460; /* Sandy Brown/Orange */\n            --sun-glow: #ffd700; /* Bright Gold */\n        }\n\n        body {\n            margin: 0;\n            padding: 0;\n            overflow: hidden; /* Keeps the wave motion contained */\n            background: linear-gradient(to bottom, var(--sky-color) 0%, #4682b4 60%, var(--sand-color) 100%);\n            display: flex;\n            flex-direction: column;\n            height: 100vh;\n            align-items: center;\n        }\n\n        /* --- Sky Area (Just for ambiance) --- */\n        #sky {\n            background: linear-gradient(to bottom, var(--sky-color) 0%, #4682b4 70%);\n            height: 70vh;\n            width: 100%;\n            position: relative;\n        }\n\n        /* --- Sun --- */\n        .sun {\n            position: absolute;\n            top: 10vh;\n            left: 10vw;\n            width: 120px;\n            height: 120px;\n            background: radial-gradient(circle, var(--sun-glow) 0%, rgba(255, 165, 0, 0.5) 50%, transparent 100%);\n            border-radius: 50%;\n            box-shadow: 0 0 50px 20px rgba(255, 215, 0, 0.8);\n            z-index: 1;\n        }\n\n        /* --- Water Area --- */\n        #water-container {\n            position: absolute;\n            bottom: 0;\n            left: 0;\n            width: 100%;\n            height: 30vh; /* Defines the water height area */\n            background-color: rgba(0, 123, 190, 0.8); /* Base deep water color */\n            z-index: 10;\n            overflow: hidden; /* Crucial: keeps the waves inside */\n        }\n\n        /* --- Wave Animation --- */\n        .wave {\n            position: absolute;\n            width: 100%;\n            height: 100%;\n            top: 0;\n            left: 0;\n            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, transparent 60%);\n            animation: waveMove linear infinite;\n            opacity: 0.8;\n        }\n\n        /* Multiple waves for complexity */\n        .wave:nth-child(1) {\n            transform: translateY(10px);\n            animation-duration: 5s;\n            animation-delay: 0s;\n        }\n\n        .wave:nth-child(2) {\n            transform: translateY(30px);\n            animation-duration: 6s;\n            animation-delay: -1s;\n            opacity: 0.9;\n        }\n\n        .wave:nth-child(3) {\n            transform: translateY(50px);\n            animation-duration: 7s;\n            animation-delay: -2s;\n            opacity: 0.7;\n        }\n\n        @keyframes waveMove {\n            0% {\n                transform: translateX(-100%) translateY(0);\n            }\n            100% {\n                transform: translateX(100%) translateY(0);\n            }\n        }\n        \n        /* Special animation for the wave crest/crash effect */\n        @keyframes waveCrest {\n            0% {\n                transform: scaleY(0.8) translateY(10px);\n                opacity: 0.6;\n            }\n            50% {\n                transform: scaleY(1.1) translateY(-5px);\n                opacity: 1;\n            }\n            100% {\n                transform: scaleY(0.8) translateY(10px);\n                opacity: 0.4;\n            }\n        }\n\n        /* Applying the crest animation specifically to simulate crashing */\n        .crash-effect {\n            position: absolute;\n            bottom: 0;\n            width: 100%;\n            height: 15%;\n            background: rgba(30, 144, 255, 0.8); /* Brighter blue for the crash */\n            animation: waveCrest 2s linear infinite;\n            animation-timing-function: ease-in-out;\n            /* Staggering the crash timing */\n        }\n        \n        .crash-effect:nth-child(1) {\n            animation-delay: 0s;\n        }\n        .crash-effect:nth-child(2) {\n            animation-delay: 1.5s;\n        }\n        .crash-effect:nth-child(3) {\n            animation-delay: 3s;\n        }\n\n\n        /* --- Sand Area --- */\n        #sand {\n            flex-grow: 1; /* Takes up remaining space */\n            background: linear-gradient(to top, var(--sand-color) 0%, rgba(255, 165, 0, 0.1) 100%);\n            z-index: 5;\n        }\n    </style>\n</head>\n<body>\n    <!-- Sky and Sun -->\n    <div id=\"sky\">\n        <div class=\"sun\"></div>\n    </div>\n\n    <!-- Water Container and Waves -->\n    <div id=\"water-container\">\n        <!-- Base wave illusion layers -->\n        <div class=\"wave\"></div>\n        <div class=\"wave\"></div>\n        <div class=\"wave\"></div>\n        \n        <!-- Visible crash/foam effects -->\n        <div class=\"crash-effect\"></div>\n        <div class=\"crash-effect\"></div>\n        <div class=\"crash-effect\"></div>\n    </div>\n\n    <!-- Sand Area -->\n    <div id=\"sand\"></div>\n</body>\n</html>")
+```

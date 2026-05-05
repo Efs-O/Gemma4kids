@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e4b-rocket--add-twinkling-stars-in-the-background",
+  "stage": 2,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e4b-f2-rocket",
+  "promptSlug": "rocket",
+  "chip": "Add twinkling stars in the background",
+  "chipSlug": "add-twinkling-stars-in-the-background",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (16 → 19)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (9%)",
+    "CSS-only (no script to parse)"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "35.0",
+  "timestamp": "2026-04-30T08:40:16.166Z"
+}

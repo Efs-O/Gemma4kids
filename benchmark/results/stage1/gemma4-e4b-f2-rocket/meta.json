@@ -1,0 +1,27 @@
+{
+  "runKey": "gemma4-e4b-f2-rocket",
+  "stage": 1,
+  "model": "gemma4:e4b",
+  "familyId": 2,
+  "familyLabel": "Production Prompt As-Is",
+  "promptSlug": "rocket",
+  "promptText": "Make a rocket launch into space with stars in the background",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)"
+  ],
+  "durationSec": "57.4",
+  "timestamp": "2026-04-30T08:05:43.765Z"
+}

@@ -1,0 +1,120 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Night Sky</title>
+    <style>
+        body {
+            background-color: #0a0020; /* Deep cosmic blue/purple */
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* --- Stars Setup --- */
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        /* --- Twinkling Animation --- */
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1.2;
+                transform: scale(1.1);
+            }
+        }
+
+        /* --- Shooting Star Setup --- */
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 150px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 165, 0, 0.5), rgba(0, 255, 255, 0.8));
+            border-radius: 1px;
+            opacity: 0; /* Start invisible */
+            animation: shoot 5s linear forwards;
+        }
+
+        /* --- Shooting Star Animation --- */
+        @keyframes shoot {
+            0% {
+                transform: translateX(-100vw);
+                opacity: 0.5;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw);
+                opacity: 0; /* Fade out at the end */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Generate Stars (Dynamically placed for variation) -->
+    <script>
+        const starContainer = document.body;
+        const numStars = 200;
+
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random position
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            
+            // Random size variation
+            const size = Math.random() * 3 + 1; // Size between 1px and 4px
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            
+            // Random animation delay for staggered twinkling
+            star.style.animationDelay = `${Math.random() * 3}s`;
+            star.style.animationDuration = `${3 + Math.random() * 3}s`; // Slightly varied twinkle speed
+            
+            starContainer.appendChild(star);
+        }
+    </script>
+
+    <!-- Generate Shooting Stars (Randomly appear and move) -->
+    <script>
+        const shootingStarContainer = document.body;
+        const numShootingStars = 15;
+
+        for (let i = 0; i < numShootingStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            
+            // Random starting position (off-screen left)
+            star.style.left = `0vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            
+            // Random duration and delay for staggered appearance
+            star.style.animationDuration = `${5 + Math.random() * 5}s`;
+            star.style.animationDelay = `${Math.random() * 5}s`;
+
+            // Random destination (ensuring they shoot across the screen)
+            // The CSS keyframes handle the actual transition, this just sets the initial state
+            shootingStarContainer.appendChild(star);
+        }
+    </script>
+
+</body>
+</html>
+```

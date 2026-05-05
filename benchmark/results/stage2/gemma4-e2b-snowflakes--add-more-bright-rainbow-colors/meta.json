@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e2b-snowflakes--add-more-bright-rainbow-colors",
+  "stage": 2,
+  "model": "gemma4:e2b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e2b-f2-snowflakes",
+  "promptSlug": "snowflakes",
+  "chip": "Add more bright rainbow colors",
+  "chipSlug": "add-more-bright-rainbow-colors",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (1 → 0)",
+    "background color/gradient preserved",
+    "CSS-only (no script to parse)"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "91% content change — possible full replacement instead of targeted edit"
+  ],
+  "durationSec": "9.8",
+  "timestamp": "2026-04-30T08:28:40.090Z"
+}

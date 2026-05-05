@@ -4,6 +4,10 @@ export interface ChatMessage {
   role: Role;
   /** null only on assistant messages that carry tool_calls instead of text. */
   content: string | null;
+  /** Optional base64 image payloads for multimodal user turns. */
+  images?: string[];
+  /** Optional reasoning text returned by Ollama when think=true. */
+  thinking?: string | null;
   tool_call_id?: string;
   name?: string;
   tool_calls?: ToolCall[];
@@ -38,6 +42,8 @@ export interface ChatCompletionRequest {
   model: string;
   messages: ChatMessage[];
   stream: true;
+  /** Ollama /v1/chat/completions extension: maps to runner num_ctx when supported. */
+  context_length?: number;
   temperature?: number;
   top_p?: number;
   top_k?: number;

@@ -1,0 +1,208 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Night Sky</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050510;
+        }
+
+        #canvasContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Nebula Layer (CSS for smooth, large movement) */
+        .nebula {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 1;
+            animation: drift 30s infinite alternate ease-in-out;
+        }
+
+        @keyframes drift {
+            from { transform: translate(-10%, -10%) scale(1); }
+            to { transform: translate(10%, 10%) scale(1.2); }
+        }
+
+        /* Decorative overlay for depth */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.4) 100%);
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div id="canvasContainer">
+    <!-- Nebula elements for background depth -->
+    <div class="nebula" style="width: 600px; height: 600px; background: #ff00ff; top: -100px; left: -100px; animation-duration: 45s;"></div>
+    <div class="nebula" style="width: 500px; height: 500px; background: #00ffff; bottom: -50px; right: -50px; animation-duration: 60s;"></div>
+    <div class="nebula" style="width: 400px; height: 400px; background: #4b0082; top: 30%; left: 40%; animation-duration: 35s;"></div>
+    
+    <div class="overlay"></div>
+    <canvas id="skyCanvas"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById('skyCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let stars = [];
+    let shootingStars = [];
+    let particles = [];
+
+    class Star {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 1.5;
+            this.opacity = Math.random();
+            this.fadeSpeed = 0.01 + Math.random() * 0.02;
+            this.fadingIn = true;
+            this.color = Math.random() > 0.8 ? '#00ffff' : '#ffffff'; // Some cyan stars
+        }
+
+        update() {
+            if (this.fadingIn) {
+                this.opacity += this.fadeSpeed;
+                if (this.opacity >= 1) this.fadingIn = false;
+            } else {
+                this.opacity -= this.fadeSpeed;
+                if (this.opacity <= 0.1) this.fadingIn = true;
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = this.opacity;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    class ShootingStar {
+        constructor() {
+            this.init();
+        }
+
+        init() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * (height / 2);
+            this.vx = (Math.random() * 10) + 5;
+            this.vy = (Math.random() * 5) + 2;
+            this.len = Math.random() * 80 + 20;
+            this.active = true;
+            this.opacity = 1;
+            this.color = Math.random() > 0.5 ? '#00f2ff' : '#ff00ff'; // Cyan or Magenta
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.opacity -= 0.015;
+
+            if (this.opacity <= 0 || this.x > width || this.y > height) {
+                this.active = false;
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = this.color;
+            ctx.globalAlpha = this.opacity;
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x - (this.len * Math.cos(Math.atan2(this.vy, this.vx))), 
+                       this.y - (this.len * Math.sin(Math.atan2(this.vy, this.vx))));
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        initStars();
+    }
+
+    function initStars() {
+        stars = [];
+        const starCount = Math.floor((width * height) / 3000);
+        for (let i = 0; i < starCount; i++) {
+            stars.push(new Star());
+        }
+    }
+
+    function spawnShootingStar() {
+        if (Math.random() < 0.02) { // 2% chance per frame to spawn
+            shootingStars.push(new ShootingStar());
+        }
+    }
+
+    function animate() {
+        // Leave a slight trail effect by not fully clearing the canvas
+        ctx.fillStyle = 'rgba(5, 5, 16, 0.3)';
+        ctx.fillRect(0, 0, width, height);
+
+        // Update and draw stars
+        stars.forEach(star => {
+            star.update();
+            star.draw();
+        });
+
+        // Handle shooting stars
+        spawnShootingStar();
+        for (let i = shootingStars.length - 1; i >= 0; i--) {
+            shootingStars[i].update();
+            shootingStars[i].draw();
+            if (!shootingStars[i].active) {
+                shootingStars.splice(i, 1);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resize);
+
+    // Initial Setup
+    resize();
+    animate();
+
+</script>
+</body>
+</html>
+```

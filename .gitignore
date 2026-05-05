@@ -8,3 +8,19 @@ npm-debug.log*
 Thumbs.db
 *.env
 .env.local
+.claude/settings.local.json
+
+# Generated icon files — regenerate with: npm run icons
+assets/icon.png
+assets/icon.ico
+assets/icon.icns
+
+# Internal markdown — only README.md + SETUP.md belong on public remote
+*.md
+!README.md
+!SETUP.md
+
+# Local tooling / artifacts — never commit
+**/tts-test-output/
+tmp_*.json
+benchmark/results-simple/

@@ -1,0 +1,229 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow After Rain</title>
+    <style>
+        /* General Setup & Styling */
+        :root {
+            --sky-color-storm: #1a1a3a;
+            --rain-color: rgba(173, 216, 230, 0.6);
+            --rainbow-transition-delay: 5s;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden; /* Keeps the action contained */
+            height: 100vh;
+            font-family: sans-serif;
+            position: relative;
+        }
+
+        .sky-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* =================================
+           1. RAIN EFFECT (The Storm)
+           ================================= */
+        .rain-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows interaction underneath */
+            animation: fallRain 0.5s infinite linear;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, var(--rain-color));
+            opacity: 0.7;
+            transform: translate3d(0, 0, 0);
+            animation: fallLinear 1s linear forwards, slideRandom 2s linear infinite;
+            will-change: transform;
+        }
+
+        /* Keyframes for the Rain Effect */
+        @keyframes fallRain {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes fallLinear {
+            0% { transform: translateY(-10vh) translateX(0); opacity: 0.7; }
+            100% { transform: translateY(110vh) translateX(50px); opacity: 0; }
+        }
+
+        @keyframes slideRandom {
+            0% { left: var(--start-left); }
+            100% { left: calc(var(--start-left) + 10vw); }
+        }
+
+        /* =================================
+           2. RAIN FADE / CLEARING EFFECT
+           ================================= */
+        .clearing-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            animation: revealLight 1s ease-in 3.5s forwards; /* Starts fading after rain */
+        }
+
+        @keyframes revealLight {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+
+        /* =================================
+           3. RAINBOW EFFECT
+           ================================= */
+        .rainbow-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            animation: appearRainbow 1.5s ease-out forwards; /* Delayed until after rain fades */
+        }
+
+        .rainbow-arc {
+            position: absolute;
+            /* Setting a base size and shape for the arcs */
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to top, transparent 70%, currentColor 100%);
+            border-radius: 50% / 100% 100% 0 0; /* Makes it curve like an arc */
+            opacity: 0;
+            transform: translateY(200px); /* Start low */
+            animation: drawArc 1.5s cubic-bezier(0.2, 1.2, 0.3, 1) forwards;
+            box-shadow: 0 0 50px 10px rgba(255, 255, 255, 0.5); /* Outer glow */
+        }
+
+        /* Specific Rainbow Colors and Delays */
+        .arc-red { background-color: #ff0000; animation-delay: var(--delay-red); }
+        .arc-orange { background-color: #ff7f00; animation-delay: var(--delay-orange); }
+        .arc-yellow { background-color: #ffff00; animation-delay: var(--delay-yellow); }
+        .arc-green { background-color: #00ff00; animation-delay: var(--delay-green); }
+        .arc-blue { background-color: #0000ff; animation-delay: var(--delay-blue); }
+        .arc-indigo { background-color: #4b0082; animation-delay: var(--delay-indigo); }
+        .arc-violet { background-color: #9400d3; animation-delay: var(--delay-violet); }
+
+        /* Keyframes for the Rainbow Appearance */
+        @keyframes drawArc {
+            0% {
+                opacity: 0;
+                transform: translateY(150px) scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="sky-container">
+        <!-- 1. RAIN CONTAINER -->
+        <div class="rain-container" id="rain-effect">
+            <!-- Raindrops will be injected by JS for randomization -->
+        </div>
+
+        <!-- 2. CLEARING OVERLAY (Appears after rain stops) -->
+        <div class="clearing-overlay"></div>
+
+        <!-- 3. RAINBOW CONTAINER -->
+        <div class="rainbow-container" id="rainbow-effect">
+            <!-- Arcs will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rainContainer = document.getElementById('rain-effect');
+            const rainbowContainer = document.getElementById('rainbow-effect');
+            const totalRaindrops = 50;
+
+            // --- 1. Initialize Rain ---
+            function generateRain() {
+                for (let i = 0; i < totalRaindrops; i++) {
+                    const drop = document.createElement('div');
+                    drop.className = 'raindrop';
+                    
+                    // Randomize starting position and animation time
+                    const startX = Math.random() * 100;
+                    const delay = Math.random() * 1;
+                    
+                    drop.style.setProperty('--start-left', `${startX}vw`);
+                    drop.style.animationDuration = `${(Math.random() * 0.8) + 0.5}s`; // Fall time
+                    drop.style.animationDelay = `${delay}s`;
+                    
+                    rainContainer.appendChild(drop);
+                }
+            }
+            generateRain();
+
+
+            // --- 2. Initialize Rainbow Arcs ---
+            const colors = [
+                { name: 'red', class: 'arc-red', delay: '0s' },
+                { name: 'orange', class: 'arc-orange', delay: '0.3s' },
+                { name: 'yellow', class: 'arc-yellow', delay: '0.6s' },
+                { name: 'green', class: 'arc-green', delay: '0.9s' },
+                { name: 'blue', class: 'arc-blue', delay: '1.2s' },
+                { name: 'indigo', class: 'arc-indigo', delay: '1.5s' },
+                { name: 'violet', class: 'arc-violet', delay: '1.8s' }
+            ];
+
+            function createRainbow() {
+                colors.forEach(colorInfo => {
+                    const arc = document.createElement('div');
+                    arc.className = `rainbow-arc ${colorInfo.class}`;
+                    // Setting CSS variables for staggered timing using JS for robustness
+                    arc.style.setProperty('--delay-red', colorInfo.delay); 
+                    arc.style.setProperty('--delay-orange', colorInfo.delay); 
+                    arc.style.setProperty('--delay-yellow', colorInfo.delay); 
+                    arc.style.setProperty('--delay-green', colorInfo.delay); 
+                    arc.style.setProperty('--delay-blue', colorInfo.delay); 
+                    arc.style.setProperty('--delay-indigo', colorInfo.delay); 
+                    arc.style.setProperty('--delay-violet', colorInfo.delay); 
+
+                    // For this structured example, we rely on the CSS animation-delay property being applied correctly
+                    arc.setAttribute('data-delay', colorInfo.delay);
+
+                    rainbowContainer.appendChild(arc);
+                });
+            }
+            createRainbow();
+
+            /* 
+             * Since the animation timing is controlled primarily by CSS delays 
+             * (Rain -> Fade -> Rainbow), no JavaScript timer is strictly necessary 
+             * to trigger the sequence, as the CSS keyframe animation delays handle the timing.
+             */
+
+        });
+    </script>
+</body>
+</html>
+```

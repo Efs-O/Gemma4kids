@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fireworks</title>
+    <style>
+        :root {
+            --sky-color-dark: hsl(240, 10%, 20%); /* Deep Navy/Dark Blue */
+            --firework-size: 50px;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #1a1a2e, #16213e); /* Night Sky Gradient */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .firework {
+            position: absolute;
+            border-radius: 50%;
+            animation: explode var(--duration) ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Twinkling Stars Styles */
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite alternate;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0.1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes twinkle {
+            from {
+                opacity: 0.3;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="fireworks-container">
+        <!-- Fireworks will be added here by JavaScript -->
+    </div>
+
+    <script>
+        const container = document.getElementById('fireworks-container');
+
+        function createFirework() {
+            const firework = document.createElement('div');
+            firework.classList.add('firework');
+
+            // Random colors
+            const colors = ['hsl(200, 100%, 50%)', 'hsl(300, 100%, 50%)', 'hsl(330, 100%, 50%)', 'hsl(120, 100%, 50%)', 'hsl(240, 100%, 70%)'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Random size and duration for a more varied effect
+            const size = Math.random() * 80 + 40; // Size between 40px and 120px
+            const duration = Math.random() * 1 + 1.5; // Duration between 1s and 2.5s
+
+            firework.style.width = `${size}px`;
+            firework.style.height = `${size}px`;
+            firework.style.backgroundColor = randomColor;
+            firework.style.left = `${Math.random() * 100}%`;
+            firework.style.top = `${Math.random() * 100}%`;
+            firework.style.animationDuration = `${duration}s`;
+
+            container.appendChild(firework);
+            
+            // Remove the element after animation finishes to keep the DOM clean
+            firework.addEventListener('animationend', () => {
+                firework.remove();
+            });
+        }
+
+        // Start creating fireworks repeatedly!
+        setInterval(createFirework, 500);
+
+        // Add twinkling stars
+        function createStars() {
+            const numStars = 50;
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // Random positioning
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Random size
+                star.style.width = `${Math.random() * 2}px`;
+                star.style.height = `${Math.random() * 2}px`;
+                
+                // Random initial opacity for varied twinkling
+                star.style.opacity = Math.random() * 0.8 + 0.2;
+
+                // Random animation duration and delay for twinkling effect
+                const duration = Math.random() * 5 + 5; // Longer duration for slow twinkle
+                const delay = Math.random() * 5;
+                star.style.animation = `twinkle ${duration}s infinite ease-in-out ${delay}s`;
+
+                container.appendChild(star);
+            }
+        }
+
+        createStars();
+
+    </script>
+
+</body>
+</html>

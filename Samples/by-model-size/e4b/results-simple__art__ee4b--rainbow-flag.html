@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Flag</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: #eee; /* Fallback background, but the stripes will cover it fully */
+            overflow: hidden;
+        }
+
+        .flag-container {
+            width: 80vw; /* Width relative to viewport */
+            height: 90vh; /* Height relative to viewport, keeping it tall */
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Stripes for the rainbow (ROYGBIV) */
+        .stripe {
+            flex: 1 0 auto; /* Distributes space equally among the 7 stripes */
+            min-height: 0; /* Necessary for flex items */
+            border-top: 1px solid rgba(0, 0, 0, 0.1); /* Subtle separator */
+        }
+
+        /* Defining the colors */
+        .red { background-color: #FF0000; }
+        .orange { background-color: #FF7F00; }
+        .yellow { background-color: #FFFF00; }
+        .green { background-color: #008000; }
+        .blue { background-color: #0000FF; }
+        .indigo { background-color: #4B0082; } /* Deep Indigo */
+        .violet { background-color: #9932CC; } /* Medium Violet/Purple */
+
+        /* Removing the bottom border of the last stripe for a cleaner look */
+        .stripe:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="flag-container">
+        <div class="stripe red"></div>
+        <div class="stripe orange"></div>
+        <div class="stripe yellow"></div>
+        <div class="stripe green"></div>
+        <div class="stripe blue"></div>
+        <div class="stripe indigo"></div>
+        <div class="stripe violet"></div>
+    </div>
+</body>
+</html>

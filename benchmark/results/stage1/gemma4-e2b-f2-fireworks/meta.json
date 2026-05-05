@@ -1,0 +1,27 @@
+{
+  "runKey": "gemma4-e2b-f2-fireworks",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 2,
+  "familyLabel": "Production Prompt As-Is",
+  "promptSlug": "fireworks",
+  "promptText": "Make colorful fireworks exploding in the night sky",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "JS parses OK",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "undefined CSS vars: duration"
+  ],
+  "durationSec": "18.6",
+  "timestamp": "2026-04-30T07:43:56.017Z"
+}

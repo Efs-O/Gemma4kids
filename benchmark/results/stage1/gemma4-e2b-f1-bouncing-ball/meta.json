@@ -1,0 +1,25 @@
+{
+  "runKey": "gemma4-e2b-f1-bouncing-ball",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 1,
+  "familyLabel": "Basic Prompt",
+  "promptSlug": "bouncing-ball",
+  "promptText": "Make a bouncing ball animation",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "33.8",
+  "timestamp": "2026-04-30T07:40:32.173Z"
+}

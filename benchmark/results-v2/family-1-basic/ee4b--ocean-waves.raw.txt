@@ -1,0 +1,153 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Ocean Waves</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #87CEEB; /* Fallback sky color */
+            font-family: sans-serif;
+        }
+
+        /* --- Layout Container --- */
+        .scene {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 1. Sky Area */
+        .sky {
+            height: 60vh;
+            background-color: #79C0FF; /* Bright Sky Blue */
+            border-bottom: 10px solid #6CB3D9;
+            position: relative;
+        }
+
+        /* 2. Beach/Sand Area */
+        .sand {
+            height: 20vh;
+            background-color: #FFD700; /* Vivid Gold/Yellow Sand */
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 3. Ocean Area */
+        .ocean {
+            height: 20vh;
+            background: linear-gradient(to bottom, #0077BE, #00BFFF); /* Deep Blue to Bright Cyan */
+            position: relative;
+            overflow: hidden; /* Crucial to keep waves inside */
+            z-index: 20;
+        }
+
+        /* --- Wave Animation Element --- */
+        .wave-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* Ensures it doesn't block clicks */
+        }
+
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cfilter id='waveFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.08' numOctaves='3' seed='1'/%3E%3CfeDisplacementMap xlink:href='%23waveFilter' scale='15'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='100%25' height='100%25' filter='url(%23waveFilter)'/%3E%3C/svg%3E") repeat-x;
+            background-size: 100% 100%;
+            animation-name: waveFlow;
+            animation-duration: 8s;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        /* Keyframe Animation for Flowing Water */
+        @keyframes waveFlow {
+            0% { background-position: -100% 0; }
+            100% { background-position: 100% 0; }
+        }
+        
+        /* Specific wave structure for breaking effect (visual overlay) */
+        .crest {
+            position: absolute;
+            width: 150%; /* Make it wide so it can travel across */
+            height: 10%;
+            background: radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 60%);
+            border-radius: 50% / 100% 100%;
+            opacity: 0;
+            transform: translateX(-100%) translateY(0);
+            animation: crashTravel 10s linear infinite;
+            animation-delay: -2s; /* Stagger the start */
+            z-index: 30;
+            /* Since we are using CSS animation, we will use a pseudo-animation keyframe for the crash */
+        }
+        
+        /* Keyframes for the overall wave motion (simulating recession/arrival) */
+        @keyframes crashTravel {
+            0% {
+                transform: translateX(-100%) translateY(0) scaleY(0.5);
+                opacity: 0.7;
+            }
+            20% {
+                transform: translateX(-100%) translateY(0) scaleY(1);
+                opacity: 1;
+            }
+            70% {
+                transform: translateX(100%) translateY(5px) scaleY(1.2); /* Peak and slight lift */
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100%) translateY(0) scaleY(0.8); /* Settling back */
+                opacity: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        
+        <!-- SKY -->
+        <div class="sky">
+            <!-- Optional: Sun Glow -->
+            <div style="position: absolute; top: 10%; right: 10%; width: 80px; height: 80px; background: radial-gradient(circle, rgba(255, 255, 0, 0.6) 0%, rgba(255, 255, 0, 0) 70%); z-index: 1;"></div>
+        </div>
+
+        <!-- SAND -->
+        <div class="sand">
+            <!-- Optional: Palm effect -->
+            <div style="position: absolute; bottom: 10px; left: 10%; width: 5px; height: 100px; background-color: #38761D; transform: rotate(-20deg); z-index: 11;"></div>
+            <div style="position: absolute; bottom: 15px; right: 15%; width: 7px; height: 120px; background-color: #274e13; transform: rotate(15deg); z-index: 11;"></div>
+        </div>
+
+        <!-- OCEAN -->
+        <div class="ocean">
+            <div class="wave-container">
+                <!-- Layer 1: Underlying flow (using SVG filter for complex wave texture) -->
+                <div class="wave"></div>
+
+                <!-- Layer 2: Visible crest/crash animation -->
+                <!-- We use multiple crest elements staggered to create continuous movement -->
+                <div class="crest" style="animation-delay: 0s;"></div>
+                <div class="crest" style="width: 180%; animation-duration: 11s; animation-delay: -3s;"></div>
+                <div class="crest" style="width: 120%; animation-duration: 9s; animation-delay: -6s;"></div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+```

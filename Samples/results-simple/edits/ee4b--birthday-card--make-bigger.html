@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giant Birthday Celebration Card</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FF6B6B; /* Vivid background color (Red-Pink) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .card-container {
+            background-color: #FFF3B0; /* Light yellow/creamish card base, but vibrant */
+            border: 25px solid #FFD93D; /* Bigger border */
+            border-radius: 30px;
+            padding: 60px; /* Increased padding */
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 95%;
+            max-width: 1200px;
+            position: relative;
+            background-color: #FFEBCD; /* Slightly warmer base for the card itself */
+        }
+
+        /* --- Title Banner --- */
+        .banner {
+            background-color: #FFC300; /* Bright Yellow */
+            color: #D9003D; /* Deep Pink/Red text */
+            padding: 15px 0; /* Increased padding */
+            margin-bottom: 30px; /* Increased margin */
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .banner h1 {
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 4em; /* Much larger text */
+            text-shadow: 3px 3px #FF5E62;
+        }
+
+        /* --- Cake Styling --- */
+        .cake-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px; /* Increased margin */
+            position: relative;
+            z-index: 2;
+        }
+
+        .cake {
+            background-color: #F5E6C5; /* Cake sponge color */
+            border-radius: 15px;
+            padding-top: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .layer {
+            width: 90%; /* Wider layers */
+            height: 90px; /* Taller layers */
+            margin-bottom: -15px; /* More overlap */
+            background-color: #D32F2F; /* Red frosting base */
+            border-radius: 8px;
+            position: relative;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .layer:nth-child(1) { background-color: #EF5350; height: 110px; } /* Top Layer */
+        .layer:nth-child(2) { background-color: #4CAF50; height: 100px; } /* Middle Layer */
+        .layer:nth-child(3) { background-color: #2196F3; height: 90px; } /* Bottom Layer */
+
+        /* Frosting drip/border effect */
+        .layer::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -10px;
+            right: -10px;
+            height: 30px;
+            background: linear-gradient(to right, transparent 50%, rgba(255, 255, 255, 0.3) 100%);
+            border-radius: 8px;
+        }
+
+        .candles {
+            display: flex;
+            gap: 35px; /* Wider candle spacing */
+            margin-top: -25px;
+            padding: 0 20px;
+        }
+
+        .candle-holder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .candle-stick {
+            width: 12px; /* Thicker stick */
+            height: 45px; /* Taller stick */
+            background-color: #FFD700; /* Gold/Yellow stick */
+            border-radius: 6px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .flame {
+            width: 18px; /* Bigger flame */
+            height: 22px;
+            background-color: #FFEB3B; /* Bright Yellow flame */
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: absolute;
+            top: -30px;
+            left: -3px;
+            /* Removing animation for static output compliance */
+            box-shadow: 0 0 12px rgba(255, 165, 0, 0.9);
+        }
+
+        /* --- Balloons Styling --- */
+        .balloon-cluster {
+            display: flex;
+            gap: 30px;
+            position: absolute;
+            top: 80px; /* Lowered and larger */
+            right: 50px;
+            z-index: 1;
+        }
+
+        .balloon {
+            width: 80px; /* Bigger balloon */
+            height: 120px; /* Taller balloon */
+            border-radius: 50% 50% 50% 50% / 65% 65% 45% 45%;
+            position: relative;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .balloon-1 { background-color: #FF5722; } /* Orange-Red */
+        .balloon-2 { background-color: #00BCD4; } /* Cyan */
+        .balloon-3 { background-color: #8BC34A; } /* Lime Green */
+        .balloon-4 { background-color: #E91E63; } /* Pink */
+        .balloon-5 { background-color: #FF9800; } /* Amber */
+
+        .string {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px; /* Thicker string */
+            height: 40px; /* Longer string */
+            background-color: #333;
+            border-radius: 8px;
+        }
+
+        /* --- Text Message --- */
+        .message {
+            margin-top: 40px; /* Increased margin */
+            padding: 25px; /* Increased padding */
+            background-color: #FFEB3B; /* Bright background for text */
+            border-radius: 15px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            width: 80%; /* Wider text box */
+            max-width: 800px;
+        }
+
+        .message p {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-size: 2.2em; /* Much larger text */
+            color: #D9003D;
+            margin: 0;
+        }
+
+        /* Keyframe removed as it implies movement */
+
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <div class="banner">
+            <h1>HAPPY BIRTHDAY!</h1>
+        </div >
+
+        <!-- Balloon Cluster -->
+        <div class="balloon-cluster">
+            <div class="balloon balloon-1">
+                <div class="string"></div>
+            </div>
+            <div class="balloon balloon-2" style="transform: scale(0.9); margin-top: -10px;">
+                <div class="string"></div>
+            </div>
+            <div class="balloon balloon-3" style="transform: scale(1.1); margin-top: -15px;">
+                <div class="string"></div>
+            </div>
+            <div class="balloon balloon-4" style="transform: scale(0.8); margin-top: -10px;">
+                <div class="string"></div>
+            </div>
+            <div class="balloon balloon-5">
+                <div class="string"></div>
+            </div>
+        </div >
+
+
+        <!-- Cake Section -->
+        <div class="cake-section">
+            <div class="cake">
+                <div class="layer"></div>
+                <div class="layer"></div>
+                <div class="layer"></div>
+            </div>
+            <div class="candles">
+                <div class="candle-holder">
+                    <div class="candle-stick"></div>
+                    <div class="flame"></div>
+                </div >
+                <div class="candle-holder">
+                    <div class="candle-stick"></div>
+                    <div class="flame"></div>
+                </div >
+                <div class="candle-holder">
+                    <div class="candle-stick"></div>
+                    <div class="flame"></div>
+                </div >
+                <div class="candle-holder">
+                    <div class="candle-stick"></div>
+                    <div class="flame"></div>
+                </div >
+            </div >
+        </div >
+
+        <!-- Message Area -->
+        <div class="message">
+            <p>Wishing you the happiest day!</p>
+        </div >
+
+    </div >
+</body>
+</html>

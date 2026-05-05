@@ -1,0 +1,119 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter Wonderland - Falling Snow</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #001d3d, #003566, #000814);
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Background glow to make it look magical */
+        .glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, rgba(135, 206, 250, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -50px;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+            box-shadow: 0 0 10px white;
+        }
+
+        /* Animation for falling and swaying */
+        @keyframes fall {
+            0% {
+                transform: translateY(0vh) translateX(0px) rotate(0deg);
+            }
+            25% {
+                transform: translateY(25vh) translateX(50px) rotate(90deg);
+            }
+            50% {
+                transform: translateY(50vh) translateX(-50px) rotate(180deg);
+            }
+            75% {
+                transform: translateY(75vh) translateX(50px) rotate(270deg);
+            }
+            100% {
+                transform: translateY(110vh) translateX(0px) rotate(360deg);
+            }
+        }
+
+        /* Adding a subtle twinkle to snowflakes */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="glow"></div>
+    <div id="snow-container"></div>
+
+    <script>
+        const container = document.getElementById('snow-container');
+        const snowflakeCount = 100;
+
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            
+            // Randomize size
+            const size = Math.random() * 8 + 4 + 'px';
+            snowflake.style.width = size;
+            snowflake.style.height = size;
+
+            // Randomize starting position across the full width
+            const startX = Math.random() * 100;
+            snowflake.style.left = startX + 'vw';
+
+            // Randomize fall duration and delay for staggered entry
+            const duration = Math.random() * 10 + 10 + 's';
+            const delay = Math.random() * -20 + 's'; // Negative delay makes them start mid-air
+            
+            // Randomize horizontal drift/swing range
+            const drift = (Math.random() * 100 - 50) + 'px';
+
+            // Randomize opacity
+            snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+
+            // Apply animations
+            snowflake.style.animation = `fall ${duration} linear ${delay} infinite, twinkle 3s ease-in-out ${Math.random() * 2}s infinite`;
+
+            // Add to container
+            container.appendChild(snowflake);
+        }
+
+        // Initialize snow
+        for (let i = 0; i < snowflakeCount; i++) {
+            createSnowflake();
+        }
+
+        // Handle window resize to ensure coverage
+        window.addEventListener('resize', () => {
+            container.innerHTML = '';
+            for (let i = 0; i < snowflakeCount; i++) {
+                createSnowflake();
+            }
+        });
+    </script>
+</body>
+</html>
+```

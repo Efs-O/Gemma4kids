@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fireworks</title>
+    <style>
+        /* CSS Variables for easy color changes */
+        :root {
+            --sky-dark: #000020;
+            --firework-color-1: #FF4500; /* Orange Red */
+            --firework-color-2: #00FFFF; /* Cyan */
+            --firework-color-3: #FFFF00; /* Yellow */
+            --firework-color-4: #00FF7F; /* Spring Green */
+            --firework-color-5: #0000FF; /* Blue */
+            --firework-color-6: #FF0000; /* Red */
+            --firework-color-7: #FFA500; /* Orange */
+        }
+
+        body {
+            background: linear-gradient(to bottom, #0a0a1a, #000033); /* Dark night sky gradient */
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            opacity: 0;
+            animation: explode 1.5s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(200);
+                opacity: 0;
+            }
+        }
+
+        /* Optional: Add some subtle twinkling stars */
+        .star {
+            position: absolute;
+            background-color: white;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="firework-container"></div>
+
+    <!-- Stars for extra sparkle -->
+    <div class="star" style="top: 10%; left: 15%;"></div
+    <div class="star" style="top: 50%; left: 80%;"></div>
+    <div class="star" style="top: 85%; left: 5%;"></div
+
+    <script>
+        const container = document.getElementById('firework-container');
+        const colors = [
+            'var(--firework-color-1)',
+            'var(--firework-color-2)',
+            'var(--firework-color-3)',
+            'var(--firework-color-4)',
+            'var(--firework-color-5)',
+            'var(--firework-color-6)',
+            'var(--firework-color-7)'
+        ];
+
+        function createFirework() {
+            const firework = document.createElement('div');
+            firework.classList.add('firework');
+
+            // Random starting position at the bottom/middle area
+            const startX = Math.random() * window.innerWidth;
+            const startY = window.innerHeight;
+
+            firework.style.left = `${startX}px`;
+            firework.style.top = `${startY}px`;
+
+            // Random color selection
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            firework.style.backgroundColor = randomColor;
+
+            // Apply an explosion effect based on where it starts
+            // We use a delay to make them appear sequentially or randomly
+            firework.style.animationDelay = `${Math.random() * 0.5}s`;
+            
+            // Position the explosion slightly higher up randomly for visual effect
+            firework.style.transition = 'transform 1.5s ease-out';
+            
+            // To make the explosion look like a burst, we can manipulate the animation property slightly
+            // Since the base animation handles the scaling, we'll just ensure it appears at the spot.
+            
+            container.appendChild(firework);
+
+            // Clean up the element after animation finishes to prevent clutter (optional but good practice)
+            setTimeout(() => {
+                firework.remove();
+            }, 1500);
+        }
+
+        // Set up a loop to create fireworks randomly every second or so
+        const fireworkInterval = setInterval(createFirework, 1000);
+
+        // Start the show!
+        // Let's create a few initial fireworks right away!
+        for (let i = 0; i < 5; i++) {
+            setTimeout(createFirework, i * 500);
+        }
+
+    </script>
+</body>
+</html>

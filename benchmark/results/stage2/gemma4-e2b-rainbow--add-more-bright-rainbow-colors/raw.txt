@@ -1,0 +1,25 @@
+I changed the `background` property in the `.rainbow` class to include more bright rainbow colors.
+
+```css
+.rainbow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg);
+    width: 400px;
+    height: 100px;
+    /* The magic rainbow gradient */
+    background: linear-gradient(to bottom, 
+        var(--rainbow-start), 
+        hsl(240, 90%, 60%), /* Blue/Violet */
+        hsl(270, 100%, 60%), /* Pure Violet */
+        hsl(300, 100%, 60%), /* Magenta */
+        hsl(330, 100%, 60%), /* Red */
+        hsl(360, 100%, 60%), /* Orange */
+        var(--rainbow-end) /* Violet */
+    );
+    /* Make the rainbow appear gradually */
+    opacity: 0;
+    animation: revealRainbow 3s forwards;
+}
+```

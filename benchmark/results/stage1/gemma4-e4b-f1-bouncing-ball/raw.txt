@@ -1,0 +1,115 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Bouncing Ball Animation</title>
+    <style>
+        /* Set the background and ensure the canvas fills the viewport */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Crucial to keep the animation contained */
+            background: linear-gradient(135deg, #ff00cc, #3300ff); /* Vivid gradient background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+        canvas {
+            display: block;
+            /* The canvas itself will take up the full space set by body */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bouncingCanvas"></canvas>
+
+    <script>
+        // Get the canvas element and its context
+        const canvas = document.getElementById('bouncingCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas dimensions to match the viewport size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // --- Ball Properties ---
+        let ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 30,
+            color: '#FFD700', // Bright Gold/Yellow
+            // Initial velocities (pixels per frame)
+            dx: 8,
+            dy: 8
+        };
+
+        // --- Animation Loop ---
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function updatePosition() {
+            // 1. Update position based on velocity
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // 2. Collision Detection (Horizontal Walls)
+            // Check right boundary
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx = -ball.dx; // Reverse X direction
+                // Prevent sticking by resetting position slightly inside the boundary
+                if (ball.x + ball.radius > canvas.width) ball.x = canvas.width - ball.radius;
+                if (ball.x - ball.radius < 0) ball.x = ball.radius;
+            }
+
+            // 3. Collision Detection (Vertical Walls)
+            // Check bottom boundary
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy; // Reverse Y direction
+                if (ball.y + ball.radius > canvas.height) ball.y = canvas.height - ball.radius;
+                if (ball.y - ball.radius < 0) ball.y = ball.radius;
+            }
+        }
+
+        function animate() {
+            // 1. Clear the entire canvas for the next frame
+            // Using a slight fading effect by drawing a semi-transparent rectangle over the previous frame
+            ctx.fillStyle = 'rgba(51, 0, 255, 0.1)'; // Fading trail effect matching background vibe
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // For a clean, non-trailing look, use:
+            // ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Update physics and position
+            updatePosition();
+
+            // 3. Draw the ball
+            drawBall();
+
+            // 4. Request the next animation frame
+            requestAnimationFrame(animate);
+        }
+
+        // Handle window resizing to keep the animation filling the viewport
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Reset ball position slightly to center it after resize for stability
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+        });
+
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+</html>
+```

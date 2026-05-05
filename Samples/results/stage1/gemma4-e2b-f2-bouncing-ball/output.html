@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball</title>
+    <style>
+        :root {
+            --ball-size: 50px;
+            --ball-color: #FF6347; /* Bright Red-Orange */
+            --background-start: #10B981; /* Emerald Green */
+            --background-end: #7C3AED; /* Violet */
+        }
+
+        body {
+            /* Setting a cheerful background gradient */
+            background: linear-gradient(to bottom, var(--background-start), var(--background-end));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Hide anything that might spill out */
+        }
+
+        .ball {
+            width: var(--ball-size);
+            height: var(--ball-size);
+            background-color: var(--ball-color);
+            border-radius: 50%; /* Makes it a perfect circle */
+            position: relative;
+            animation: bounce 1s infinite alternate; /* Animation applied here */
+        }
+
+        /* The bouncing motion */
+        @keyframes bounce {
+            0% {
+                transform: translateY(0); /* Start at the top */
+            }
+            100% {
+                transform: translateY(150px); /* Move down by 150px to simulate a bounce */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ball"></div>
+</body>
+</html>

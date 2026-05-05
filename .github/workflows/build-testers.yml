@@ -1,0 +1,133 @@
+name: Build And Release Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: packaging-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    timeout-minutes: 30
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify bundled packaging assets
+        shell: pwsh
+        run: |
+          if (!(Test-Path "piper/win/piper.exe")) {
+            throw "Missing piper/win/piper.exe. This workflow needs bundled Piper assets in the repo or fetched before packaging."
+          }
+          if (!(Test-Path "voices")) {
+            throw "Missing voices/ directory. This workflow needs bundled voice assets in the repo or fetched before packaging."
+          }
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npx electron-builder --win --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gemma4kids-windows
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+
+  build-macos:
+    timeout-minutes: 30
+    runs-on:  macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify bundled packaging assets
+        run: |
+          test -f piper/mac/x64/piper_macos_x64.tar.gz || { echo "Missing piper/mac/x64/piper_macos_x64.tar.gz. Bundle Piper assets in the repo or fetch them before packaging."; exit 1; }
+          test -d voices || { echo "Missing voices/ directory. Bundle voice assets in the repo or fetch them before packaging."; exit 1; }
+      - name: Prepare Piper mac x64 payload
+        run: |
+          rm -rf piper/mac/x64/piper
+          tar -xf piper/mac/x64/piper_macos_x64.tar.gz -C piper/mac/x64
+          chmod +x piper/mac/x64/piper/piper
+          chmod +x piper/mac/x64/piper/piper_phonemize
+          chmod +x piper/mac/x64/piper/espeak-ng
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npx electron-builder --mac --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gemma4kids-macos
+          path: |
+            release/*.dmg
+            release/*.zip
+
+  build-linux:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify bundled packaging assets
+        run: |
+          test -f piper/linux/x64/piper_linux_x86_64.tar.gz || { echo "Missing piper/linux/x64/piper_linux_x86_64.tar.gz. Bundle Piper assets in the repo or fetch them before packaging."; exit 1; }
+          test -d voices || { echo "Missing voices/ directory. Bundle voice assets in the repo or fetch them before packaging."; exit 1; }
+      - name: Prepare Piper linux x64 payload
+        run: |
+          rm -rf piper/linux/x64/piper
+          tar -xf piper/linux/x64/piper_linux_x86_64.tar.gz -C piper/linux/x64
+          chmod +x piper/linux/x64/piper/piper
+          chmod +x piper/linux/x64/piper/piper_phonemize
+          chmod +x piper/linux/x64/piper/espeak-ng
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npx electron-builder --linux --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gemma4kids-linux
+          path: |
+            release/*.AppImage
+
+  publish-release:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    needs:
+      - build-windows
+      - build-macos
+      - build-linux
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release-artifacts/gemma4kids-windows/*
+            release-artifacts/gemma4kids-macos/*
+            release-artifacts/gemma4kids-linux/*

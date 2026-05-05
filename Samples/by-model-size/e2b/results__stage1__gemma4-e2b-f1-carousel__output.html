@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Horse Carousel</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Carousel Container Setup */
+        .carousel-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px; /* For 3D effect */
+            overflow: hidden;
+        }
+
+        /* The spinning element that rotates everything */
+        .carousel-scene {
+            width: 800px;
+            height: 600px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: spin 20s linear infinite; /* Slow, continuous spin */
+        }
+
+        @keyframes spin {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        /* Horse Styling */
+        .horse {
+            position: absolute;
+            width: 150px;
+            height: 100px;
+            background-color: #ff6b6b; /* Vivid Red Base */
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 5px solid #fff;
+            transition: transform 0.5s ease; /* Slight hover transition */
+        }
+
+        /* Horse Details (Simplified shapes for visual appeal) */
+        .horse::before {
+            content: '🐴';
+            font-size: 48px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+        }
+
+        /* Specific Horse Colors and Positions */
+
+        /* Horse 1 - Pink/Purple */
+        .horse:nth-child(1) {
+            background-color: #a29bfe; /* Light Purple */
+            transform: rotateY(0deg) translateZ(0px);
+        }
+        .horse:nth-child(1)::before {
+            color: #ff4d6d;
+        }
+
+        /* Horse 2 - Cyan/Blue */
+        .horse:nth-child(2) {
+            background-color: #4dffc6; /* Bright Cyan */
+            transform: rotateY(90deg) translateZ(0px);
+        }
+        .horse:nth-child(2)::before {
+            color: #1e90ff;
+        }
+
+        /* Horse 3 - Gold/Yellow */
+        .horse:nth-child(3) {
+            background-color: #ffd700; /* Gold */
+            transform: rotateY(180deg) translateZ(0px);
+        }
+        .horse:nth-child(3)::before {
+            color: #ffcc00;
+        }
+
+        /* Horse 4 - Bright Green */
+        .horse:nth-child(4) {
+            background-color: #7cfc8d; /* Mint Green */
+            transform: rotateY(270deg) translateZ(0px);
+        }
+        .horse:nth-child(4)::before {
+            color: #38a74d;
+        }
+        
+        /* Horse 5 - Hot Pink */
+        .horse:nth-child(5) {
+            background-color: #ff4d94; /* Hot Pink */
+            transform: rotateY(360deg) translateZ(0px);
+        }
+        .horse:nth-child(5)::before {
+            color: #ff007f;
+        }
+
+        /* Ensure the content inside the scene spins consistently */
+        .carousel-scene .horse {
+            /* Initial placement for the 3D rotation effect */
+            transform-origin: center center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container">
+        <div class="carousel-scene">
+            <!-- Horses will be positioned and rotated based on their index -->
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+            <div class="horse"></div>
+        </div>
+    </div>
+
+</body>
+</html>

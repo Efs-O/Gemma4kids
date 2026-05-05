@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juggling Clown</title>
+    <style>
+        :root {
+            --clown-red: #E74C3C;
+            --clown-yellow: #F1C40F;
+            --clown-blue: #3498DB;
+            --ball-color-1: #FF6347;
+            --ball-color-2: #4CAF50;
+            --ball-color-3: #3498DB;
+            --juggling-amplitude: 150px;
+            --juggling-speed: 2s;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #FFD1DC, #87CEEB); /* Pinkish sky to light blue ground */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* --- Clown Styling --- */
+        .clown-container {
+            position: relative;
+            width: 350px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wig {
+            width: 150px;
+            height: 100px;
+            background: radial-gradient(circle, #DDA0DD 0%, #A020F0 70%, #6A1B9A 100%);
+            border-radius: 50% 50% 10px 10px;
+            position: absolute;
+            top: -50px;
+            left: -15px;
+            z-index: 10;
+        }
+
+        .head {
+            width: 160px;
+            height: 160px;
+            background-color: #FFDAB9; /* Light skin tone */
+            border-radius: 50%;
+            position: relative;
+            margin-top: 30px;
+            z-index: 5;
+        }
+
+        .nose {
+            width: 40px;
+            height: 40px;
+            background-color: #FF0000;
+            border-radius: 50%;
+            position: absolute;
+            top: 55px;
+            left: 50px;
+            z-index: 6;
+            border: 3px solid #D9534F; /* Give it a little pop */
+        }
+
+        .mouth {
+            width: 70px;
+            height: 15px;
+            background-color: #CC0000;
+            border-radius: 0 0 50% 50%;
+            position: absolute;
+            top: 85px;
+            left: 45px;
+            z-index: 6;
+        }
+
+        .body {
+            width: 220px;
+            height: 220px;
+            background: repeating-linear-gradient(
+                45deg,
+                #FF6347,
+                #FF6347 10px,
+                #FFD700 10px,
+                #FFD700 20px
+            );
+            border-radius: 10px 10px 50% 50%;
+            position: relative;
+            margin-top: -30px;
+            z-index: 1;
+        }
+
+        /* --- Juggling Balls --- */
+        .juggling-area {
+            position: absolute;
+            top: 120px; /* Positioned near the hands/center */
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicking through if needed */
+            z-index: 2;
+        }
+
+        .ball {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FFD700; /* Default start color */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: bounce var(--juggling-speed) infinite cubic-bezier(0.2, 1, 0.8, 0);
+        }
+
+        /* Specific ball colors and starting positions/delays */
+        .ball:nth-child(1) {
+            background-color: var(--ball-color-1);
+            left: 50px;
+            animation-delay: 0s;
+        }
+        .ball:nth-child(2) {
+            background-color: var(--ball-color-2);
+            left: 120px;
+            animation-delay: 0.15s;
+        }
+        .ball:nth-child(3) {
+            background-color: var(--ball-color-3);
+            left: 190px;
+            animation-delay: 0.3s;
+        }
+
+        /* --- Animation Keyframes --- */
+        @keyframes bounce {
+            0% {
+                transform: translateY(0) scale(1);
+                animation-timing-function: cubic-bezier(0.2, 1, 0.8, 0);
+            }
+            50% {
+                transform: translateY(calc(var(--juggling-amplitude) * -1)) scale(1.1);
+                animation-timing-function: cubic-bezier(0.2, 1, 0.8, 0);
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                animation-timing-function: cubic-bezier(0.2, 1, 0.8, 0);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="clown-container">
+        <div class="wig"></div>
+        <div class="head">
+            <div class="nose"></div>
+            <div class="mouth"></div>
+        </div>
+        <div class="body"></div>
+        
+        <div class="juggling-area">
+            <!-- Balls are children of juggling-area for relative positioning -->
+            <div class="ball"></div>
+            <div class="ball"></div>
+            <div class="ball"></div>
+        </div>
+    </div>
+
+</body>
+</html>

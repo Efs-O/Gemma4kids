@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autumn Leaf Fall</title>
+    <style>
+        /* --- Global Setup & Vivid Background --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e; /* Deep twilight blue/purple */
+            overflow: hidden; /* Crucial to hide leaves falling outside the view */
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* --- Scene Setup (Trees/Ground) --- */
+        .scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Simple representation of trees (implied by falling context) */
+        .tree-trunk {
+            position: absolute;
+            bottom: 0;
+            width: 10px;
+            height: 150px;
+            background-color: #5d4037; /* Brown */
+            z-index: 1;
+        }
+
+        /* --- Leaf Styling --- */
+        .leaf {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 0 0; /* Gentle leaf shape */
+            opacity: 0.9;
+            /* Initial positioning will be set by JS to simulate falling from the top */
+        }
+
+        /* --- Animation Definition --- */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) rotate(720deg); /* Move far down and rotate for visual interest */
+                opacity: 0;
+            }
+        }
+
+        /* --- Dynamic Leaf Animation Application --- */
+        .falling-leaf {
+            animation-name: fall;
+            animation-duration: 8s; /* Slow, gentle fall time */
+            animation-timing-function: ease-in-out; /* Smooth start and end */
+            animation-fill-mode: forwards;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <!-- Placeholder for Trees (Static visual elements) -->
+        <div class="tree-trunk" style="left: 10%; bottom: 0; height: 200px;"></div>
+        <div class="tree-trunk" style="left: 60%; bottom: 0; height: 180px;"></div>
+
+        <!-- Falling Leaves will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        const scene = document.querySelector('.scene');
+        const numberOfLeaves = 100;
+        const fallDuration = 8; // Matches CSS animation-duration
+
+        /**
+         * Generates and animates a single falling leaf.
+         * @param {number} index - The index of the leaf.
+         */
+        function createFallingLeaf(index) {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf falling-leaf';
+
+            // Randomize appearance (Color)
+            const colors = [
+                '#ff6b6b', // Vivid Red
+                '#ffa500', // Bright Orange
+                '#ffd166', // Sunny Yellow
+                '#7cb342', // Vivid Green (late autumn)
+                '#b35a00', // Deep Rust
+                '#ffc300'  // Gold
+            ];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            leaf.style.backgroundColor = randomColor;
+
+            // Randomize starting horizontal position (spread across the view)
+            const startX = Math.random() * 100;
+            leaf.style.left = `${startX}vw`;
+
+            // Randomize starting position (where they enter the frame from above)
+            // This ensures some leaves start higher up than others, creating layered depth.
+            const startY = Math.random() * -100; // Start slightly above the viewport
+
+            // Set initial transform to position the leaf correctly before animation starts
+            leaf.style.top = `${startY}px`;
+
+            // Stagger the start time for a more natural, gentle cascade
+            const delay = index * (fallDuration / numberOfLeaves) + (Math.random() * 1);
+
+            scene.appendChild(leaf);
+
+            // Apply the animation delay after insertion
+            setTimeout(() => {
+                // Apply the animation properties slightly offset if needed, 
+                // but applying the class is enough for the CSS animation to take over.
+            }, delay * 1000);
+        }
+
+        // Generate all the leaves
+        for (let i = 0; i < numberOfLeaves; i++) {
+            createFallingLeaf(i);
+        }
+    </script>
+</body>
+</html>

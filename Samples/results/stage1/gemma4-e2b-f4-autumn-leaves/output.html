@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autumn Fall Animation</title>
+    <style>
+        /* Base setup for full viewport coverage and autumn theme */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #f5e6b8, #ffaf33, #d9534f, #a83838);
+            overflow: hidden; /* Hide potential overflow from falling elements */
+            font-family: 'Arial', sans-serif;
+        }
+
+        .scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Style for the falling leaves */
+        .leaf {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            opacity: 0.9;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        /* Keyframes for the falling motion */
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) translateX(20vw); /* Slight horizontal drift for realism */
+                opacity: 0.3;
+            }
+        }
+
+        /* --- Layered Depth and Specific Leaf Styling --- */
+
+        /* Background Trees/Anchors (Subtle visual structure) */
+        .tree-base {
+            position: absolute;
+            width: 150px;
+            height: 100%;
+            bottom: 0;
+            background-color: rgba(139, 69, 19, 0.5); /* Brown/Red trunk simulation */
+            z-index: 1;
+        }
+
+        /* Foreground Layer (Faster, larger, brighter) */
+        .leaf:nth-child(3n) {
+            width: 40px;
+            height: 40px;
+            animation-duration: 4s;
+            animation-delay: 0.5s;
+        }
+        .leaf:nth-child(3n) {
+            /* Example Color: Bright Orange */
+            background-color: #ff8c00;
+        }
+
+        /* Midground Layer (Standard speed) */
+        .leaf:nth-child(n+10):nth-child(-n+20) {
+            animation-duration: 3s;
+            animation-delay: 1s;
+        }
+        .leaf:nth-child(n+10):nth-child(-n+20) {
+            /* Example Color: Vivid Red */
+            background-color: #cc3333;
+        }
+
+        /* Background Layer (Slower, smaller, deeper layers) */
+        .leaf:nth-child(21n) {
+            animation-duration: 5s;
+            animation-delay: 0s;
+        }
+        .leaf:nth-child(21n) {
+            /* Example Color: Deep Yellow */
+            background-color: #ffdd00;
+        }
+        
+        /* Ensure initial placement is staggered across the screen width */
+        .leaf:nth-child(1) { left: 5%; top: 5%; }
+        .leaf:nth-child(2) { left: 20%; top: 10%; }
+        .leaf:nth-child(3) { left: 35%; top: 15%; }
+        .leaf:nth-child(4) { left: 50%; top: 20%; }
+        .leaf:nth-child(5) { left: 65%; top: 25%; }
+        .leaf:nth-child(6) { left: 80%; top: 30%; }
+
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <!-- Simulated Tree Bases (Midground anchors) -->
+        <div class="tree-base" style="left: 10%; top: 40%;"></div>
+        <div class="tree-base" style="left: 40%; top: 60%;"></div>
+        <div class="tree-base" style="left: 75%; top: 30%;"></div>
+
+        <!-- Animated Leaves (Foreground, Midground, Background layering) -->
+        <!-- Background Layer (Slowest, deep colors) -->
+        <div class="leaf" style="background-color: #ffdd00; left: 15%; top: 5%; animation-duration: 5s; animation-delay: 0s;"></div>
+        <div class="leaf" style="background-color: #a83838; left: 30%; top: 10%; animation-duration: 5.5s; animation-delay: 1s;"></div>
+        <div class="leaf" style="background-color: #ff8c00; left: 55%; top: 15%; animation-duration: 6s; animation-delay: 0.5s;"></div>
+        <div class="leaf" style="background-color: #cc3333; left: 70%; top: 20%; animation-duration: 5s; animation-delay: 2s;"></div>
+
+        <!-- Midground Layer (Standard speed) -->
+        <div class="leaf" style="background-color: #ff5733; left: 10%; top: 25%; animation-duration: 3.5s; animation-delay: 1.5s;"></div>
+        <div class="leaf" style="background-color: #33cc66; left: 30%; top: 35%; animation-duration: 3s; animation-delay: 2.5s;"></div>
+        <div class="leaf" style="background-color: #ff4d4d; left: 50%; top: 45%; animation-duration: 3.2s; animation-delay: 3s;"></div>
+        <div class="leaf" style="background-color: #f0e68c; left: 75%; top: 55%; animation-duration: 4s; animation-delay: 1.2s;"></div>
+
+        <!-- Foreground Layer (Fastest, largest, most vibrant) -->
+        <div class="leaf" style="background-color: #ff0000; left: 5%; top: 10%; animation-duration: 2.5s; animation-delay: 0.2s;"></div>
+        <div class="leaf" style="background-color: #ffaa00; left: 20%; top: 15%; animation-duration: 4.5s; animation-delay: 0.7s;"></div>
+        <div class="leaf" style="background-color: #ff6600; left: 35%; top: 20%; animation-duration: 2.8s; animation-delay: 1.8s;"></div>
+        <div class="leaf" style="background-color: #ffff00; left: 60%; top: 25%; animation-duration: 3.8s; animation-delay: 0.4s;"></div>
+    </div>
+</body>
+</html>

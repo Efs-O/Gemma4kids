@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow After Rain</title>
+    <style>
+        :root {
+            --sky-color: #333;
+            --rain-color: rgba(173, 216, 230, 0.7); /* Light blue/cyan for rain drops */
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            background-color: #000;
+            font-family: sans-serif;
+        }
+
+        /* ================================== */
+        /* 1. RAIN EFFECT CONTAINER */
+        /* ================================== */
+        #rain-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows interaction with elements underneath */
+            z-index: 10;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, rgba(173, 216, 230, 0) 0%, var(--rain-color) 50%, rgba(173, 216, 230, 0) 100%);
+            animation: fall linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) translateY(-100vh);
+            }
+        }
+
+        /* ================================== */
+        /* 2. RAINSTOP & RAINBOW CONTAINER */
+        /* ================================== */
+        #rainbow-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Start the rainbow low on the horizon */
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #rainbow-overlay.active {
+            opacity: 1;
+        }
+
+        /* Individual color bands for the rainbow */
+        .band {
+            position: absolute;
+            width: 200%; /* Make them wide enough to span the screen */
+            height: 40vh;
+            border-radius: 50% / 100% 100% 0 0; /* Curved bottom shape */
+            opacity: 0;
+            transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+            transform: scaleY(0.1); /* Start compressed vertically */
+        }
+
+        /* Specific Colors (Vivid Rainbow) */
+        .red { background-color: #FF0000; }
+        .orange { background-color: #FF7F00; }
+        .yellow { background-color: #FFFF00; }
+        .green { background-color: #00FF00; }
+        .blue { background-color: #0000FF; }
+        .indigo { background-color: #4B0082; }
+        .violet { background-color: #9400D3; }
+
+
+        /* ================================== */
+        /* UTILITY/TEXT */
+        /* ================================== */
+        #status {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2em;
+            text-shadow: 0 0 10px black;
+            z-index: 30;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="rain-container">
+        <!-- Raindrops will be injected here by JavaScript -->
+    </div>
+
+    <div id="rainbow-overlay">
+        <!-- Bands will be injected and animated here -->
+    </div>
+
+    <div id="status">RAIN COMING...</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rainContainer = document.getElementById('rain-container');
+            const rainbowOverlay = document.getElementById('rainbow-overlay');
+            const statusElement = document.getElementById('status');
+
+            const numDrops = 100;
+            const rainbowColors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+
+            // --- 1. RAIN SETUP ---
+            function createRain() {
+                for (let i = 0; i < numDrops; i++) {
+                    const drop = document.createElement('div');
+                    drop.classList.add('raindrop');
+                    // Stagger initial horizontal position and speed
+                    drop.style.left = `${Math.random() * 100}%`;
+                    drop.style.top = `${Math.random() * -100}px`;
+                    // Use CSS animation delay/duration to stagger timing
+                    drop.style.animationDelay = `${Math.random() * 1.5}s`;
+                    drop.style.animationDuration = `${0.8 + Math.random() * 1.2}s`;
+                    rainContainer.appendChild(drop);
+                }
+            }
+
+            // --- 2. RAINBOW SETUP ---
+            function createRainbow() {
+                rainbowColors.forEach((colorName, index) => {
+                    const band = document.createElement('div');
+                    band.classList.add('band', colorName);
+                    // Stagger timing slightly for natural look
+                    band.style.setProperty('--delay', `${index * 0.1}s`);
+                    rainbowOverlay.appendChild(band);
+                });
+            }
+
+            // --- 3. ANIMATION SEQUENCE ---
+            
+            // A. Start the Rain
+            createRain();
+
+            // Wait for rain to be visible (1 second)
+            setTimeout(() => {
+                statusElement.textContent = "The rain passes...";
+            }, 1000);
+
+
+            // B. End Rain & Activate Rainbow (After 3 seconds of rain)
+            setTimeout(() => {
+                // 1. Make the rain disappear (by changing its visual effect/opacity, though CSS handles the visual end)
+                // We rely on the 'transition' property of the overall scene to manage this.
+                
+                // 2. Activate Rainbow sequence
+                rainbowOverlay.classList.add('active');
+                statusElement.textContent = "🌈 RAINBOW! 🌈";
+
+                // 3. Trigger the appearance of the bands after a small delay
+                setTimeout(() => {
+                    const bands = document.querySelectorAll('.band');
+                    bands.forEach((band, index) => {
+                        // Use a staggered timeout to make them rise sequentially
+                        setTimeout(() => {
+                            band.style.opacity = 0.9;
+                            band.style.transform = 'scaleY(1.1) translateY(0)';
+                        }, 150 + (index * 150)); 
+                    });
+                }, 200);
+
+            }, 3000); // 3 seconds elapse for the rain phase
+
+            // C. Final State Update (Optional: Fade out after 8 seconds)
+            setTimeout(() => {
+                statusElement.textContent = "Clear skies!";
+                rainbowOverlay.style.opacity = 0;
+            }, 8000);
+
+        });
+    </script>
+</body>
+</html>

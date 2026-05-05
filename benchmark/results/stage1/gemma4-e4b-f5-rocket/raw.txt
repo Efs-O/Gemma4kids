@@ -1,0 +1,184 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Rocket Launch</title>
+    <style>
+        /* Global Reset and Setup */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(at 0% 0%, #0a0033 0%, #1a004d 60%, #000000 100%);
+            /* Sky/Space Gradient Background */
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --------------------- STAR BACKGROUND --------------------- */
+        .stars-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* Ensures it doesn't block clicks/interactions */
+        }
+
+        /* Keyframes for Twinkling Stars (Using box-shadow trickery) */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.2); }
+        }
+
+        /* Creating many randomized 'star' elements */
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 6s infinite linear;
+            box-shadow: 0 0 5px 1px rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Initial placement and animation timing for various stars */
+        .star:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+        .star:nth-child(2) { top: 60%; left: 95%; animation-delay: 1s; }
+        .star:nth-child(3) { top: 20%; left: 30%; animation-delay: 2s; }
+        .star:nth-child(4) { top: 80%; left: 70%; animation-delay: 3s; }
+        .star:nth-child(5) { top: 45%; left: 15%; animation-delay: 4s; }
+        .star:nth-child(6) { top: 15%; left: 85%; animation-delay: 5s; }
+        /* Add more for density */
+        .star:nth-child(7) { top: 75%; left: 22%; animation-delay: 0.5s; }
+        .star:nth-child(8) { top: 30%; left: 40%; animation-delay: 2.5s; }
+        .star:nth-child(9) { top: 90%; left: 55%; animation-delay: 1.5s; }
+
+
+        /* --------------------- ROCKET STYLING --------------------- */
+        .rocket-container {
+            position: absolute;
+            bottom: 0; /* Start from the bottom edge */
+            width: 80px;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .rocket-body {
+            width: 0;
+            height: 0;
+            /* Creating a basic triangular nose cone effect using borders */
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 100px solid #ffaa00; /* Main body color */
+            position: relative;
+            z-index: 5;
+        }
+        
+        /* Adding detail to the body */
+        .rocket-body::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 5px;
+            width: 60px;
+            height: 10px;
+            background: linear-gradient(to right, #cccccc, #aaaaaa);
+            border-radius: 2px;
+        }
+
+        .rocket-fins {
+            width: 0;
+            height: 0;
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid #cc8800; /* Fin color */
+            margin-top: -10px; /* Overlap slightly */
+        }
+
+        .flame {
+            position: absolute;
+            bottom: -10px;
+            width: 100%;
+            height: 0;
+            background: radial-gradient(circle, #ff6600 0%, #ffaa00 50%, transparent 100%);
+            transform: scale(0.5);
+            filter: blur(3px);
+            animation: launchFlame 0.2s infinite alternate;
+        }
+
+        /* --------------------- KEYFRAME ANIMATIONS --------------------- */
+
+        /* Rocket Launch Animation */
+        @keyframes rocketLaunch {
+            0% {
+                transform: translateY(0); /* Starts at the container's original bottom position */
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh); /* Moves up the full viewport height */
+                opacity: 0.6;
+            }
+        }
+
+        /* Flame Pulsing Animation */
+        @keyframes launchFlame {
+            from {
+                transform: scale(0.5);
+                opacity: 0.9;
+            }
+            to {
+                transform: scale(1.2);
+                opacity: 1.0;
+            }
+        }
+
+        /* Applying the rocket launch animation */
+        .rocket-container {
+            animation: rocketLaunch 6s cubic-bezier(0.1, 1, 0.5, 1) forwards;
+            animation-timing-function: ease-out;
+            transform-origin: bottom center; /* Ensures launch origin is at the base */
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Star Background Layer -->
+    <div class="stars-container">
+        <!-- Populating stars using 9 elements to demonstrate randomized placement -->
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+
+    <!-- Rocket Element -->
+    <div class="rocket-container">
+        <!-- The Flame is attached to the bottom of the rocket -->
+        <div class="flame"></div>
+        
+        <!-- Main Body (using pseudo-elements/borders for shape) -->
+        <div class="rocket-body"></div>
+        
+        <!-- Fins attached below the body -->
+        <div class="rocket-fins"></div>
+    </div>
+
+</body>
+</html>
+```

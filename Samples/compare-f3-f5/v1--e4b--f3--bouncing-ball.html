@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball Animation</title>
+    <style>
+        /* Set a vivid, engaging background matching the subject (bouncing ball) */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ff6b81, #ffe66d); /* Bright pink to sunny yellow gradient */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            /* The canvas will be sized dynamically by JS to cover the viewport */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bouncingCanvas"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('bouncingCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas dimensions to fill the viewport
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Event listener to resize canvas if the window changes size
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+
+            // --- Bouncing Ball Physics Setup ---
+            const ball = {
+                x: canvas.width * 0.2, // Start left, spread out
+                y: canvas.height * 0.1, // Start near the top, spread out
+                radius: 50, // Minimum 80px size? Wait, let's make it bigger.
+                radius: 70, // Increased size
+                color: '#00bcd4', // Vivid cyan color
+                
+                // Velocity components
+                vx: 8, // Initial horizontal speed
+                vy: 0, // Initial vertical speed
+                
+                // Bounce properties
+                restitution: 0.8, // Coefficient of restitution (bounciness)
+                damping: 0.995 // Air resistance/damping factor
+            };
+
+            let animationFrameId;
+
+            function drawBall() {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.strokeStyle = '#ff9800'; // Bright orange outline
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+            function updatePosition() {
+                // Apply damping to movement each frame
+                ball.vx *= ball.damping;
+                ball.vy *= ball.damping;
+
+                // Update position
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+
+                // --- Collision Detection ---
+
+                // 1. Floor/Ceiling Collision (Vertical bounds)
+                if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                    // Reverse vertical velocity and dampen it
+                    ball.vy = -ball.vy * ball.restitution;
+                    // Prevent sticking in the wall (simple correction)
+                    if (ball.y + ball.radius > canvas.height) {
+                        ball.y = canvas.height - ball.radius;
+                    } else if (ball.y - ball.radius < 0) {
+                        ball.y = ball.radius;
+                    }
+                }
+
+                // 2. Left/Right Wall Collision (Horizontal bounds)
+                if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                    // Reverse horizontal velocity and dampen it
+                    ball.vx = -ball.vx * ball.restitution;
+                    // Prevent sticking in the wall
+                    if (ball.x + ball.radius > canvas.width) {
+                        ball.x = canvas.width - ball.radius;
+                    } else if (ball.x - ball.radius < 0) {
+                        ball.x = ball.radius;
+                    }
+                }
+            }
+
+            function animate() {
+                // 1. Clear the canvas (this creates the illusion of motion)
+                // Use a semi-transparent color to create a subtle "trail" effect if desired, 
+                // but for clean physics, we clear fully.
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 2. Update physics and position
+                updatePosition();
+
+                // 3. Draw the object
+                drawBall();
+
+                // Loop the animation
+                animationFrameId = requestAnimationFrame(animate);
+            }
+
+            // Start the animation loop
+            animate();
+        });
+    </script>
+</body>
+</html>

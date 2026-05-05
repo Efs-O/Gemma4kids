@@ -1,0 +1,142 @@
+I changed the HSL value for `--fish-red` to represent a strong red color.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Sea Adventure</title>
+    <style>
+        /* CSS Variables for easy color changes */
+        :root {
+            --sea-blue-dark: hsl(210, 70%, 40%);
+            --sea-blue-light: hsl(180, 80%, 60%);
+            --fish-red: hsl(0, 100%, 50%); /* Changed to Red */
+            --fish-blue: hsl(200, 90%, 60%);
+            --fish-yellow: hsl(45, 100%, 60%);
+            --bubble-color-1: hsl(210, 80%, 50%);
+            --bubble-color-2: hsl(140, 80%, 50%);
+            --speed: 15s; /* Slower animation for swimming */
+        }
+
+        body {
+            background: linear-gradient(to bottom, var(--sea-blue-dark), var(--sea-blue-light));
+            margin: 0;
+            overflow: hidden; /* Hide scrollbars */
+            min-height: 100vh;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .scene {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* --- Fish Styling --- */
+        .fish {
+            position: absolute;
+            width: 100px;
+            height: 50px;
+            /* Base shape: Oval body */
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            /* Animation for swimming */
+            animation: swim var(--speed) linear infinite;
+            top: 20%;
+            left: 0;
+        }
+
+        /* Tail for the fish (using border trick for the triangle shape) */
+        .fish::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 30px solid currentColor; /* Uses the fish's color */
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Specific Fish Colors and Positions */
+        .fish:nth-child(1) { background-color: var(--fish-red); left: 10%; animation-duration: 18s; }
+        .fish:nth-child(2) { background-color: var(--fish-blue); left: 30%; animation-duration: 22s; }
+        .fish:nth-child(3) { background-color: var(--fish-yellow); left: 50%; animation-duration: 16s; }
+        .fish:nth-child(4) { background-color: var(--fish-red); left: 70%; animation-duration: 20s; }
+        .fish:nth-child(5) { background-color: var(--fish-blue); left: 90%; animation-duration: 19s; }
+
+        /* --- Bubble Styling --- */
+        .bubble {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--bubble-color-1);
+            opacity: 0.8;
+            animation: floatUp var(--speed) linear infinite;
+            /* Start position will be set by JS */
+        }
+
+        /* Bubble 1 specific colors */
+        .bubble:nth-child(odd) { background-color: var(--bubble-color-2); }
+
+        /* Animation for floating bubbles */
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 0.8; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <!-- Fish Elements -->
+        <div class="fish" style="animation-duration: 18s;"></div
+        <div class="fish" style="animation-duration: 22s;"></div
+        <div class="fish" style="animation-duration: 16s;"></div
+        <div class="fish" style="animation-duration: 20s;"></div
+        <div class="fish" style="animation-duration: 19s;"></div
+        
+        <!-- Bubbles will be added here by JavaScript -->
+    </div>
+
+    <script>
+        const scene = document.querySelector('.scene');
+        const numBubbles = 20;
+
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+            
+            // Random starting position across the screen width
+            const startX = Math.random() * window.innerWidth;
+            bubble.style.left = `${startX}px`;
+            
+            // Random initial size and color variation
+            const size = Math.random() * 15 + 10; // Size between 10px and 25px
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            
+            // Random delay to stagger the appearance
+            const delay = Math.random() * 5; 
+            bubble.style.animationDelay = `${delay}s`;
+
+            scene.appendChild(bubble);
+        }
+
+        // Spawn bubbles continuously
+        const bubbleInterval = setInterval(createBubble, 500);
+
+        // Start the animation loop
+        window.onload = () => {
+            // Create initial batch of bubbles
+            for (let i = 0; i < numBubbles; i++) {
+                createBubble();
+            }
+        };
+    </script>
+</body>
+</html>
+```

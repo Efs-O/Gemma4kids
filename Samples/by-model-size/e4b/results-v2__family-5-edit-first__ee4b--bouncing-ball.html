@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Bouncing Ball Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a0033; /* Deep, vivid background */
+            overflow: hidden; /* Crucial to keep the animation contained */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #animationContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #bouncingBall {
+            /* Vivid primary color for the ball */
+            background-color: #ff4500; /* Vivid Orange-Red */
+            border-radius: 50%;
+            position: absolute;
+            /* Initial size setup */
+            width: 100px;
+            height: 100px;
+            box-shadow: 0 0 20px rgba(255, 69, 0, 0.8); /* Glow effect */
+            transition: box-shadow 0.1s ease; /* Slight transition for bounce effect */
+        }
+
+        /* Styling for informative overlay text */
+        .info-text {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #00ffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="animationContainer">
+        <div id="bouncingBall"></div>
+        <div class="info-text">Bouncing Ball Demo</div>
+    </div>
+
+    <script>
+        // Get the elements
+        const ball = document.getElementById('bouncingBall');
+        const container = document.getElementById('animationContainer');
+
+        // Constants
+        const BALL_SIZE = 100; // Matches CSS width/height
+        const BOUNCE_DAMPING = 0.85; // Controls energy loss on bounce
+        const INITIAL_SPEED = 8;
+
+        // State variables
+        let positionX = 50;
+        let positionY = 50;
+        let velocityX = INITIAL_SPEED;
+        let velocityY = INITIAL_SPEED * 0.8; // Slightly slower vertical start
+
+        // Function to update the ball's visual position
+        function updateBallPosition() {
+            // Apply the calculated CSS transformation for smooth movement
+            ball.style.transform = `translate(${positionX}px, ${positionY}px)`;
+        }
+
+        // Main animation loop using requestAnimationFrame
+        function animateBounce() {
+            // 1. Update Position based on Velocity
+            positionX += velocityX;
+            positionY += velocityY;
+
+            // 2. Check for Wall Collisions (Horizontal)
+            const maxX = window.innerWidth - BALL_SIZE;
+            const minX = 0;
+
+            if (positionX + BALL_SIZE > maxX || positionX < minX) {
+                // Reverse horizontal velocity and apply slight energy loss
+                velocityX *= -1 * BOUNCE_DAMPING;
+                
+                // Correct position to prevent sticking outside the boundary
+                if (positionX > maxX) {
+                    positionX = maxX;
+                } else if (positionX < minX) {
+                    positionX = minX;
+                }
+            }
+
+            // 3. Check for Wall Collisions (Vertical)
+            const maxY = window.innerHeight - BALL_SIZE;
+            const minY = 0;
+
+            if (positionY + BALL_SIZE > maxY || positionY < minY) {
+                // Reverse vertical velocity and apply slight energy loss
+                velocityY *= -1 * BOUNCE_DAMPING;
+
+                // Correct position
+                if (positionY > maxY) {
+                    positionY = maxY;
+                } else if (positionY < minY) {
+                    positionY = minY;
+                }
+            }
+
+            // 4. Update DOM and Loop
+            updateBallPosition();
+
+            // Request the next frame for smooth animation
+            requestAnimationFrame(animateBounce);
+        }
+
+        // Initialize the animation by setting the starting position and running the loop
+        window.onload = () => {
+            // Set initial CSS transform (must match initial JS position)
+            updateBallPosition(); 
+            // Start the physics loop
+            animateBounce();
+        };
+
+        // Optional: Handle window resizing to keep boundaries correct
+        window.addEventListener('resize', () => {
+            // Re-setting the boundaries when resizing is critical for game/animation loops
+            // For simplicity, we just let the loop recalculate boundaries on the next collision check.
+        });
+
+    </script>
+</body>
+</html>

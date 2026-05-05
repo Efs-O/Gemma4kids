@@ -1,0 +1,87 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Snowfall</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            /* Vivid sky background */
+            background: linear-gradient(to bottom, #87CEEB, #4169E1); /* Light blue to royal blue */
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        .snowflake {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #FFFFFF; /* Bright white flakes */
+            border-radius: 50%;
+            opacity: 0.8;
+            /* Initial position (will be set by JS) */
+            top: -10px;
+            left: 0;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) translateX(50vw); /* Drift slightly across the screen */
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="snowflake-container">
+        <!-- Snowflakes will be inserted here by JavaScript -->
+    </div>
+
+    <script>
+        const container = document.getElementById('snowflake-container');
+        const numberOfSnowflakes = 50;
+
+        function createSnowflake() {
+            const flake = document.createElement('div');
+            flake.classList.add('snowflake');
+
+            // Random starting horizontal position (0% to 100%)
+            const startX = Math.random() * 100;
+            
+            // Random fall duration and drift factor for staggered effect
+            const fallDuration = 8 + Math.random() * 12; // Slower fall time
+            const driftSpeed = (Math.random() - 0.5) * 2; // Slight horizontal drift speed
+
+            // Set initial styles
+            flake.style.left = `${startX}vw`;
+            flake.style.animationDuration = `${fallDuration}s`;
+            
+            // Apply the custom animation defined in CSS
+            // Note: The CSS animation handles the full fall and drift looping.
+            
+            // Stagger the start time slightly for better visual dispersion
+            flake.style.animationDelay = `${Math.random() * 5}s`; 
+
+            container.appendChild(flake);
+        }
+
+        // Populate the container with snowflakes
+        for (let i = 0; i < numberOfSnowflakes; i++) {
+            createSnowflake();
+        }
+    </script>
+
+</body>
+</html>
+```

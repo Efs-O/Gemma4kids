@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Sunshine</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #87CEEB; /* Light Blue Sky */
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .scene {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The Sun - Happy and Big */
+        .sun {
+            width: 300px;
+            height: 300px;
+            background-color: #FFD700; /* Bright Yellow */
+            border-radius: 50%;
+            position: relative;
+            border: 10px solid #FFA500; /* Orange glow */
+            box-shadow: 0 0 30px #FFEB3B; /* Bright glow effect */
+        }
+
+        /* Sun's Happy Face (Symmetry) */
+        .sun::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            background-color: #FFEB3B; /* Lighter center for happiness */
+            border-radius: 50%;
+            border: 5px solid #FFC107;
+        }
+
+        /* Sun's Happy Eyes (Symmetric) */
+        .sun::after {
+            content: '';
+            position: absolute;
+            top: 40%;
+            left: 30%;
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            border-radius: 50%;
+            border: 3px solid #FF4500; /* Orange outline for eyes */
+        }
+
+        .sun .eye-left {
+            left: 30%;
+            top: 30%;
+        }
+
+        .sun .eye-right {
+            right: 30%;
+            top: 30%;
+        }
+
+        /* Sun's Happy Smile (Symmetric) */
+        .sun .smile {
+            width: 120px;
+            height: 30px;
+            border: 5px solid #FF6347; /* Red/Coral smile */
+            border-radius: 0 0 50px 50px;
+            margin: 20px auto;
+            /* Creating a happy arc/smile shape */
+            border-bottom: none;
+        }
+
+        /* Optional: Add some simple sun rays */
+        .sun::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid #FFEB3B;
+            border-bottom-color: #FFEB3B;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Title/Caption area if needed (keeping it focused on the sun/sky) */
+        .sky-text {
+            color: #333;
+            font-size: 2em;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="sun">
+            <!-- Eyes -->
+            <div class="eye-left"></div>
+            <div class="eye-right"></div>
+            <!-- Smile -->
+            <div class="smile"></div>
+        </div>
+        <div class="sky-text">Happy Sunshine!</div>
+    </div>
+</body>
+</html>

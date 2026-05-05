@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Underwater Reef</title>
+    <style>
+        :root {
+            --ocean-deep: #003366;
+            --ocean-mid: #0099ff;
+            --ocean-light: #66ccff;
+            --fish-color-1: #ff6b6b; /* Coral Red */
+            --fish-color-2: #4ecdc4; /* Teal */
+            --fish-color-3: #ffc371; /* Orange */
+            --bubble-color: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, var(--ocean-mid) 0%, var(--ocean-deep) 100%);
+            overflow: hidden;
+            font-family: sans-serif;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* --- WAVE/DEPTH EFFECT (Subtle background movement) --- */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10%;
+            background: radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.2) 0%, transparent 30%);
+            animation: deepWaterShift 15s linear infinite;
+            opacity: 0.8;
+            z-index: 1;
+        }
+
+        @keyframes deepWaterShift {
+            0% { transform: translateY(0%); }
+            100% { transform: translateY(-5%); }
+        }
+
+        /* --- FISH STYLING --- */
+        .fish-container {
+            position: absolute;
+            z-index: 10;
+            animation: swimLoop linear infinite;
+            /* Initial positioning is set in HTML */
+        }
+
+        .fish {
+            position: relative;
+            width: 120px;
+            height: 50px;
+            background: linear-gradient(90deg, #ffffff 10%, currentColor 10%, currentColor 90%, #ffffff 10%);
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transform-origin: center center;
+        }
+
+        /* Fish Pseudo-elements for complexity */
+        .fish::before, .fish::after {
+            content: '';
+            position: absolute;
+            background-color: currentColor;
+            border-radius: 50%;
+        }
+
+        /* Tail Fin */
+        .fish::before {
+            width: 40px;
+            height: 25px;
+            top: 10px;
+            right: -10px;
+            transform: rotate(30deg) translate(0, -5px);
+            background-color: currentColor;
+            filter: brightness(1.2);
+        }
+
+        /* Dorsal Fin */
+        .fish::after {
+            width: 15px;
+            height: 20px;
+            top: -5px;
+            right: 10px;
+            border-radius: 50%;
+            background-color: currentColor;
+            transform: rotate(10deg);
+        }
+
+        /* Keyframes for Swimming Motion */
+        @keyframes swimLoop {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            50% { transform: translateX(50px) rotate(5deg); }
+        }
+
+        /* --- BUBBLE STYLING --- */
+        .bubble-emitter {
+            position: absolute;
+            z-index: 5;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background-color: var(--bubble-color);
+            opacity: 0;
+            /* Initial placement is handled by JS/CSS */
+            animation: bubbleRise var(--duration) linear forwards;
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(calc(-1 * var(--start-y))) scale(0.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fish 1 (Left, Swimming Right) -->
+    <div class="fish-container" id="fish1" style="left: 10%; top: 20%; animation-duration: 15s; animation-timing-function: ease-in-out;">
+        <div class="fish" style="color: var(--fish-color-1);"></div>
+    </div>
+
+    <!-- Fish 2 (Right, Swimming Left) -->
+    <div class="fish-container" id="fish2" style="left: 85%; top: 45%; animation-duration: 20s; animation-timing-function: ease-in-out;">
+        <div class="fish" style="color: var(--fish-color-2); transform: scaleX(-1);"></div>
+    </div>
+
+    <!-- Fish 3 (Center, Slow Drift) -->
+    <div class="fish-container" id="fish3" style="left: 30%; top: 70%; animation-duration: 18s; animation-timing-function: ease-in-out;">
+        <div class="fish" style="color: var(--fish-color-3);"></div>
+    </div>
+
+    <!-- Container for dynamically generated bubbles -->
+    <div id="bubble-area"></div>
+
+    <script>
+        const bubbleArea = document.getElementById('bubble-area');
+        const body = document.body;
+
+        // Function to create a single bubble
+        function createBubble(x, y, size, duration) {
+            const bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+            
+            // Set custom CSS properties for the animation
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size * 0.8}px`;
+            bubble.style.left = `${x}px`;
+            bubble.style.top = `${y}px`;
+            
+            // Set CSS variables needed by the @keyframes rule
+            bubble.style.setProperty('--duration', `${duration}s`);
+            bubble.style.setProperty('--start-y', `${window.innerHeight - y}px`);
+            
+            bubbleArea.appendChild(bubble);
+
+            // Clean up the element after animation duration
+            setTimeout(() => {
+                bubble.remove();
+            }, (duration * 1000) + 100);
+        }
+
+        // Function to generate a burst of bubbles
+        function bubbleBurst() {
+            const numBubbles = Math.floor(Math.random() * 5) + 5; // 5 to 10 bubbles
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * window.innerHeight * 0.7; // Keep them above the bottom third
+
+            for (let i = 0; i < numBubbles; i++) {
+                const size = Math.random() * 15 + 5; // Size 5px to 20px
+                const duration = Math.random() * 3 + 4; // Duration 4s to 7s
+                
+                // Stagger the start time slightly for visual richness
+                setTimeout(() => {
+                    createBubble(startX + (i * 10), startY, size, duration);
+                }, i * 150);
+            }
+        }
+
+        // Initial setup and continuous animation loop
+        function initializeScene() {
+            // 1. Seed the initial bubbles immediately
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => bubbleBurst(), i * 500);
+            }
+
+            // 2. Set up the continuous bubble generation loop
+            setInterval(() => {
+                bubbleBurst();
+            }, 1500); // Burst a new set every 1.5 seconds
+        }
+
+        initializeScene();
+    </script>
+</body>
+</html>

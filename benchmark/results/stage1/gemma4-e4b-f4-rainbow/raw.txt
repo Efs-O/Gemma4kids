@@ -1,0 +1,213 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Rain Rainbow Display</title>
+    <style>
+        :root {
+            /* Base Colors */
+            --deep-sky: #1a1a40;
+            --rain-color: rgba(173, 216, 230, 0.7);
+            --rainbow-red: #ff0000;
+            --rainbow-orange: #ff7f00;
+            --rainbow-yellow: #ffff00;
+            --rainbow-green: #00ff00;
+            --rainbow-blue: #0000ff;
+            --rainbow-violet: #9933ff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--deep-sky);
+            font-family: sans-serif;
+        }
+
+        /* --- Sky Container & Rain Effect --- */
+        .sky-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 10%, rgba(100, 100, 150, 0.8) 0%, var(--deep-sky) 70%);
+        }
+
+        /* Raindrop Styling */
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: var(--rain-color);
+            animation: fall linear infinite;
+            opacity: 0.7;
+        }
+
+        /* --- Rainbow Structure --- */
+        .rainbow-container {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* So it doesn't block clicks */
+            opacity: 0; /* Start hidden */
+            animation: appearRainbow 10s linear forwards;
+        }
+
+        .arc {
+            position: absolute;
+            width: 150%; /* Make it wide enough to span the screen plus overlaps */
+            height: 150%;
+            border-radius: 50% / 100% 100% 0 0; /* Creates a large, flattened arc shape */
+            transform-origin: bottom center;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.5); /* Added glow */
+            opacity: 0;
+            animation: fadeUp 3s ease-out forwards;
+        }
+
+        /* Specific Rainbow Layers - Varying Delays for Depth */
+        #arc-red {
+            background: linear-gradient(to bottom, rgba(255, 0, 0, 0.8), rgba(255, 140, 0, 0.8));
+            transform: scaleY(0.1) translateY(200%);
+            animation-delay: 0.5s;
+        }
+        #arc-orange {
+            background: linear-gradient(to bottom, rgba(255, 140, 0, 0.8), rgba(255, 255, 0, 0.8));
+            transform: scaleY(0.1) translateY(200%);
+            animation-delay: 0.8s;
+        }
+        #arc-yellow {
+            background: linear-gradient(to bottom, rgba(255, 255, 0, 0.8), rgba(0, 255, 0, 0.8));
+            transform: scaleY(0.1) translateY(200%);
+            animation-delay: 1.1s;
+        }
+        #arc-green {
+            background: linear-gradient(to bottom, rgba(0, 255, 0, 0.8), rgba(0, 0, 255, 0.8));
+            transform: scaleY(0.1) translateY(200%);
+            animation-delay: 1.4s;
+        }
+        #arc-blue {
+            background: linear-gradient(to bottom, rgba(0, 0, 255, 0.8), rgba(100, 0, 255, 0.8));
+            transform: scaleY(0.1) translateY(200%);
+            animation-delay: 1.7s;
+        }
+        #arc-violet {
+            background: linear-gradient(to bottom, rgba(100, 0, 255, 0.8), rgba(100, 50, 255, 0.8));
+            transform: scaleY(0.1) translateY(200%);
+            animation-delay: 2.0s;
+        }
+
+
+        /* ==========================
+           KEYFRAMES FOR ANIMATION
+           ========================== */
+
+        /* 1. RAIN FALLING (Background/Foreground) */
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) translateX(0);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(100vh) translateX(100px);
+                opacity: 0.2;
+            }
+        }
+
+        /* 2. RAIN VISIBILITY/FADE (Transition) */
+        /* This controls the whole rain layer to fade away */
+        @keyframes rainFade {
+            0% { opacity: 1; }
+            95% { opacity: 0.1; }
+            100% { opacity: 0; }
+        }
+
+        /* 3. RAINBOW APPEARANCE (Timing controlled by the arcs) */
+        @keyframes appearRainbow {
+            0% { opacity: 0; }
+            5% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+        /* 4. ARC ANIMATION (Making the arcs rise and bloom) */
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: scaleY(0.1) translateY(200%) rotate(0deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scaleY(1) translateY(0%) rotate(0deg);
+            }
+        }
+
+        /* --- Global Timing Overrides (For controlled flow) --- */
+        /* Apply the fade to the rain container */
+        .rain-layer {
+            animation: rainFade 10s linear forwards;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Phase 1: Sky and Rain Layer -->
+    <div class="sky-container">
+        <div class="rain-layer">
+            <!-- Raindrops are injected by JS for controlled variation -->
+        </div>
+
+        <!-- Phase 2: The Rainbow Layer -->
+        <div class="rainbow-container">
+            <div class="arc" id="arc-red"></div>
+            <div class="arc" id="arc-orange"></div>
+            <div class="arc" id="arc-yellow"></div>
+            <div class="arc" id="arc-green"></div>
+            <div class="arc" id="arc-blue"></div>
+            <div class="arc" id="arc-violet"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const rainLayer = document.querySelector('.rain-layer');
+            const numDrops = 150;
+
+            // 1. Generate Raindrops (Foreground Element)
+            for (let i = 0; i < numDrops; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'raindrop';
+                
+                // Random starting positions across the width
+                const left = Math.random() * 100;
+                // Random animation duration and delay for varied timing
+                const duration = Math.random() * 1.5 + 0.8; // 0.8s to 2.3s
+                const delay = Math.random() * 1.5; // Stagger the start times
+                
+                drop.style.left = `${left}vw`;
+                drop.style.animationDuration = `${duration}s`;
+                drop.style.animationDelay = `${delay}s`;
+                
+                rainLayer.appendChild(drop);
+            }
+
+            // 2. Optional: Add a gentle ambient light glow at the end
+            const body = document.body;
+            body.style.transition = 'background-color 5s ease-in-out';
+
+            // After a significant delay (e.g., 7 seconds), transition the body background 
+            // to mimic the bright, post-storm atmosphere.
+            setTimeout(() => {
+                body.style.backgroundColor = '#4d6d8c'; // Lighter, clearer sky blue/grey
+            }, 6000);
+        });
+    </script>
+</body>
+</html>
+```

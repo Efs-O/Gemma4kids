@@ -1,0 +1,29 @@
+{
+  "runKey": "gemma4-e2b-f4-autumn-leaves",
+  "stage": 1,
+  "model": "gemma4:e2b",
+  "familyId": 4,
+  "familyLabel": "Wide General Animation Prompt",
+  "promptSlug": "autumn-leaves",
+  "promptText": "Make colorful autumn leaves gently falling from trees",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "has DOCTYPE",
+    "has <html>",
+    "has <head>",
+    "has <body>",
+    "has <style> or <script>",
+    "CSS-only (no script to parse)",
+    "animation mechanism present",
+    "16 div elements in body"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [
+    "animation-duration may be missing time unit (use 2s not 2)",
+    "only 1 @keyframes — wide prompt expects ≥ 2 for multi-element scene"
+  ],
+  "durationSec": "18.6",
+  "timestamp": "2026-04-30T07:52:23.576Z"
+}

@@ -1,0 +1,155 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Butterfly Garden</title>
+    <style>
+        /* Global Setup and Vivid Background */
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #a8d5ff, #f0f8ff); /* Light sky gradient */
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Scene Container */
+        .scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Flower Styling (Midground Elements) */
+        .flower {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 100, 0, 0.7);
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        /* Flower 1: Red/Orange */
+        .flower:nth-child(1) {
+            background-color: #ff6b6b;
+            top: 20%;
+            left: 10%;
+            animation-duration: 6s;
+        }
+
+        /* Flower 2: Bright Yellow */
+        .flower:nth-child(2) {
+            background-color: #feca57;
+            top: 65%;
+            left: 30%;
+            animation-duration: 5s;
+        }
+
+        /* Flower 3: Deep Pink */
+        .flower:nth-child(3) {
+            background-color: #ff8a80;
+            top: 40%;
+            left: 60%;
+            animation-duration: 7s;
+        }
+
+        /* Keyframes for Flower Pulse (Subtle depth) */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.9; }
+        }
+
+        /* Butterfly Styling (Foreground Elements) */
+        .butterfly {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transform-origin: center;
+            animation: fly;
+        }
+
+        /* Butterfly 1: Bright Blue */
+        .butterfly:nth-child(1) {
+            background-color: #4d96ff;
+            top: 50%;
+            left: 5%;
+            animation-name: butterflyFly1;
+            animation-duration: 8s;
+            animation-delay: 1s;
+            z-index: 10;
+        }
+
+        /* Butterfly 2: Vivid Pink */
+        .butterfly:nth-child(2) {
+            background-color: #ff4d96;
+            top: 70%;
+            left: 75%;
+            animation-name: butterflyFly2;
+            animation-duration: 6s;
+            animation-delay: 3s;
+            z-index: 11;
+        }
+
+        /* Butterfly 3: Emerald Green */
+        .butterfly:nth-child(3) {
+            background-color: #38a169;
+            top: 30%;
+            left: 85%;
+            animation-name: butterflyFly3;
+            animation-duration: 10s;
+            animation-delay: 5s;
+            z-index: 12;
+        }
+
+        /* Keyframes for Butterfly Flight Paths */
+        @keyframes butterflyFly1 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20vw, 10vh) rotate(180deg); }
+            50% { transform: translate(50vw, 30vh) rotate(360deg); }
+            75% { transform: translate(80vw, 5vh) rotate(180deg); }
+            100% { transform: translate(100vw, 0) rotate(360deg); }
+        }
+
+        @keyframes butterflyFly2 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-15vw, 5vh) rotate(200deg); }
+            50% { transform: translate(5vw, 40vh) rotate(300deg); }
+            75% { transform: translate(10vw, 20vh) rotate(100deg); }
+            100% { transform: translate(0, -10vh) rotate(360deg); }
+        }
+
+        @keyframes butterflyFly3 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-20vw, -5vh) rotate(30deg); }
+            50% { transform: translate(0, 10vw) rotate(150deg); }
+            75% { transform: translate(15vw, 0) rotate(200deg); }
+            100% { transform: translate(-10vw, 0) rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <!-- Flowers (Midground) -->
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+
+        <!-- Butterflies (Foreground) -->
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+    </div>
+
+    <script>
+        // No complex JS needed as the animation is purely CSS driven,
+        // satisfying the requirements for element manipulation and timing variation.
+    </script>
+</body>
+</html>
+```

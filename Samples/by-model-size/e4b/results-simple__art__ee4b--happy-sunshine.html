@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Sunshine</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: #79c2ff; /* Vivid Sky Blue */
+            overflow: hidden;
+        }
+
+        .sun-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sun {
+            background-color: #ffeb3b; /* Bright Yellow */
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.8);
+            /* Making it large and visible */
+            width: 300px;
+            height: 300px;
+            border: 5px solid #ffc107; /* Gold outline */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Sun face features */
+        .eye {
+            background-color: #333;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            top: 60px;
+            /* Symmetry: Left and Right */
+        }
+
+        .eye.left {
+            left: 90px; /* Adjusted for visual balance */
+        }
+
+        .eye.right {
+            right: 90px; /* Adjusted for visual balance */
+        }
+
+        .pupil {
+            background-color: #000;
+            border-radius: 50%;
+            width: 10px;
+            height: 10px;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+        }
+        
+        .eye.left .pupil {
+             left: 5px;
+        }
+        .eye.right .pupil {
+             right: 5px;
+        }
+
+
+        .smile {
+            position: absolute;
+            bottom: 70px;
+            width: 150px;
+            height: 35px;
+            border-radius: 0 0 150px 150px; /* Semi-circle shape */
+            background-color: #ff9800; /* Bright Orange Smile */
+            border: 3px solid #f57c00;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Optional: Adding light rays effect using pseudo-elements for extra shine */
+        .sun::before, .sun::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 150, 0.5) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sun-container">
+        <div class="sun">
+            <!-- Eyes -->
+            <div class="eye left">
+                <div class="pupil"></div>
+            </div>
+            <div class="eye right">
+                <div class="pupil"></div>
+            </div>
+            
+            <!-- Smile -->
+            <div class="smile"></div>
+        </div>
+    </div>
+</body>
+</html>

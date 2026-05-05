@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fish Sea</title>
+    <style>
+        :root {
+            --sea-blue-dark: hsl(210, 10%, 30%);
+            --sea-blue-light: hsl(180, 50%, 70%);
+            --fish1-color: #FF6347; /* Tomato */
+            --fish2-color: #46B450; /* Green */
+            --fish3-color: #4169E1; /* Royal Blue */
+            --fish4-color: #FFD700; /* Gold */
+            --bubble-color: #FFFFFF;
+            --bubble-size: 20px;
+        }
+
+        body {
+            background: linear-gradient(to bottom, var(--sea-blue-dark), var(--sea-blue-light));
+            margin: 0;
+            overflow: hidden; /* Hide scrollbars */
+        }
+
+        /* Fish Styling */
+        .fish {
+            position: absolute;
+            width: 50px;
+            height: 30px;
+            border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%; /* Oval body shape */
+            background-color: var(--fish1-color);
+            transform-origin: center bottom;
+            animation: swim var(--speed, 15s) linear infinite;
+        }
+
+        .fish:nth-child(2) {
+            background-color: var(--fish2-color);
+            animation-duration: calc(var(--speed, 15s) * 0.8);
+            animation-delay: 1s;
+        }
+
+        .fish:nth-child(3) {
+            background-color: var(--fish3-color);
+            animation-duration: calc(var(--speed, 15s) * 1.2);
+            animation-delay: 2s;
+        }
+
+        .fish:nth-child(4) {
+            background-color: var(--fish4-color);
+            animation-duration: calc(var(--speed, 15s) * 0.9);
+            animation-delay: 3s;
+        }
+
+        /* Fish Tail (using pseudo-element for the triangle tail) */
+        .fish::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 20px;
+            background-color: #222; /* Darker color for tail */
+            border-radius: 0 0 5px 5px;
+        }
+
+        /* Bubble Styling */
+        .bubble {
+            position: absolute;
+            background-color: var(--bubble-color);
+            border-radius: 50%;
+            animation: floatUp var(--bubble-speed, 10s) linear infinite;
+        }
+
+        /* Keyframes for Swimming Motion */
+        @keyframes swim {
+            0% { transform: translateX(0) translateY(0px); }
+            50% { transform: translateX(calc(100vw - 100px)) translateY(-10px); }
+            100% { transform: translateX(0) translateY(0px); }
+        }
+
+        /* Keyframes for Bubbles */
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Colorful Fish -->
+    <div class="fish" style="left: 5%; top: 50%; animation-duration: 12s;"></div>
+    <div class="fish" style="left: 25%; top: 60%; animation-duration: 14s;"></div>
+    <div class="fish" style="left: 45%; top: 40%; animation-duration: 13s;"></div>
+    <div class="fish" style="left: 70%; top: 55%; animation-duration: 11s;"></div>
+
+    <!-- Bubbles -->
+    <div class="bubble" style="width: var(--bubble-size); height: var(--bubble-size); left: 10%; top: 80%; animation-duration: 7s; animation-delay: 0s;"></div>
+    <div class="bubble" style="width: 30px; height: 30px; left: 60%; top: 40%; animation-duration: 9s; animation-delay: 1s;"></div>
+    <div class="bubble" style="width: 25px; height: 25px; left: 85%; top: 70%; animation-duration: 6s; animation-delay: 2s;"></div>
+    <div class="bubble" style="width: 40px; height: 40px; left: 30%; top: 95%; animation-duration: 10s; animation-delay: 3s;"></div>
+    <div class="bubble" style="width: 20px; height: 20px; left: 90%; top: 30%; animation-duration: 8s; animation-delay: 4s;"></div>
+    <div class="bubble" style="width: 35px; height: 35px; left: 50%; top: 75%; animation-duration: 7.5s; animation-delay: 5s;"></div>
+
+</body>
+</html>

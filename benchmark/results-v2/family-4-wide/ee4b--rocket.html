@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch into Space</title>
+    <style>
+        :root {
+            --space-dark: #030020;
+            --nebula-blue: #3a006b;
+            --rocket-red: #ff4444;
+            --flame-orange: #ff9900;
+            --star-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--space-dark) 0%, var(--nebula-blue) 70%, #000011 100%);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Start elements from the bottom */
+        }
+
+        /* 1. Background Star Field Animation (Deepest Layer) */
+        .star-field {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px),
+                              radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 2px);
+            background-size: 100px 100px;
+            animation: twinkle 60s linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes twinkle {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 1000px; }
+        }
+
+        /* 2. The Rocket (Midground Focus) */
+        .rocket {
+            position: absolute;
+            bottom: 0;
+            width: 50px;
+            height: 150px;
+            background: linear-gradient(to bottom, #ffffff, #ffcc00, var(--rocket-red));
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            transform: translateY(0); /* Initial state */
+            animation: launch 6s cubic-bezier(0.2, 1.2, 0.8, 0) forwards;
+            z-index: 10;
+            box-shadow: 0 0 20px #ffaa00;
+        }
+
+        /* 3. The Exhaust Plume (Foreground Effect) */
+        .exhaust {
+            position: absolute;
+            bottom: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(ellipse at 50% 100%, rgba(255, 153, 0, 0.8) 0%, rgba(255, 68, 68, 0.5) 50%, transparent 100%);
+            border-radius: 50%;
+            transform: scale(1);
+            animation: exhaustPulse 0.2s steps(2) infinite alternate, 
+                       launchTrail 6s cubic-bezier(0.2, 1.2, 0.8, 0) forwards;
+            z-index: 9;
+            opacity: 0.9;
+        }
+
+        /* Keyframe Animations */
+
+        /* Star Field Movement */
+        @keyframes twinkle {
+            from { background-position: 0 0; }
+            to { background-position: 1000px 1000px; }
+        }
+
+        /* Rocket Launch Trajectory */
+        @keyframes launch {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                /* Reaching a high point in the "sky" */
+                transform: translateY(-100vh) scale(0.8); 
+                opacity: 0;
+            }
+        }
+
+        /* Exhaust Pulsing Effect (Quick, repeated pulsing) */
+        @keyframes exhaustPulse {
+            from {
+                transform: scale(1) translateY(0);
+                opacity: 0.8;
+            }
+            to {
+                transform: scale(1.1) translateY(-10px);
+                opacity: 0.6;
+            }
+        }
+
+        /* Exhaust Trail Movement (Simulating continuous push) */
+        @keyframes launchTrail {
+            0% {
+                transform: scale(0.8) translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2) translateY(-150px); /* Moves up and expands */
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Star Background Layer -->
+    <div class="star-field"></div>
+
+    <!-- 2. Rocket Element (Foreground/Midground) -->
+    <div class="rocket"></div>
+
+    <!-- 3. Exhaust Element (Foreground) -->
+    <div class="exhaust"></div>
+
+    <script>
+        // Minor JS adjustments for visual enhancement or interaction, 
+        // though CSS handles the main animation loop.
+        document.addEventListener("DOMContentLoaded", function() {
+            const rocket = document.querySelector('.rocket');
+            const exhaust = document.querySelector('.exhaust');
+
+            // Small adjustment to make the rocket look grounded initially before animation takes over
+            rocket.style.transform = 'translateY(0)';
+            exhaust.style.transform = 'translateY(0)';
+        });
+    </script>
+</body>
+</html>

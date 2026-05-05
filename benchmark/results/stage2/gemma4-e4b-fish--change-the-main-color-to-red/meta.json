@@ -1,0 +1,24 @@
+{
+  "runKey": "gemma4-e4b-fish--change-the-main-color-to-red",
+  "stage": 2,
+  "model": "gemma4:e4b",
+  "familyId": 5,
+  "familyLabel": "Edit-First Preservation Prompt",
+  "baseKey": "gemma4-e4b-f2-fish",
+  "promptSlug": "fish",
+  "chip": "Change the main color to red",
+  "chipSlug": "change-the-main-color-to-red",
+  "htmlExtracted": true,
+  "error": null,
+  "checkerScore": 2,
+  "checkerPassed": [
+    "element count preserved (11 → 11)",
+    "background color/gradient preserved",
+    "content change ratio acceptable (0%)",
+    "CSS-only (no script to parse)"
+  ],
+  "checkerFailed": [],
+  "checkerWarnings": [],
+  "durationSec": "42.2",
+  "timestamp": "2026-04-30T08:45:37.535Z"
+}

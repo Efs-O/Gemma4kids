@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Spinning Carousel</title>
+    <style>
+        :root {
+            /* Vivid Color Palette */
+            --color-sky: #00FFFF;
+            --color-ground: #FF00FF;
+            --color-horse1: #FF4500; /* OrangeRed */
+            --color-horse2: #00FF7F; /* SpringGreen */
+            --color-horse3: #00FFFF; /* Cyan */
+            --color-horse4: #FFD700; /* Gold */
+            --carousel-size: 80vh;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--color-sky) 0%, #1E90FF 50%, var(--color-ground) 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .carousel-container {
+            width: 100%;
+            height: var(--carousel-size);
+            position: relative;
+            /* This rotation centers the carousel visually */
+            transform-style: preserve-3d;
+            animation: spin 20s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .horse {
+            position: absolute;
+            width: 150px;
+            height: 100px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            border: 5px solid white;
+            background: linear-gradient(45deg, var(--color-horse1), var(--color-horse2));
+            transition: transform 0.1s ease;
+        }
+
+        /* Positioning the horses in a circle */
+        .horse:nth-child(1) {
+            background: linear-gradient(45deg, #FF6347, #FFD700);
+            transform: rotate(0deg) translate(calc(var(--carousel-size) / 2)) rotate(-90deg);
+        }
+
+        .horse:nth-child(2) {
+            background: linear-gradient(45deg, #00BFFF, #1E90FF);
+            transform: rotate(45deg) translate(calc(var(--carousel-size) / 2)) rotate(-90deg);
+        }
+
+        .horse:nth-child(3) {
+            background: linear-gradient(45deg, #3CB371, #00FF7F);
+            transform: rotate(90deg) translate(calc(var(--carousel-size) / 2)) rotate(-90deg);
+        }
+
+        .horse:nth-child(4) {
+            background: linear-gradient(45deg, #FF4500, #FFD700);
+            transform: rotate(135deg) translate(calc(var(--carousel-size) / 2)) rotate(-90deg);
+        }
+
+        .horse:nth-child(5) {
+            background: linear-gradient(45deg, #00FFFF, #6495ED);
+            transform: rotate(180deg) translate(calc(var(--carousel-size) / 2)) rotate(-90deg);
+        }
+
+        .horse:nth-child(6) {
+            background: linear-gradient(45deg, #ADFF2F, #FF1493);
+            transform: rotate(225deg) translate(calc(var(--carousel-size) / 2)) rotate(-90deg);
+        }
+
+        /* Ensure the horses stay on the visible plane despite the container rotation */
+        .horse::before {
+            content: "Horse";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container">
+        <div class="horse"></div>
+        <div class="horse"></div>
+        <div class="horse"></div>
+        <div class="horse"></div>
+        <div class="horse"></div>
+        <div class="horse"></div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome Sign</title>
+<style>
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        background-color: #ffeb3b; /* Bright yellow background */
+        overflow: hidden;
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+
+    .scene-container {
+        position: relative;
+        width: 90%;
+        height: 90%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Welcome Sign Styling */
+    .welcome-sign {
+        background-color: #8bc34a; /* Bright green sign base */
+        border: 10px solid #ff9800; /* Orange border */
+        border-radius: 20px;
+        padding: 30px 50px;
+        text-align: center;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+    }
+
+    .welcome-text {
+        font-size: 5em;
+        color: #d32f2f; /* Vivid red text */
+        text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+        margin: 0;
+        line-height: 1.1;
+        letter-spacing: 5px;
+    }
+
+    .welcome-message {
+        font-size: 2em;
+        color: #3f51b5; /* Vivid blue text */
+        margin-top: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Flower Container positioning elements around the sign */
+    .flower-area {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        pointer-events: none; /* Allows clicking through the flowers */
+        z-index: 5;
+    }
+
+    /* Basic Flower structure (using pseudo-elements or simple divs for petals) */
+    .flower {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        transform-origin: center;
+        opacity: 0.9;
+        z-index: 8;
+        /* Slight rotation effect placement */
+        transition: transform 0.3s;
+    }
+
+    /* Specific Flower Placements and Colors */
+
+    /* Top Left Cluster */
+    .flower-tl { top: 10%; left: 5%; transform: rotate(-30deg); }
+    /* Bottom Left Cluster */
+    .flower-bl { bottom: 15%; left: 10%; transform: rotate(10deg); }
+    /* Top Right Cluster */
+    .flower-tr { top: 15%; right: 5%; transform: rotate(30deg); }
+    /* Bottom Right Cluster */
+    .flower-br { bottom: 10%; right: 15%; transform: rotate(-10deg); }
+
+    /* Center surrounding flowers */
+    .flower-center-left { top: 30%; left: 2%; }
+    .flower-center-right { top: 30%; right: 2%; }
+    .flower-top-center { top: 5%; left: 45%; transform: rotate(0deg); }
+    .flower-bottom-center { bottom: 5%; left: 45%; transform: rotate(0deg); }
+
+
+    /* Petal Styles */
+    .petal {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: inherit;
+        opacity: 0.8;
+        box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Sunflower (Yellow/Brown) */
+    .sunflower {
+        /* Center */
+        width: 20px; height: 20px; background-color: #ffb300; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
+    }
+    .sunflower .petal-1 { background-color: #ffeb3b; top: -10px; left: 0; width: 35px; height: 30px; border-radius: 50% 50% 0 0; transform: rotate(0deg); }
+    .sunflower .petal-2 { background-color: #fbc02d; top: -10px; left: 35px; width: 35px; height: 30px; border-radius: 50% 50% 0 0; transform: rotate(120deg); }
+    .sunflower .petal-3 { background-color: #ffeb3b; top: -10px; left: 35px; width: 35px; height: 30px; border-radius: 50% 50% 0 0; transform: rotate(240deg); }
+
+
+    /* Red Flower (Poppy-like) */
+    .red-flower {
+        width: 60px; height: 60px;
+    }
+    .red-flower .petal { background-color: #e91e63; width: 40px; height: 40px; border-radius: 50%; top: -15px; left: 5px; transform: rotate(0deg); }
+    .red-flower .petal:nth-child(2) { background-color: #c2185b; top: -15px; left: 25px; transform: rotate(120deg); }
+    .red-flower .petal:nth-child(3) { background-color: #e91e63; top: -15px; left: 25px; transform: rotate(240deg); }
+    .red-flower::after { content: ''; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 6px; height: 15px; background-color: #880e4f; border-radius: 0 0 5px 5px; }
+
+    /* Blue Flower (Simple) */
+    .blue-flower {
+        width: 70px; height: 70px;
+    }
+    .blue-flower .petal { background-color: #29b6f6; width: 35px; height: 35px; border-radius: 50%; top: -20px; left: 10px; transform: rotate(0deg); }
+    .blue-flower .petal:nth-child(2) { background-color: #4fc3f7; top: -20px; left: 45px; transform: rotate(120deg); }
+    .blue-flower .petal:nth-child(3) { background-color: #29b6f6; top: -20px; left: 45px; transform: rotate(240deg); }
+    .blue-flower::after { content: ''; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 8px; height: 25px; background-color: #0d47a1; border-radius: 0 0 8px 8px; }
+
+</style>
+</head>
+<body>
+    <div class="scene-container">
+        <!-- Flower Decorations -->
+        <div class="flower-area">
+            <!-- Top Left Cluster -->
+            <div class="flower flower-tl red-flower" style="top: 10%; left: 5%;">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
+            <div class="flower flower-tl blue-flower" style="top: 15%; left: 10%;">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
+
+            <!-- Top Center -->
+            <div class="flower flower-top-center sunflower" style="top: 5%;">
+                <div class="petal-1"></div>
+                <div class="petal-2"></div>
+                <div class="petal-3"></div>
+            </div>
+
+            <!-- Top Right Cluster -->
+            <div class="flower flower-tr red-flower" style="top: 15%; right: 5%;">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
+            <div class="flower flower-tr blue-flower" style="top: 20%; right: 10%;">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
+
+            <!-- Center Left -->
+            <div class="flower flower-center-left sunflower" style="top: 30%; left: 2%;">
+                <div class="petal-1"></div>
+                <div class="petal-2"></div>
+                <div class="petal-3"></div>
+            </div>
+            <!-- Center Right -->
+            <div class="flower flower-center-right red-flower" style="top: 30%; right: 2%;">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
+            
+            <!-- Bottom Left Cluster -->
+            <div class="flower flower-bl blue-flower" style="bottom: 15%; left: 10%;">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
+            <!-- Bottom Center -->
+            <div class="flower flower-bottom-center sunflower" style="bottom: 5%; left: 45%;">
+                <div class="petal-1"></div>
+                <div class="petal-2"></div>
+                <div class="petal-3"></div>
+            </div>
+            <!-- Bottom Right Cluster -->
+            <div class="flower flower-br red-flower" style="bottom: 10%; right: 15%;">
+                <div class="petal"></div>
+                <div class="petal"></div>
+                <div class="petal"></div>
+            </div>
+
+        </div>
+
+        <!-- Welcome Sign -->
+        <div class="welcome-sign">
+            <h1 class="welcome-text">WELCOME</h1>
+            <p class="welcome-message">To Our Colorful Corner!</p>
+        </div>
+    </div>
+</body>
+</html>

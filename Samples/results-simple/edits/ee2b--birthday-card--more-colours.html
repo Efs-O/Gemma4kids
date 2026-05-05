@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Birthday Celebration</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #ffeb3b; /* Bright Yellow background */
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .birthday-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            padding: 40px;
+            background-color: #81d4fa; /* Bright Sky Blue base */
+            border-radius: 30px;
+            box-shadow: 15px 15px 30px rgba(255, 100, 100, 0.5);
+            border: 12px solid #ff6b6b; /* Bright Red border */
+        }
+
+        .cake {
+            width: 220px;
+            height: 160px;
+            background-color: #f8bbd0; /* Bright Pink cake base */
+            border-radius: 50% / 100% 100% 0 0;
+            position: relative;
+            border: 12px solid #ff9800; /* Orange cake border */
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .frosting {
+            width: 100%;
+            height: 35px;
+            background-color: #4dd0e1; /* Bright Cyan frosting */
+            border-radius: 15px 15px 0 0;
+            position: absolute;
+            top: 15px;
+            left: 0;
+        }
+
+        .candle {
+            width: 18px;
+            height: 45px;
+            background-color: #ffe082; /* Bright Yellow candle */
+            border-radius: 5px;
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 3px solid #ff6d00;
+        }
+
+        .flame {
+            width: 12px;
+            height: 25px;
+            background-color: #ffeb3b; /* Bright Yellow flame base */
+            border-radius: 50% 50% 50% 50%;
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 8px #ffeb3b, 0 0 10px #ff9800;
+        }
+
+        /* Balloon Styles */
+        .balloon-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 50px;
+        }
+
+        .balloon {
+            width: 90px;
+            height: 110px;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 20px;
+            border: 6px solid #333;
+            box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .balloon::before {
+            content: '';
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 35px;
+            background-color: var(--balloon-color);
+            border-radius: 50% 50% 0 0;
+        }
+
+        /* Increased and brighter balloon colors */
+        .balloon:nth-child(1) { --balloon-color: #ff4081; } /* Hot Pink */
+        .balloon:nth-child(2) { --balloon-color: #00bcd4; } /* Bright Cyan */
+        .balloon:nth-child(3) { --balloon-color: #4caf50; } /* Emerald Green */
+        .balloon:nth-child(4) { --balloon-color: #ff9800; } /* Bright Orange */
+
+        /* Strings */
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            width: 3px;
+            height: 60px;
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="birthday-card">
+        <h1 style="color: #e91e63;">Happy Birthday! 🎉</h1>
+        <div class="cake">
+            <div class="frosting"></div>
+            <div class="candle"></div>
+            <div class="flame"></div>
+        </div>
+        <div class="balloon-container">
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+        </div>
+    </div>
+</body>
+</html>

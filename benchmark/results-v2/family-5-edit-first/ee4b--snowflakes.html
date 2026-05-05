@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Snowflakes Animation</title>
+    <style>
+        /* Global Setup */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d0d2b; /* Deep twilight blue/indigo sky */
+            overflow: hidden; /* Hide scrollbars due to absolute positioning */
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: flex-start; /* Start animation from the top */
+            justify-content: center;
+        }
+
+        /* Container for all snowflakes to manage overflow */
+        .snowflake-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Ignore mouse events */
+        }
+
+        /* Base Snowflake Styling */
+        .snowflake {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            opacity: 0.8;
+            /* Base animation properties will be set per snowflake class/element */
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            animation-delay: 0s;
+        }
+
+        /* Keyframes for Falling Animation */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0) scale(1);
+                opacity: 0.9;
+            }
+            100% {
+                /* Move far down the viewport and slightly drift horizontally */
+                transform: translateY(110vh) translateX(100px) scale(0.5);
+                opacity: 0.2;
+            }
+        }
+
+        /* --- Individual Snowflake Instances --- */
+        /* We create several snowflakes with different properties to simulate a natural snowfall */
+
+        /* Snowflake 1: Bright Blue, Slow drift */
+        .s1 {
+            background-color: rgba(173, 216, 230, 0.9); /* Light Blue */
+            width: 8px;
+            height: 8px;
+            top: -10%;
+            left: 10%;
+            animation-duration: 15s;
+            animation-delay: 0s;
+            animation-name: fall;
+        }
+
+        /* Snowflake 2: Vivid White, Medium speed */
+        .s2 {
+            background-color: rgba(255, 255, 255, 0.95); /* Pure White */
+            width: 12px;
+            height: 12px;
+            top: -20%;
+            left: 50%;
+            animation-duration: 12s;
+            animation-delay: 2s;
+            animation-name: fall;
+        }
+
+        /* Snowflake 3: Cyan/Aqua, Faster, more spread out */
+        .s3 {
+            background-color: rgba(0, 255, 255, 0.8); /* Cyan */
+            width: 6px;
+            height: 6px;
+            top: -5%;
+            left: 85%;
+            animation-duration: 10s;
+            animation-delay: 4s;
+            animation-name: fall;
+        }
+
+        /* Snowflake 4: Light Purple Glow, Slowest */
+        .s4 {
+            background-color: rgba(200, 149, 237, 0.7); /* Purple */
+            width: 10px;
+            height: 10px;
+            top: -30%;
+            left: 20%;
+            animation-duration: 20s;
+            animation-delay: 0s;
+            animation-name: fall;
+        }
+
+        /* Snowflake 5: Tiny, Bright Flash effect (added randomness) */
+        .s5 {
+            background-color: rgba(255, 255, 255, 0.6); 
+            width: 4px;
+            height: 4px;
+            top: -15%;
+            left: 75%;
+            animation-duration: 18s;
+            animation-delay: 1s;
+            animation-name: fall;
+        }
+
+        /* Responsive Adjustments (Optional: make sure they cover the whole screen even if content changes) */
+        @media (max-width: 768px) {
+             .s1 {
+                left: 5%;
+            }
+            .s2 {
+                left: 40%;
+            }
+            .s3 {
+                left: 70%;
+            }
+            .s4 {
+                left: 15%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="snowflake-container">
+        <!-- Initial placement of multiple elements to create density -->
+        <div class="snowflake s1"></div>
+        <div class="snowflake s2"></div>
+        <div class="snowflake s3"></div>
+        <div class="snowflake s4"></div>
+        <div class="snowflake s5"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Fireworks Display</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050510; /* Deep midnight blue */
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #ff00ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            pointer-events: none;
+            text-shadow: 0 0 10px #ff00ff;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">Midnight Celebration</div>
+    <canvas id="fireworksCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+        let fireworks = [];
+
+        // Resize handler
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Helper to get random number in range
+        const random = (min, max) => Math.random() * (max - min) + min;
+
+        class Firework {
+            constructor() {
+                this.x = random(width * 0.1, width * 0.9);
+                this.y = height;
+                this.targetY = random(height * 0.1, height * 0.5);
+                this.speed = random(4, 8);
+                this.angle = -Math.PI / 2 + random(-0.1, 0.1);
+                this.vx = Math.cos(this.angle) * this.speed;
+                this.vy = Math.sin(this.angle) * this.speed;
+                this.hue = random(0, 360);
+                this.color = `hsl(${this.hue}, 100%, 60%)`;
+                this.dead = false;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.05; // Gravity on the ascent
+
+                if (this.vy >= 0 || this.y <= this.targetY) {
+                    this.explode();
+                    this.dead = true;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // Add a tiny glow to the rocket
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+            }
+
+            explode() {
+                const count = 100;
+                for (let i = 0; i < count; i++) {
+                    particles.push(new Particle(this.x, this.y, this.hue));
+                }
+            }
+        }
+
+        class Particle {
+            constructor(x, y, hue) {
+                this.x = x;
+                this.y = y;
+                this.hue = hue + random(-30, 30); // Variance in color
+                this.speed = random(1, 10);
+                this.angle = random(0, Math.PI * 2);
+                this.vx = Math.cos(this.angle) * this.speed;
+                this.vy = Math.sin(this.angle) * this.speed;
+                this.friction = 0.95;
+                this.gravity = 0.15;
+                this.alpha = 1;
+                this.decay = random(0.01, 0.03);
+                this.size = random(1, 3);
+                this.color = `hsl(${this.hue}, 100%, 60%)`;
+            }
+
+            update() {
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+
+                if (this.alpha <= 0) {
+                    this.dead = true;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function animate() {
+            // Draw semi-transparent background to create "motion trails"
+            ctx.fillStyle = 'rgba(5, 5, 16, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Randomly spawn fireworks
+            if (Math.random() < 0.04) {
+                fireworks.push(new Firework());
+            }
+
+            // Update and draw fireworks (the rockets)
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                fireworks[i].update();
+                fireworks[i].draw();
+                if (fireworks[i].dead) {
+                    fireworks.splice(i, 1);
+                }
+            }
+
+            // Update and draw particles (the explosions)
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initial burst for instant visibility
+        function init() {
+            for(let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    fireworks.push(new Firework());
+                }, i * 300);
+            }
+            animate();
+        }
+
+        init();
+    </script>
+</body>
+</html>

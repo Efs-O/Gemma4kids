@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Neon Carousel</title>
+    - <style>
+        :root {
+            --carousel-speed: 20s;
+            --horse-bob-speed: 1.5s;
+            --primary-color: #ff00ff;
+            --secondary-color: #00ffff;
+            --accent-color: #ffff00;
+            --bg-color: #0a0a2e;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: sans-serif;
+        }
+
+        /* Starry Background */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: twinkle var(--star-duration) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Carousel Stage */
+        .viewport {
+            perspective: 1200px;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            transform-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            transform: rotateX(-10deg);
+        }
+
+        /* The rotating ring holding the horses */
+        .carousel-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: rotateRing var(--carousel-speed) linear infinite;
+        }
+
+        @keyframes rotateRing {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        /* The Carousel Base/Floor */
+        .carousel-base {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #444, #111);
+            border: 10px solid var/>
+            border-radius: 50%;
+            transform: rotateX(90deg) translateZ(-150px);
+            box-shadow: 0 0 50px var(--primary-color), inset 0 0 50px var(--secondary-color);
+            border: 5px solid var(--accent-color);
+        }
+
+        /* Individual Carousel Items */
+        .carousel-item {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 100px;
+            height: 150px;
+            margin-left: -50px;
+            margin-top: -75px;
+            transform-style: preserve-3d;
+        }
+
+        /* The Pole */
+        .pole {
+            position: absolute;
+            width: 8px;
+            height: 300px;
+            background: linear-gradient(to bottom, gold, #fff, gold);
+            left: 50%;
+            transform: translateX(-50%) translateZ(0);
+            border-radius: 4px;
+            box-shadow: 0 0 10px gold;
+        }
+
+        /* The Horse Shape (Using SVG for clarity) */
+        .horse-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            transform-style: preserve-3d;
+            animation: horseBob var(--horse-bob-speed) ease-in-out infinite;
+        }
+
+        @keyframes horseBob {
+            0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+            50% { transform: translateX(-50%) translateY(-30px) rotate(5deg); }
+        }
+
+        .horse-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+
+        /* Top Decorative Bar */
+        .carousel-top {
+            position: absolute;
+            width: 600px;
+            height: 20px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color), var(--primary-color));
+            left: -100px;
+            top: -10px;
+            transform: rotateX(90deg) translateZ(200px);
+            border-radius: 10px;
+            box-shadow: 0 0 20px white;
+        }
+
+        /* Lights around the top bar */
+        .light {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 15px white;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="starField"></div>
+
+    <div class="viewport">
+        <div class="carousel-container">
+            <!-- Carousel Base -->
+            <div class="carousel-base"></div>
+
+            <!-- Top decoration bar -->
+            <div class="carousel-top" id="topBar"></div>
+
+            <!-- The rotating element -->
+            <div class="carousel-ring" id="carouselRing">
+                <!-- Items will be injected here via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ring = document.getElementById('carouselRing');
+        const starField = document.getElementById('starField');
+        const topBar = document.getElementById('topBar');
+        
+        const itemCount = 12;
+        const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff3300', '#33ff00', '#ff0077'];
+
+        // 1. Generate Stars
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3 + 'px';
+            star.style.width = size;
+            star.style.height = size;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.setProperty('--star-duration', (Math.random() * 3 + 2) + 's');
+            starField.appendChild(star);
+        }
+
+        // 2. Generate Lights for the top bar
+        for (let i = 0; i < 20; i++) {
+            const light = document.createElement('div');
+            light.className = 'light';
+            light.style.left = (i * 30) + 'px';
+            light.style.top = '-5px';
+            light.style.backgroundColor = colors[i % colors.length];
+            light.style.boxShadow = `0 0 10px ${colors[i % colors.length]}`;
+            topBar.appendChild(light);
+        }
+
+        // 3. Generate Carousel Horses
+        const rotationAngle = 360 / itemCount;
+        const radius = 250; // Distance from center
+
+        for (let i = 0; i < itemCount; i++) {
+            const item = document.createElement('div');
+            item.className = 'carousel-item';
+            
+            // Calculate rotation and position
+            const angle = i * rotationAngle;
+            item.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+
+            const color = colors[i % colors.length];
+
+            // Create Pole
+            const pole = document.createElement('div');
+            pole.className = 'pole';
+            
+            // Create Horse Container
+            const horseContainer = document.createElement('div');
+            horseContainer.className = 'horse-container';
+            horseContainer.style.color = color;
+
+            // Create Horse SVG
+            horseContainer.innerHTML = `
+                <svg class="horse-svg" viewBox="0 0 100 100">
+                    <path fill="currentColor" d="M20,70 Q30,40 50,40 T80,70 L80,80 L20,80 Z" />
+                    <path fill="currentColor" d="M40,40 Q45,10 60,10 Q75,10 70,40 Z" />
+                    <circle fill="white" cx="55" cy="25" r="3" />
+                    <path fill="currentColor" d="M20,70 Q10,60 15,50" stroke="currentColor" stroke-width="2" fill="none"/>
+                </svg>
+            `;
+
+            item.appendChild(pole);
+            item.appendChild(horseContainer);
+            ring.appendChild(item);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fish in the Sea</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #004d99, #0077cc); /* Deep blue to bright blue sea gradient */
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Keep action low enough */
+        }
+
+        .sea-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- FISH STYLING --- */
+        .fish {
+            position: absolute;
+            font-size: 50px; /* Base size for visibility */
+            animation-name: swim;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            z-index: 10;
+        }
+
+        /* Specific Fish Instances */
+        .fish-1 {
+            left: 10%;
+            bottom: 10%;
+            animation-duration: 12s;
+            transform: scale(1.2);
+        }
+
+        .fish-2 {
+            left: 70%;
+            bottom: 20%;
+            animation-duration: 15s;
+            transform: scale(1.5);
+        }
+
+        .fish-3 {
+            left: 30%;
+            bottom: 5%;
+            animation-duration: 10s;
+            transform: scale(1.0);
+        }
+
+        /* --- FISH SHAPE CONSTRUCTION (Using pseudo-elements for better shaping) --- */
+        /* General fish wrapper to make the animation point to the actual shape */
+        .fish-shape {
+            position: relative;
+            width: 100px; /* Overall width for positioning */
+            height: 50px;
+        }
+
+        .fish-shape::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.7) 10%, transparent 60%);
+            border-radius: 50% 50% 10% 50%; /* Oval body approximation */
+            transform: scaleX(1);
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.5); /* Adding a glow/highlight */
+        }
+        
+        .fish-shape::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: -15px; /* Positioned at the tail */
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 20px solid currentColor; /* Color determined by parent */
+            transform: rotate(30deg); /* Angle the tail */
+        }
+
+        /* Overriding colors and specific properties for distinct fish */
+        .fish-1 .fish-shape::before { background-color: #FF6347; } /* Tomato Red */
+        .fish-1 .fish-shape::after { border-left-color: #FF6347; }
+
+        .fish-2 .fish-shape::before { background-color: #10B981; } /* Green */
+        .fish-2 .fish-shape::after { border-left-color: #10B981; }
+
+        .fish-3 .fish-shape::before { background-color: #7C3AED; } /* Purple */
+        .fish-3 .fish-shape::after { border-left-color: #7C3AED; }
+
+
+        /* --- ANIMATIONS --- */
+        @keyframes swim {
+            0% { transform: translate(0, 0) scaleX(1); }
+            50% { transform: translate(300px, 0) scaleX(1.1); } /* Move across screen */
+            100% { transform: translate(600px, 0) scaleX(1); }
+        }
+
+        /* Adjusting animation properties for different starting points and movement */
+        .fish-1 { animation-name: swim-1; animation-duration: 12s; animation-timing-function: ease-in-out; }
+        .fish-2 { animation-name: swim-2; animation-duration: 15s; animation-timing-function: ease-in-out; }
+        .fish-3 { animation-name: swim-3; animation-duration: 10s; animation-timing-function: ease-in-out; }
+
+        /* Re-defining specific keyframes for staggered movement */
+        @keyframes swim-1 {
+            0% { transform: translate(-10vw, 0) scaleX(1); }
+            100% { transform: translate(20vw, 0) scaleX(1.1); }
+        }
+        @keyframes swim-2 {
+            0% { transform: translate(-10vw, 0) scaleX(1); }
+            100% { transform: translate(20vw, 0) scaleX(1.5); }
+        }
+        @keyframes swim-3 {
+            0% { transform: translate(-10vw, 0) scaleX(1); }
+            100% { transform: translate(15vw, 0) scaleX(1); }
+        }
+
+
+        /* --- BUBBLES --- */
+        .bubble {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            opacity: 0;
+            animation-name: float-up;
+            animation-timing-function: ease-out;
+            animation-iteration-count: infinite;
+        }
+
+        /* Bubble Animations and Start Points */
+        .bubble-1 {
+            left: 20vw; top: 70vh;
+            animation-duration: 8s;
+            animation-delay: 0s;
+        }
+        .bubble-2 {
+            left: 55vw; top: 90vh;
+            animation-duration: 10s;
+            animation-delay: 2s;
+        }
+        .bubble-3 {
+            left: 80vw; top: 65vh;
+            animation-duration: 7s;
+            animation-delay: 4s;
+        }
+        .bubble-4 {
+            left: 10vw; top: 80vh;
+            animation-duration: 11s;
+            animation-delay: 1s;
+        }
+        .bubble-5 {
+            left: 40vw; top: 85vh;
+            animation-duration: 9s;
+            animation-delay: 3s;
+        }
+        .bubble-6 {
+            left: 90vw; top: 75vh;
+            animation-duration: 12s;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100vh) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sea-container">
+        <!-- Fish elements wrapping the shape -->
+        <div class="fish fish-1">
+            <div class="fish-shape"></div>
+        </div>
+        <div class="fish fish-2">
+            <div class="fish-shape"></div>
+        </div>
+        <div class="fish fish-3">
+            <div class="fish-shape"></div>
+        </div>
+
+        <!-- Bubble elements -->
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        <div class="bubble bubble-3"></div>
+        <div class="bubble bubble-4"></div>
+        <div class="bubble bubble-5"></div>
+        <div class="bubble bubble-6"></div>
+
+    </div >
+</body>
+</html>

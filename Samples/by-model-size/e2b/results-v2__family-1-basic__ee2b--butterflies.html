@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Butterflies and Flowers</title>
+    <style>
+        body {
+            background-color: #f0f8ff; /* Light sky blue background */
+            overflow: hidden; /* Hide anything that flies out of view */
+            margin: 0;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* --- Flower Styling --- */
+        .flower {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.8); /* Orange glow */
+            animation: pulse 3s infinite alternate;
+        }
+
+        .flower:nth-child(1) {
+            background-color: #ff69b4; /* Pink */
+            top: 15%;
+            left: 10%;
+            width: 100px;
+            height: 100px;
+            box-shadow: 0 0 20px rgba(255, 192, 203, 0.8);
+        }
+
+        .flower:nth-child(2) {
+            background-color: #3cb371; /* Medium Sea Green */
+            top: 40%;
+            right: 15%;
+            width: 120px;
+            height: 120px;
+            box-shadow: 0 0 20px rgba(144, 238, 144, 0.8);
+        }
+
+        .flower:nth-child(3) {
+            background-color: #ffd700; /* Gold */
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 90px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .flower:nth-child(4) {
+            background-color: #4169e1; /* Royal Blue */
+            top: 60%;
+            left: 25%;
+            width: 110px;
+            height: 110px;
+            box-shadow: 0 0 20px rgba(65, 105, 225, 0.8);
+        }
+
+        /* Flower pulsing animation */
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        /* --- Butterfly Styling --- */
+        .butterfly {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            opacity: 0.9;
+            animation: fly 15s infinite ease-in-out;
+        }
+
+        /* Butterfly wing details (using pseudo-elements for effect) */
+        .butterfly::before,
+        .butterfly::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: currentColor; /* Use butterfly's main color */
+            opacity: 0.7;
+        }
+
+        /* Set the color for the pseudo-elements to be slightly different */
+        .butterfly::before {
+            background-color: #ffeb3b; /* Bright yellow accent */
+        }
+        .butterfly::after {
+            background-color: #ff80ab; /* Bright pink accent */
+        }
+
+        /* Butterfly Flying Animation */
+        @keyframes fly {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0.8;
+            }
+            25% {
+                transform: translate(150px, -50px) rotate(10deg);
+            }
+            50% {
+                transform: translate(300px, 100px) rotate(-10deg);
+            }
+            75% {
+                transform: translate(450px, -200px) rotate(20deg);
+            }
+            100% {
+                transform: translate(600px, 0) rotate(0deg);
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Flowers -->
+    <div class="flower"></div>
+    <div class="flower"></div>
+    <div class="flower"></div>
+    <div class="flower"></div>
+
+    <!-- Butterflies (Generated via JS for variety) -->
+    <script>
+        const butterflyContainer = document.body;
+        const numButterflies = 20;
+
+        for (let i = 0; i < numButterflies; i++) {
+            const butterfly = document.createElement('div');
+            butterfly.className = 'butterfly';
+            
+            // Assign random starting positions
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * window.innerHeight;
+            
+            // Assign random initial color for vividness
+            const randomColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            butterfly.style.setProperty('--main-color', randomColor); // Store color contextually if needed, but CSS handles it via currentColor
+
+            butterfly.style.left = `${startX}px`;
+            butterfly.style.top = `${startY}px`;
+            
+            // Randomize the animation delay and the flight path slightly for unique movement
+            butterfly.style.animationDelay = `${Math.random() * 15}s`;
+            butterfly.style.animationDuration = `${10 + Math.random() * 10}s`; // Vary flight speed
+            
+            // Set the actual color that will be used by the CSS animation (currentColor)
+            butterfly.style.color = randomColor; 
+
+            butterflyContainer.appendChild(butterfly);
+        }
+    </script>
+
+</body>
+</html>

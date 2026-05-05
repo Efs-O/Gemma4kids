@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Ocean Crash</title>
+    <style>
+        :root {
+            --sky-color: #87CEEB; /* Bright Blue */
+            --sand-color: #FFD700; /* Bright Gold/Yellow */
+            --ocean-color: #4682B4; /* Steel Blue */
+            --wave-color-1: #00FFFF; /* Cyan */
+            --wave-color-2: #007FFF; /* Deep Sky Blue */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(to bottom, var(--sky-color) 60%, var(--ocean-color) 60%);
+        }
+
+        /* --- Scene Setup --- */
+        #scene {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+
+        /* The Sunny Beach Sand */
+        #beach {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%; /* Occupy the bottom third for the beach */
+            background-color: var(--sand-color);
+            z-index: 10;
+        }
+
+        /* --- Wave Animation Setup --- */
+        .wave {
+            position: absolute;
+            bottom: 30%; /* Start waves just above the sand line */
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to top, var(--wave-color-2) 0%, var(--wave-color-1) 50%, var(--ocean-color) 100%);
+            border-radius: 50% / 100% 100% 0 0; /* Creates a curved wave shape */
+            transform: translateX(0);
+            animation: waveMotion var(--speed) linear infinite;
+            z-index: 5;
+        }
+
+        /* Define specific wave instances and speeds */
+        .wave:nth-child(1) {
+            height: 120px;
+            animation-duration: 5s;
+            animation-delay: 0s;
+            animation-name: moveWave1;
+        }
+
+        .wave:nth-child(2) {
+            height: 180px;
+            background: linear-gradient(to top, var(--wave-color-1) 0%, var(--wave-color-2) 50%, var(--ocean-color) 100%);
+            animation-duration: 7s;
+            animation-delay: 1s;
+            animation-name: moveWave2;
+        }
+
+        .wave:nth-child(3) {
+            height: 100px;
+            background: linear-gradient(to top, var(--wave-color-2) 0%, var(--wave-color-1) 50%, var(--ocean-color) 100%);
+            animation-duration: 4s;
+            animation-delay: 2s;
+            animation-name: moveWave3;
+        }
+
+        /* --- Keyframe Animations --- */
+        @keyframes moveWave1 {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(100vw);
+            }
+        }
+
+        @keyframes moveWave2 {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-100vw);
+            }
+        }
+
+        @keyframes moveWave3 {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(100vw);
+            }
+        }
+
+        /* Subtle background shimmer for sun effect */
+        #sun-glare {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 70%);
+            opacity: 0.5;
+            animation: shimmer 8s infinite alternate;
+            z-index: 1;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scene">
+        <!-- Simulate the sunny sky/water transition -->
+        <div id="sun-glare"></div>
+
+        <!-- The Beach Floor -->
+        <div id="beach"></div>
+
+        <!-- Animated Waves Layer -->
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+
+    </div>
+
+</body>
+</html>

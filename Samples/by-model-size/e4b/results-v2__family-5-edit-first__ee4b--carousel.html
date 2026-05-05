@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Spinning Carousel</title>
+    <style>
+        /* --- Global Setup & Background --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Hides overflow from the spinning items */
+            background: linear-gradient(135deg, #ff00cc 0%, #3333ff 100%); /* Vivid background gradient */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px; /* For 3D rotation feel */
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* --- Carousel Container --- */
+        .carousel-wrapper {
+            width: 90vw;
+            height: 60vh;
+            position: relative;
+            transform-style: preserve-3d;
+            /* Initial rotation state, will be animated */
+            transform: rotateY(0deg);
+            animation: spin 20s linear infinite;
+        }
+
+        /* Keyframes for the continuous spin */
+        @keyframes spin {
+            from {
+                transform: rotateY(0deg);
+            }
+            to {
+                transform: rotateY(360deg);
+            }
+        }
+
+        /* --- Carousel Items (The "Horses") --- */
+        .carousel-item {
+            position: absolute;
+            width: 300px; /* Width of each horse representation */
+            height: 250px; /* Height of each horse representation */
+            background: rgba(255, 255, 255, 0.1); /* Slight transparency for layering effect */
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            cursor: pointer;
+            /* Initial placement staggering */
+            transform-origin: center center;
+            transition: transform 0.3s;
+            border: 4px solid;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Staggering the items to look like they are arranged around a circle */
+        .carousel-item:nth-child(1) {
+            transform: rotateY(-160deg) translateZ(0px);
+            border-color: #ff5722; /* Vivid Orange */
+        }
+        .carousel-item:nth-child(2) {
+            transform: rotateY(0deg) translateZ(0px);
+            border-color: #4caf50; /* Vivid Green */
+        }
+        .carousel-item:nth-child(3) {
+            transform: rotateY(160deg) translateZ(0px);
+            border-color: #9c27b0; /* Vivid Purple */
+        }
+        .carousel-item:nth-child(4) {
+            transform: rotateY(320deg) translateZ(0px);
+            border-color: #2196f3; /* Vivid Blue */
+        }
+
+        /* Hover effect for interactivity */
+        .carousel-item:hover {
+            transform: scale(1.05) translateZ(30px) !important; /* Pops out slightly */
+            box-shadow: 0 0 35px currentColor;
+            z-index: 10;
+        }
+
+        /* Styling the Horse/Carriage representation inside the item */
+        .horse-graphic {
+            width: 80%;
+            height: 100%;
+            background: linear-gradient(to bottom, #eee, #ddd);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Abstract 'Horse' detail using CSS shapes */
+        .horse-graphic::before {
+            content: '🐎'; /* Using an emoji as a placeholder for visual flair */
+            font-size: 4em;
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            opacity: 0.8;
+            transform: rotate(-20deg);
+        }
+        
+        /* Adding a vivid underline/accent strip for dynamism */
+        .horse-graphic::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: linear-gradient(90deg, #ffeb3b, #ff9800, #ffeb3b);
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="carousel-wrapper">
+        
+        <!-- Carousel Item 1: Red/Orange Theme -->
+        <div class="carousel-item" style="color: #ff5722;">
+            <div class="horse-graphic"></div>
+            <h3 style="color: #ff5722; margin-top: 10px;">Majestic Stallion</h3>
+        </div>
+
+        <!-- Carousel Item 2: Green Theme -->
+        <div class="carousel-item" style="color: #4caf50;">
+            <div class="horse-graphic"></div>
+            <h3 style="color: #4caf50; margin-top: 10px;">Emerald Dancer</h3>
+        </div>
+
+        <!-- Carousel Item 3: Purple Theme -->
+        <div class="carousel-item" style="color: #9c27b0;">
+            <div class="horse-graphic"></div>
+            <h3 style="color: #9c27b0; margin-top: 10px;">Royal Charger</h3>
+        </div>
+
+        <!-- Carousel Item 4: Blue Theme -->
+        <div class="carousel-item" style="color: #2196f3;">
+            <div class="horse-graphic"></div>
+            <h3 style="color: #2196f3; margin-top: 10px;">Sky Spirit</h3>
+        </div>
+
+    </div>
+
+</body>
+</html>

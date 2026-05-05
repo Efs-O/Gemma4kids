@@ -1,0 +1,177 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Night Sky Animation</title>
+    <style>
+        :root {
+            --sky-darkness: #000011;
+            --star-color: #ffffff;
+            --glow-color: #aaffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Crucial to keep stars contained */
+            background-color: var(--sky-darkness);
+            cursor: none; /* Hide cursor for immersion */
+        }
+
+        /* --- Star Container --- */
+        #night-sky {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- Twinkling Star Animation Keyframes --- */
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.7;
+                transform: scale(1);
+                box-shadow: 0 0 2px var(--glow-color);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(1.2);
+                box-shadow: 0 0 4px var(--glow-color);
+            }
+        }
+
+        /* --- Star Element Styling --- */
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: var(--star-color);
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite alternate;
+            opacity: 0; /* Initial state managed by JS/animation */
+        }
+
+        /* --- Shooting Star Styling --- */
+        .shooting-star {
+            position: absolute;
+            width: 5px;
+            height: 3px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, #ffff88 50%, #ff00ff 100%);
+            transform: translate(-100vw, 0); /* Start far left */
+            pointer-events: none; /* Ensure it doesn't block clicks */
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.2s linear; /* Used for fading out */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="night-sky">
+        <!-- Stars and Shooting Stars will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        const nightSky = document.getElementById('night-sky');
+        const STAR_COUNT = 150;
+        const STAR_SPEED_FACTOR = 1; // Controls twinkle speed
+
+        // --- 1. Star Generation ---
+
+        /**
+         * Creates and places static, twinkling stars across the viewport.
+         */
+        function createStars() {
+            for (let i = 0; i < STAR_COUNT; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+
+                // Random positioning across the viewport
+                const x = Math.random() * 100; // Percentage width
+                const y = Math.random() * 100; // Percentage height
+                
+                // Random size variation
+                const size = Math.random() * 1.5 + 1; 
+                
+                star.style.left = `${x}vw`;
+                star.style.top = `${y}vh`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // Vary animation delay and duration for a natural look
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                star.style.animationDuration = `${(Math.random() * 2) + 2}s`;
+                
+                nightSky.appendChild(star);
+            }
+        }
+
+        // --- 2. Shooting Star Animation ---
+
+        /**
+         * Generates and animates a single shooting star streak across the screen.
+         */
+        function launchShootingStar() {
+            const star = document.createElement('div');
+            star.classList.add('shooting-star');
+            
+            // Set random starting positions (bottom edge, left side)
+            const startX = Math.random() * 100; // Start X percentage
+            const startY = Math.random() * 10 + 10; // Start Y (from 10vh to 20vh down)
+            
+            star.style.left = `${startX}vw`;
+            star.style.top = `${startY}vh`;
+            
+            // Randomize length and speed parameters
+            const duration = Math.random() * 2 + 1.5; // 1.5s to 3.5s travel time
+            const speed = 100 / duration; // How far in vw per frame concept
+            
+            nightSky.appendChild(star);
+
+            // CSS Animation simulation using direct style manipulation for better control
+            let currentX = startX;
+            let currentY = startY;
+            const intervalId = setInterval(() => {
+                // Move X position towards the right edge
+                currentX += 1.5; 
+                
+                // Gradually fade out and simulate vertical drift
+                const opacity = Math.max(0, 1 - (Date.now() - star.startTime) / (duration * 1500));
+                const yOffset = Math.sin(Date.now() / 300) * 1; // Slight vertical wobble
+                
+                star.style.transform = `translate(${currentX}vw, ${(startY + yOffset)}vh)`;
+                star.style.opacity = opacity;
+
+                // Check if the star has traveled off-screen or faded completely
+                if (currentX > 110 || opacity <= 0.01) {
+                    clearInterval(intervalId);
+                    star.remove();
+                }
+            }, 15); // Update roughly every 15ms
+
+            // Store start time for fade calculation (This helps simulate the decay)
+            star.startTime = Date.now();
+        }
+
+
+        // --- Initialization ---
+        
+        function initializeSky() {
+            // 1. Generate the static stars when the page loads
+            createStars();
+            
+            // 2. Launch shooting stars randomly every 0.5 to 2 seconds
+            setInterval(() => {
+                launchShootingStar();
+            }, Math.random() * 1500 + 500);
+        }
+
+        // Start the animation system
+        initializeSky();
+    </script>
+</body>
+</html>
+```
