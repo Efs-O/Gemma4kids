@@ -1,0 +1,93 @@
+name: Build Tester Packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify bundled packaging assets
+        shell: pwsh
+        run: |
+          if (!(Test-Path "piper/win/piper.exe")) {
+            throw "Missing piper/win/piper.exe. This workflow needs bundled Piper assets in the repo or fetched before packaging."
+          }
+          if (!(Test-Path "voices")) {
+            throw "Missing voices/ directory. This workflow needs bundled voice assets in the repo or fetched before packaging."
+          }
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gemma4kids-windows
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
+
+  build-macos:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify bundled packaging assets
+        run: |
+          test -f piper/mac/x64/piper_macos_x64.tar.gz || { echo "Missing piper/mac/x64/piper_macos_x64.tar.gz. Bundle Piper assets in the repo or fetch them before packaging."; exit 1; }
+          test -d voices || { echo "Missing voices/ directory. Bundle voice assets in the repo or fetch them before packaging."; exit 1; }
+      - name: Prepare Piper mac x64 payload
+        run: |
+          rm -rf piper/mac/x64/piper
+          tar -xf piper/mac/x64/piper_macos_x64.tar.gz -C piper/mac/x64
+          chmod +x piper/mac/x64/piper/piper
+          chmod +x piper/mac/x64/piper/piper_phonemize
+          chmod +x piper/mac/x64/piper/espeak-ng
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run dist:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gemma4kids-macos
+          path: |
+            release/*.dmg
+            release/*.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify bundled packaging assets
+        run: |
+          test -f piper/linux/x64/piper_linux_x86_64.tar.gz || { echo "Missing piper/linux/x64/piper_linux_x86_64.tar.gz. Bundle Piper assets in the repo or fetch them before packaging."; exit 1; }
+          test -d voices || { echo "Missing voices/ directory. Bundle voice assets in the repo or fetch them before packaging."; exit 1; }
+      - name: Prepare Piper linux x64 payload
+        run: |
+          rm -rf piper/linux/x64/piper
+          tar -xf piper/linux/x64/piper_linux_x86_64.tar.gz -C piper/linux/x64
+          chmod +x piper/linux/x64/piper/piper
+          chmod +x piper/linux/x64/piper/piper_phonemize
+          chmod +x piper/linux/x64/piper/espeak-ng
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run dist:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gemma4kids-linux
+          path: |
+            release/*.AppImage

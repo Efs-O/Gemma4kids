@@ -21,8 +21,6 @@ assets/icon.icns
 !SETUP.md
 
 # Local tooling / artifacts — never commit
-piper/
-voices/
 **/tts-test-output/
 tmp_*.json
 benchmark/results-simple/

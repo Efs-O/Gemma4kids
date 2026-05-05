@@ -819,21 +819,39 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
-  if (process.platform === 'win32') {
-    app.setAppUserModelId('com.gemma4kids.app');
-  }
-  Menu.setApplicationMenu(null);
-  ensureAnimationsDir();
-  // Allow microphone access from the local file:// renderer.
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
-    callback(permission === 'media');
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    const existingWindow = BrowserWindow.getAllWindows()[0];
+    if (existingWindow) {
+      if (existingWindow.isMinimized()) {
+        existingWindow.restore();
+      }
+      existingWindow.focus();
+      return;
+    }
+    createWindow();
   });
-  createWindow();
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+
+  app.whenReady().then(() => {
+    if (process.platform === 'win32') {
+      app.setAppUserModelId('com.gemma4kids.app');
+    }
+    Menu.setApplicationMenu(null);
+    ensureAnimationsDir();
+    // Allow microphone access from the local file:// renderer.
+    session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+      callback(permission === 'media');
+    });
+    createWindow();
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
   });
-});
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -941,9 +959,43 @@ function ttsSearchRoots(): string[] {
   return [...new Set([resourceRoot, appRoot, userData].map((value) => value.trim()).filter(Boolean))];
 }
 
+function preferredPiperArch(): 'x64' | 'aarch64' {
+  return process.arch === 'arm64' ? 'aarch64' : 'x64';
+}
+
+function devPiperDirs(appRoot: string): string[] {
+  const arch = preferredPiperArch();
+  if (process.platform === 'win32') {
+    return [path.join(appRoot, 'piper', 'win'), path.join(appRoot, 'piper')];
+  }
+  if (process.platform === 'darwin') {
+    return [
+      path.join(appRoot, 'piper', 'mac', arch, 'piper'),
+      path.join(appRoot, 'piper', 'mac', 'x64', 'piper'),
+      path.join(appRoot, 'piper', 'mac', 'aarch64', 'piper'),
+    ];
+  }
+  return [
+    path.join(appRoot, 'piper', 'linux', arch, 'piper'),
+    path.join(appRoot, 'piper', 'linux', 'x64', 'piper'),
+    path.join(appRoot, 'piper', 'linux', 'aarch64', 'piper'),
+  ];
+}
+
+function piperSearchDirs(): string[] {
+  const appRoot = app.getAppPath();
+  const userData = app.getPath('userData');
+  const resourceRoot = process.resourcesPath;
+  return [...new Set([
+    path.join(resourceRoot, 'piper'),
+    ...devPiperDirs(appRoot),
+    path.join(userData, 'piper'),
+  ])];
+}
+
 function findPiperBinary(): string | null {
   const ext = process.platform === 'win32' ? '.exe' : '';
-  const candidates = ttsSearchRoots().map((root) => path.join(root, 'piper', `piper${ext}`));
+  const candidates = piperSearchDirs().map((dir) => path.join(dir, `piper${ext}`));
   return candidates.find(p => fs.existsSync(p)) ?? null;
 }
 
@@ -993,7 +1045,7 @@ function buildWavHeader(pcmLength: number, sampleRate: number): Buffer {
 
 ipcMain.handle('tts-speak', async (_event, text: string, lang?: string): Promise<Buffer> => {
   const binary = findPiperBinary();
-  if (!binary) throw new Error('Piper binary not found. Put the bundled piper files in resources/piper or the dev copy in <project>/piper/.');
+  if (!binary) throw new Error('Piper binary not found. Put bundled Piper files in resources/piper or dev files under piper/win, piper/mac, or piper/linux.');
 
   const voices = scanVoices();
   if (voices.length === 0) throw new Error('No voice models found. Put bundled voice files in resources/voices or run: npm run download-voices');

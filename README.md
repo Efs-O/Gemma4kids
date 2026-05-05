@@ -58,6 +58,19 @@ Installer builds from Releases:
 
 > Unsigned hackathon builds: Windows **More info → Run anyway**; macOS **right‑click → Open** the first time.
 
+Installer/runtime guarantees:
+
+- Windows packages are built with NSIS. They support normal install/uninstall behavior and install into a chosen folder, but this repo does not claim a separate repair mode.
+- macOS packages ship as DMG + ZIP. Install is drag-to-Applications; uninstall is removing the app bundle. No dedicated installer repair flow is provided.
+- Linux ships as an AppImage. It is portable rather than a system installer, so uninstall is deleting the AppImage and any user data you no longer want.
+- Runtime is single-instance: launching Gemma4kids again focuses the existing window instead of opening a second app process.
+
+GitHub Actions notes:
+
+- `.github/workflows/ci.yml` runs `npm run build` and `npm run typecheck` on Windows, macOS, and Linux for pushes and pull requests.
+- `.github/workflows/build-testers.yml` is a manual packaging workflow for tester artifacts.
+- Packaging on GitHub requires bundled `piper/` and `voices/` assets to exist in the checkout or be fetched before packaging. The repo currently ignores those folders by default, so packaging will fail until that asset delivery path is solved.
+
 ### 3. Launch and create
 
 1. Open Gemma4kids (Ollama must be up).

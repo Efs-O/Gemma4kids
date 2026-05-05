@@ -111,6 +111,19 @@ npm run typecheck     # strict TS
 
 Installer outputs: **`npm run dist:win`** / **`dist:mac`** / **`dist:linux`** (see `electron-builder.yml`).
 
+Packaging/runtime guarantees:
+
+- Windows packages are built with NSIS. They provide standard install/uninstall behavior and let the user choose an install folder, but no separate repair mode is configured here.
+- macOS packages ship as DMG + ZIP. Installation is drag-to-Applications; uninstall is removing the app bundle.
+- Linux ships as an AppImage. It is a portable app, not a system installer, so uninstall is deleting the AppImage and any user data you no longer want.
+- Gemma4kids runs as a single instance. Starting it again focuses the existing window instead of launching a second app process.
+
+GitHub Actions:
+
+- `ci.yml` runs `npm run build` and `npm run typecheck` on Windows, macOS, and Linux for pushes and pull requests.
+- `build-testers.yml` is a manual workflow that builds tester artifacts for all three desktop platforms.
+- Packaging in GitHub Actions requires `piper/` and `voices/` to be present in the runner workspace. Those folders are ignored by `.gitignore` in this repo, so either commit them intentionally or add a fetch step before packaging.
+
 ---
 
 ## Step 4 — Launch checklist

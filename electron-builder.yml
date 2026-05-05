@@ -2,27 +2,24 @@ appId: com.gemma4kids.app
 productName: Gemma4kids
 copyright: "Copyright (c) 2026 Gemma4kids contributors"
 
-# Compiled output only - everything is bundled by esbuild into dist/
 files:
   - dist/**
   - "!dist/**/*.map"
   - package.json
   - assets/icon.png
 
-extraResources:
-  - from: piper
-    to: piper
-  - from: voices
-    to: voices
-
 directories:
   buildResources: assets
   output: release
 
-# Windows
 win:
   icon: assets/icon.png
   signAndEditExecutable: false
+  extraResources:
+    - from: piper/win
+      to: piper
+    - from: voices
+      to: voices
   target:
     - target: nsis
       arch: [x64]
@@ -35,24 +32,37 @@ nsis:
   shortcutName: Gemma4kids
   license: LICENSE
 
-# macOS
 mac:
   icon: assets/icon.png
   category: public.app-category.education
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   hardenedRuntime: false
+  # Package the x64 Piper payload for now. The upstream piper_macos_aarch64
+  # archive may be mislabeled or otherwise not reliably arm64, so x64 is the
+  # safer default until that artifact is verified.
+  extraResources:
+    - from: piper/mac/x64/piper
+      to: piper
+    - from: voices
+      to: voices
   target:
     - target: dmg
+      arch: [x64]
     - target: zip
+      arch: [x64]
 
 dmg:
   title: "Gemma4kids ${version}"
 
-# Linux
 linux:
   icon: assets/icon.png
   category: Education
+  extraResources:
+    - from: piper/linux/x64/piper
+      to: piper
+    - from: voices
+      to: voices
   target:
     - target: AppImage
       arch: [x64]
