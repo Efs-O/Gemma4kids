@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Night Sky</title>
+    <style>
+        body {
+            background-color: #050015; /* Deep dark blue/purple */
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* --- Star Styling and Twinkling --- */
+        .star {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0.5; transform: scale(1); }
+        }
+
+        /* --- Shooting Star Styling --- */
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 50px;
+            background: linear-gradient(to bottom, #ffdd00, #ff8800, #ff0000);
+            border-radius: 0;
+            opacity: 1;
+            animation: shoot 3s ease-out forwards;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(-100vw) translateY(50vh);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw) translateY(-50vh);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sky">
+        <!-- Stars will be dynamically generated here by JavaScript -->
+    </div>
+
+    <script>
+        const sky = document.getElementById('sky');
+        const numberOfStars = 200;
+
+        // Function to create random stars
+        function createStars() {
+            for (let i = 0; i < numberOfStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+
+                // Random position across the viewport
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.top = `${Math.random() * 100}vh`;
+
+                // Random size for visual variety
+                const size = Math.random() * 3 + 1; // Size between 1px and 4px
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // Random duration for twinkling effect variation
+                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+
+                sky.appendChild(star);
+            }
+        }
+
+        // Function to create shooting stars
+        function createShootingStars() {
+            const numberOfShooters = 10;
+            const shootInterval = 1000; // Time between new shooting star launches
+
+            for (let j = 0; j < numberOfShooters; j++) {
+                const shooter = document.createElement('div');
+                shooter.className = 'shooting-star';
+                
+                // Random starting position (off screen left) and angle
+                shooter.style.left = `0vw`;
+                shooter.style.top = `${Math.random() * 100}vh`;
+                
+                // Define destination (off screen right) and speed variation
+                const endX = 100 + Math.random() * 100; // Ensure they cross the screen
+                const endY = Math.random() * 100;
+                
+                // Adjust animation properties for unique paths
+                shooter.style.setProperty('--end-x', `${endX}vw`);
+                shooter.style.setProperty('--end-y', `${endY}vh`);
+                shooter.style.animationName = 'shoot';
+                shooter.style.animationDuration = `${3 + Math.random() * 2}s`;
+                shooter.style.animationDelay = `${j * 0.5}s`;
+
+                sky.appendChild(shooter);
+            }
+        }
+
+        // Initialize the scene
+        createStars();
+        createShootingStars();
+    </script>
+
+</body>
+</html>

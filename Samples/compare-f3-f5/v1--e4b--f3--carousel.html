@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibrant Carousel Spin</title>
+    <style>
+        /* Body and Background Setup */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #ff99cc, #66ccff, #ffcc00); /* Vivid sky/carnival gradient */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        /* Carousel Container Setup */
+        .carousel-container {
+            position: relative;
+            width: 80vmin;
+            height: 80vmin;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* The rotation point is the center of this container */
+            animation: spin 25s linear infinite;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes spin {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        /* Individual Horse Styling */
+        .horse {
+            position: absolute;
+            width: 15vmin;
+            height: 25vmin;
+            transform-origin: center center;
+            transition: transform 0.5s ease-out;
+            /* Giving the horses a stylized, colorful look */
+            filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.3));
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            /* Subtle internal animation to add life */
+            animation: floatHorse 4s ease-in-out infinite alternate;
+        }
+
+        /* Keyframe for a subtle bobbing motion on the horse body */
+        @keyframes floatHorse {
+            from { transform: translateY(0px) scale(1); }
+            to { transform: translateY(-5px) scale(1.02); }
+        }
+
+        /* Horse Styling Detail (Stylized Shapes using divs) */
+        .horse-body {
+            width: 100%;
+            height: 60%;
+            border-radius: 50% 50% 15% 15%;
+            position: relative;
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .horse-head {
+            width: 15%;
+            height: 30%;
+            border-radius: 50%;
+            position: absolute;
+            top: 10%;
+            right: -5%;
+            background-color: inherit;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .horse-legs {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5%;
+        }
+
+        .leg {
+            width: 10%;
+            height: 20%;
+            background-color: inherit;
+            border-radius: 5px 5px 0 0;
+            transform: translateY(10px);
+            box-shadow: 0 5px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Individual Horse Color Overrides */
+        /* Horse 1: Red/Gold */
+        .horse:nth-child(1) {
+            background-color: #e74c3c;
+            transform: rotateY(0deg) translate3d(0, 0, 0);
+            animation-delay: 0s;
+        }
+        .horse:nth-child(1) .horse-body { background-color: #c0392b; }
+        .horse:nth-child(1) .horse-head, .horse:nth-child(1) .leg { background-color: #d35400; }
+        
+        /* Horse 2: Blue/Teal */
+        .horse:nth-child(2) {
+            background-color: #3498db;
+            transform: rotateY(120deg) translate3d(0, 0, 0);
+            animation-delay: -6s;
+        }
+        .horse:nth-child(2) .horse-body { background-color: #2980b9; }
+        .horse:nth-child(2) .horse-head, .horse:nth-child(2) .leg { background-color: #1abc9c; }
+
+        /* Horse 3: Pink/Purple */
+        .horse:nth-child(3) {
+            background-color: #ff69b4;
+            transform: rotateY(240deg) translate3d(0, 0, 0);
+            animation-delay: -12s;
+        }
+        .horse:nth-child(3) .horse-body { background-color: #d81b60; }
+        .horse:nth-child(3) .horse-head, .horse:nth-child(3) .leg { background-color: #9c27b0; }
+
+        /* Horse 4: Yellow/Orange */
+        .horse:nth-child(4) {
+            background-color: #f1c40f;
+            transform: rotateY(0deg) translate3d(0, 0, 0); /* Re-using style but different delay/timing */
+            animation-delay: -18s;
+        }
+        .horse:nth-child(4) .horse-body { background-color: #f39c12; }
+        .horse:nth-child(4) .horse-head, .horse:nth-child(4) .leg { background-color: #e67e22; }
+
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container">
+        <!-- Horse 1: Red/Gold -->
+        <div class="horse" style="transform: rotateY(0deg) translate3d(0, 0, 0);">
+            <div class="horse-body">
+                <div class="horse-head"></div>
+                <div class="horse-legs">
+                    <div class="leg"></div>
+                    <div class="leg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horse 2: Blue/Teal -->
+        <div class="horse" style="transform: rotateY(120deg) translate3d(0, 0, 0);">
+            <div class="horse-body">
+                <div class="horse-head"></div>
+                <div class="horse-legs">
+                    <div class="leg"></div>
+                    <div class="leg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horse 3: Pink/Purple -->
+        <div class="horse" style="transform: rotateY(240deg) translate3d(0, 0, 0);">
+            <div class="horse-body">
+                <div class="horse-head"></div>
+                <div class="horse-legs">
+                    <div class="leg"></div>
+                    <div class="leg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horse 4: Yellow/Orange (Adding an extra one for visual balance) -->
+        <div class="horse" style="transform: rotateY(60deg) translate3d(0, 0, 0);">
+            <div class="horse-body">
+                <div class="horse-head"></div>
+                <div class="horse-legs">
+                    <div class="leg"></div>
+                    <div class="leg"></div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+</body>
+</html>

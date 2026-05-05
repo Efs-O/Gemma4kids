@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Smiling Emoji</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            background-color: #ff99c8; /* Bright background color */
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .emoji-face {
+            width: 200px;
+            height: 200px;
+            background-color: #ffe47c; /* Light skin tone */
+            border-radius: 50%;
+            border: 8px solid #ff6f91; /* Pink outline */
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Eyes */
+        .eye {
+            width: 30px;
+            height: 30px;
+            background-color: #4d96ff; /* Bright blue eyes */
+            border-radius: 50%;
+            position: absolute;
+            top: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #333;
+        }
+
+        .eye.left {
+            left: 50px;
+        }
+
+        .eye.right {
+            right: 50px;
+        }
+
+        /* Mouth (Big Smile) */
+        .mouth {
+            width: 120px;
+            height: 60px;
+            border: 5px solid #ff6f91; /* Pink line for the smile */
+            border-radius: 0 0 50% 50%;
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            background-color: #ffffff; /* Inner mouth part */
+            border-top: none;
+            border-left: none;
+            /* Create the smile curve */
+            border-bottom-left-radius: 50% 50%;
+            border-bottom-right-radius: 50% 50%;
+            box-sizing: border-box;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="emoji-face">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="mouth"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunny Beach Waves</title>
+    <style>
+        /* CSS Variables for easy color changes */
+        :root {
+            --sky-blue: hsl(190, 70%, 50%);
+            --ocean-blue: hsl(200, 80%, 60%);
+            --sand-color: hsl(40, 80%, 60%);
+            --wave-color: hsl(160, 60%, 40%);
+            --foam-color: hsl(200, 90%, 80%);
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Background: Sunny Beach Scene */
+            background: linear-gradient(to bottom, var(--sky-blue) 60%, var(--ocean-blue) 60%);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .beach-scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            /* Simulating the sand area */
+            background-color: var(--sand-color);
+        }
+
+        /* --- Sun/Sky Effect (Optional but nice!) --- */
+        .sun {
+            position: absolute;
+            top: 10%;
+            right: 5%;
+            width: 100px;
+            height: 100px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+            animation: sun-shine 4s infinite ease-in-out;
+        }
+
+        @keyframes sun-shine {
+            0% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.9; }
+        }
+
+
+        /* --- Wave Animation --- */
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px; /* Base height for the water line */
+            background-color: var(--wave-color);
+            border-radius: 10px;
+            animation: wave-motion linear infinite;
+        }
+
+        /* Creating multiple overlapping waves for a bigger effect */
+        .wave:nth-child(1) {
+            height: 100px;
+            animation-duration: 4s;
+            animation-delay: 0s;
+        }
+        .wave:nth-child(2) {
+            height: 80px;
+            background-color: hsl(180, 70%, 40%);
+            animation-duration: 4s;
+            animation-delay: -1s;
+        }
+        .wave:nth-child(3) {
+            height: 120px;
+            background-color: hsl(210, 80%, 50%);
+            animation-duration: 5s;
+            animation-delay: -0.5s;
+        }
+
+        /* Animation for the wave motion (simulating a crash/swell) */
+        @keyframes wave-motion {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); } /* Simulates the cresting/falling */
+            100% { transform: translateY(0); }
+        }
+
+        /* --- Foam/Splash Effect (Top of the waves) --- */
+        .foam {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background-color: var(--foam-color);
+            border-radius: 50%;
+            /* Add a little splash movement */
+            animation: foam-splash 2s infinite alternate;
+        }
+
+        @keyframes foam-splash {
+            from { opacity: 0.8; }
+            to { opacity: 1.0; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="beach-scene">
+        <!-- The Waves -->
+        <div class="wave">
+            <div class="foam"></div
+        </div>
+        <div class="wave">
+            <div class="foam"></div
+        </div>
+        <div class="wave">
+            <div class="foam"></div
+        </div>
+    </div>
+</body>
+</html>

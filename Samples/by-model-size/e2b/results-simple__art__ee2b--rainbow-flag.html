@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Flag</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            min-height: 100vh; /* Ensure full viewport coverage */
+            background-color: #ff0000; /* Initial bright background color */
+        }
+
+        .flag {
+            width: 300px; /* Flag width */
+            height: 400px; /* Flag height */
+            border: 5px solid #333;
+            background-color: #ff0000; /* Red start */
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .stripe {
+            flex-grow: 1; /* Distribute space equally */
+            /* Define the colors for the rainbow */
+        }
+
+        /* Rainbow Colors: Red, Orange, Yellow, Green, Blue, Indigo, Violet */
+        .stripe:nth-child(1) { background-color: #ff7f50; } /* Coral/Orange-Red */
+        .stripe:nth-child(2) { background-color: #ffaa00; } /* Bright Orange */
+        .stripe:nth-child(3) { background-color: #ffff00; } /* Bright Yellow */
+        .stripe:nth-child(4) { background-color: #00ff7f; } /* Spring Green */
+        .stripe:nth-child(5) { background-color: #00aaff; } /* Bright Blue */
+        .stripe:nth-child(6) { background-color: #4b0082; } /* Indigo */
+        .stripe:nth-child(7) { background-color: #9400d3; } /* Bright Violet */
+    </style>
+</html

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Snowflakes Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Essential to keep snowflakes contained within viewport */
+            background: linear-gradient(180deg, #0d1117 0%, #2a3a50 70%, #6a89cc 100%);
+            height: 100vh;
+            width: 100vw;
+            /* Adding a subtle twinkling star field effect to the background */
+            background-attachment: fixed;
+        }
+
+        .snowflake {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: currentColor; /* Use different colors via inline styles */
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: fall linear infinite;
+            will-change: transform, opacity;
+        }
+
+        /* Keyframes for the falling motion */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                /* Moves far down and slightly across the screen */
+                transform: translateY(110vh) translateX(100vw) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* --- Specific Snowflake Instances for Variation --- */
+
+        /* Background/Slowest/Largest (Cyan) */
+        .s1 {
+            left: 10%;
+            top: -10%;
+            width: 20px;
+            height: 20px;
+            color: #b3e0ff;
+            animation-duration: 40s;
+            animation-timing-function: linear;
+            animation-delay: 0s;
+        }
+
+        /* Midground/Medium Speed/Size (White/Light Blue) */
+        .s2 {
+            left: 30%;
+            top: -5%;
+            width: 12px;
+            height: 12px;
+            color: #ffffff;
+            animation-duration: 30s;
+            animation-timing-function: linear;
+            animation-delay: 5s;
+        }
+
+        /* Foreground/Fastest/Smallest (Bright Blue) */
+        .s3 {
+            left: 65%;
+            top: -15%;
+            width: 8px;
+            height: 8px;
+            color: #66b3ff;
+            animation-duration: 20s;
+            animation-timing-function: linear;
+            animation-delay: 1s;
+        }
+
+        /* Additional Layer for Density (Foreground, different wobble) */
+        .s4 {
+            left: 85%;
+            top: -20%;
+            width: 15px;
+            height: 15px;
+            color: #a0c8ff;
+            animation-duration: 28s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); /* Slight wobble curve */
+            animation-delay: 8s;
+        }
+        
+        /* Another Layer (Background, different starting position) */
+        .s5 {
+            left: 5%;
+            top: -12%;
+            width: 18px;
+            height: 18px;
+            color: #cce0ff;
+            animation-duration: 50s;
+            animation-timing-function: linear;
+            animation-delay: 15s;
+        }
+
+        /* Keyframes refinement for depth/wobble feel (applied slightly differently if possible, but relying on variation) */
+        /* Since all elements use the same core 'fall' animation, the variation in size, duration, and initial position provides the depth illusion. */
+
+    </style>
+</head>
+<body>
+
+    <!-- Snowflake Elements -->
+    <div class="snowflake s1"></div>
+    <div class="snowflake s2"></div>
+    <div class="snowflake s3"></div>
+    <div class="snowflake s4"></div>
+    <div class="snowflake s5"></div>
+
+    <script>
+        // Optional: Add a few dynamically generated snowflakes for extra visual richness
+        const body = document.body;
+        const containerWidth = window.innerWidth;
+        const containerHeight = window.innerHeight;
+
+        function createSnowflake(xPercent, yPercent, sizeClass, colorHex, duration, delay) {
+            const flake = document.createElement('div');
+            flake.className = 'snowflake';
+            
+            // Apply custom styles using camelCase for JS DOM manipulation
+            flake.style.left = `${xPercent}%`;
+            flake.style.top = `${yPercent}%`;
+            flake.style.width = sizeClass.width || '10px';
+            flake.style.height = sizeClass.height || '10px';
+            flake.style.color = colorHex;
+            
+            // Animation properties set dynamically
+            flake.style.animationDuration = `${duration}s`;
+            flake.style.animationDelay = `${delay}s`;
+            
+            body.appendChild(flake);
+        }
+        
+        // 1. Large, Slow (Background)
+        createSnowflake(
+            '20%', '-10%', 
+            { width: '30px', height: '30px' }, 
+            'rgba(179, 224, 255, 0.6)', 
+            '45s', '0s'
+        );
+
+        // 2. Medium, Steady (Midground)
+        createSnowflake(
+            '55%', '-5%', 
+            { width: '18px', height: '18px' }, 
+            'rgba(255, 255, 255, 0.8)', 
+            '32s', '7s'
+        );
+
+        // 3. Small, Fast (Foreground)
+        createSnowflake(
+            '80%', '-15%', 
+            { width: '8px', height: '8px' }, 
+            'rgba(102, 179, 255, 0.9)', 
+            '18s', '2s'
+        );
+
+        // 4. Variable element (Mid-air drift)
+        createSnowflake(
+            '70%', '-20%', 
+            { width: '22px', height: '22px' }, 
+            'rgba(160, 200, 255, 0.7)', 
+            '25s', '10s'
+        );
+
+        // 5. Very Subtle/Distant (Background)
+        createSnowflake(
+            '5%', '-8%', 
+            { width: '15px', height: '15px' }, 
+            'rgba(204, 224, 255, 0.5)', 
+            '60s', '20s'
+        );
+
+    </script>
+</body>
+</html>

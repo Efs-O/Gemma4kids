@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUPER Colorful Flower Bouquet</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: #ff00a0; /* Ultra Bright Magenta/Pink Background */
+        }
+
+        .scene-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: transparent;
+        }
+
+        /* --- Vase --- */
+        .vase {
+            width: 120px;
+            background: linear-gradient(to bottom, #ff3d71, #ff6b6b); /* Neon Coral/Red Gradient */
+            border-radius: 0 0 50% 50%;
+            box-shadow: 0 15px 30px rgba(255, 100, 100, 0.5);
+            z-index: 1;
+        }
+
+        .vase-water {
+            width: 100%;
+            height: 40px;
+            background-color: #00d2ff; /* Electric Cyan Water */
+            border-top: 3px solid #00b8ff;
+            border-radius: 0 0 50% 50%;
+            z-index: 2;
+        }
+
+        /* --- Flowers and Foliage --- */
+        .flower-arrangement {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: -10px;
+            z-index: 3;
+        }
+
+        .stem {
+            width: 10px;
+            height: 120px;
+            background-color: #4caf50; /* Bright Grass Green Stem */
+            border-radius: 6px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .leaf {
+            position: absolute;
+            background-color: #2ecc71; /* Vivid Emerald Leaf */
+            height: 20px;
+            border-radius: 0 0 50% 50%;
+            transform: rotate(20deg);
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+
+        .leaf-left {
+            width: 50px;
+            top: 40px;
+            left: -25px;
+            transform: rotate(15deg);
+        }
+
+        .leaf-right {
+            width: 50px;
+            top: 50px;
+            right: -25px;
+            transform: rotate(-15deg);
+        }
+
+        .bloom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: -25px;
+        }
+
+        .flower {
+            position: relative;
+            width: 160px;
+            height: 200px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .petal {
+            position: absolute;
+            border-radius: 50%;
+            width: 45px;
+            height: 65px;
+            transform-origin: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Petal Colors and Positions - Enhanced Vividness */
+        
+        /* Center Flower (Yellow/Orange - Tropical Pop) */
+        .petal-y1 { background-color: #ffdd00; top: 15px; left: 15px; transform: rotate(-20deg); }
+        .petal-y2 { background-color: #ff8c00; top: 25px; left: 55px; transform: rotate(0deg); }
+        .petal-y3 { background-color: #ffa500; top: 15px; right: 15px; transform: rotate(20deg); }
+        .petal-y4 { background-color: #ffdd00; top: 25px; right: 55px; transform: rotate(0deg); }
+
+        /* Second Flower (Pink/Magenta - Hot Pink Glow) */
+        .petal-p1 { background-color: #ff00ff; top: 35px; left: 30px; transform: rotate(-30deg); width: 55px; height: 75px; }
+        .petal-p2 { background-color: #ff4081; top: 45px; right: 30px; transform: rotate(30deg); width: 55px; height: 75px; }
+
+        /* Third Flower (Blue/Purple - Electric Duo) */
+        .petal-b1 { background-color: #6a1b9a; top: 25px; left: 15px; transform: rotate(10deg); width: 40px; height: 60px; }
+        .petal-b2 { background-color: #00bfff; top: 35px; right: 15px; transform: rotate(-10deg); width: 40px; height: 60px; }
+
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <!-- The Flower Arrangement -->
+        <div class="flower-arrangement">
+            <div class="bloom">
+                <div class="petal petal-y1"></div>
+                <div class="petal petal-y2"></div>
+                <div class="petal petal-y3"></div>
+                <div class="petal petal-y4"></div>
+            </div>
+            <div class="bloom" style="transform: translateY(-15px);">
+                <div class="petal petal-p1"></div>
+                <div class="petal petal-p2"></div>
+            </div>
+            <div class="bloom" style="transform: translateY(-25px);">
+                <div class="petal petal-b1"></div>
+                <div class="petal petal-b2"></div>
+            </div>
+        </div>
+        
+        <!-- Foliage -->
+        <div class="stem">
+            <div class="leaf leaf-left"></div>
+            <div class="leaf leaf-right"></div>
+        </div>
+
+        <!-- The Vase -->
+        <div class="vase"></div>
+        <div class="vase-water"></div>
+    </div>
+</body>
+</html>

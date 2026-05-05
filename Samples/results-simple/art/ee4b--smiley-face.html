@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Big Smiling Emoji Face</title>
+<style>
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        background-color: #FF6B6B; /* Bright background color */
+        height: 100vh;
+        width: 100vw;
+    }
+
+    .emoji-face {
+        width: 80vmin;
+        height: 80vmin;
+        background-color: #FFD100; /* Bright yellow face */
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+        box-sizing: border-box;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        border: 10px solid #FFC107;
+    }
+
+    .eyes-container {
+        display: flex;
+        justify-content: space-between;
+        width: 60%;
+        margin-bottom: 20px;
+    }
+
+    .eye {
+        width: 15vmin;
+        height: 15vmin;
+        background-color: #1E1E1E; /* Black for the iris/socket */
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .pupil {
+        width: 5vmin;
+        height: 5vmin;
+        background-color: #000000;
+        border-radius: 50%;
+    }
+
+    .mouth {
+        width: 70%;
+        height: 30%;
+        border: 10px solid #1E1E1E;
+        border-radius: 0 0 50% 50%; /* Curve the bottom half to look like a smile */
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 10px;
+        /* Creating a visible smile curve */
+        background-color: transparent;
+        box-sizing: content-box;
+        border-width: 0 0 15px 15px; /* Thicker bottom edge */
+        border-top: none;
+        border-left: none;
+        border-right: none;
+    }
+
+    /* Adjusting the mouth shape to be a clear smile curve */
+    .smile-curve {
+        width: 60%;
+        height: 40px;
+        background: none;
+        border: none;
+        border-bottom: 15px solid #1E1E1E;
+        border-radius: 0 0 50% 50%;
+        text-align: center;
+    }
+
+</style>
+</head>
+<body>
+    <div class="emoji-face">
+        <!-- Eyes -->
+        <div class="eyes-container">
+            <div class="eye">
+                <div class="pupil"></div>
+            </div>
+            <div class="eye">
+                <div class="pupil"></div>
+            </div>
+        </div>
+
+        <!-- Mouth/Smile -->
+        <div class="smile-curve"></div>
+    </div>
+</body>
+</html>

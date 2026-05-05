@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giant Colourful Flower Vase</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #00ff99; /* Bright background */
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        .scene-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px; /* Increased gap */
+        }
+
+        /* The Vase - Made larger */
+        .vase {
+            width: 250px;
+            height: 400px;
+            background: linear-gradient(to bottom, #ff6b6b, #ffb36b); /* Warm vase colors */
+            border: 12px solid #333;
+            border-radius: 15px 15px 75px 75px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* The Stem/Neck - Adjusted position */
+        .stem {
+            width: 30px;
+            height: 70px;
+            background-color: #4CAF50; /* Green stem */
+            position: absolute;
+            top: 350px; /* Moved down to fit the larger vase */
+            z-index: 5;
+        }
+
+        /* Petals Container - Made larger */
+        .petals {
+            position: absolute;
+            top: 100px; /* Adjusted to fit larger scale */
+            width: 350px;
+            height: 350px;
+            z-index: 20;
+        }
+
+        /* Individual Petals - Made larger */
+        .petal {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            background-color: hsl(120, 70%, 200); /* Light blue/purple base */
+            border-radius: 50% 50% 50% 50%;
+            transform-origin: center bottom;
+        }
+
+        /* Creating the Flower arrangement - Adjusted positions and rotations for larger size */
+        .petal:nth-child(1) {
+            background-color: #ff6b6b; /* Red */
+            left: 75px;
+            top: 50px;
+            transform: rotate(0deg);
+        }
+
+        .petal:nth-child(2) {
+            background-color: #4ecdc4; /* Teal */
+            right: 75px;
+            top: 50px;
+            transform: rotate(120deg);
+        }
+
+        .petal:nth-child(3) {
+            background-color: #feca57; /* Orange */
+            left: 125px;
+            top: 100px;
+            transform: rotate(240deg);
+        }
+
+        .petal:nth-child(4) {
+            background-color: #ffffff; /* White center accent */
+            right: 125px;
+            top: 100px;
+            transform: rotate(360deg);
+        }
+
+        /* Adding more petals for fullness - Adjusted positions and rotations */
+        .petal:nth-child(5) {
+            background-color: #6a1b9a; /* Purple */
+            left: 50px;
+            top: 120px;
+            transform: rotate(150deg);
+        }
+
+        .petal:nth-child(6) {
+            background-color: #ff8a65; /* Salmon */
+            right: 50px;
+            top: 120px;
+            transform: rotate(210deg);
+        }
+
+        /* Vase placement adjustment to make the flower emerge */
+        .vase {
+            margin-top: 40px; /* Increased spacing */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="vase">
+            <div class="stem"></div>
+        </div>
+        <div class="petals">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+        </div>
+    </div>
+</body>
+</html>

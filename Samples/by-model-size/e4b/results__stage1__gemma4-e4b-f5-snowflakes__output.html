@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gentle Snowfall Animation</title>
+    <style>
+        /* Global Setup: Vivid, Dark Background for Contrast */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a2a; /* Deep indigo/night sky */
+            overflow: hidden; /* Keep animation contained */
+            height: 100vh;
+            width: 100vw;
+            cursor: default;
+        }
+
+        /* Container for all snowflakes */
+        .snowfall-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Ensures clicks pass through to the body */
+        }
+
+        /* Snowflake Styling */
+        .snowflake {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, rgba(255,255,255,1) 10%, rgba(173,216,230,0.8) 50%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0.8;
+            /* Initial placement will be set via inline styles for staggering */
+            animation: fall linear infinite;
+            will-change: transform, top, left; /* Performance optimization */
+        }
+
+        /* Keyframe Animation for Falling and Drifting */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) translateX(0) scale(1);
+                opacity: 0.8;
+                /* Starting horizontal position defined by the element's left style */
+            }
+            100% {
+                /* Moves far down the screen (150vh) and drifts slightly horizontally */
+                transform: translateY(150vh) translateX(10vw) scale(1.2);
+                opacity: 0; /* Fades out as it falls */
+            }
+        }
+
+        /* =============================================================
+         * STAGGERING THE SNOWFLAKES (Creating Density and Randomness)
+         * We define many snowflakes with slightly different initial positions, 
+         * animation durations, and delays to simulate a natural, varying snowfall.
+         * ============================================================= */
+
+        /* Group 1: Larger, slower flakes */
+        .flake-1 { left: 5%; animation-duration: 15s; animation-delay: 0s; width: 6px; height: 6px; opacity: 0.7; }
+        .flake-2 { left: 15%; animation-duration: 18s; animation-delay: -3s; width: 5px; height: 5px; opacity: 0.6; }
+        .flake-3 { left: 25%; animation-duration: 12s; animation-delay: -6s; width: 4px; height: 4px; opacity: 0.9; }
+        .flake-4 { left: 35%; animation-duration: 20s; animation-delay: -1s; width: 7px; height: 7px; opacity: 0.5; }
+        .flake-5 { left: 45%; animation-duration: 16s; animation-delay: -8s; width: 5px; height: 5px; opacity: 0.8; }
+
+        /* Group 2: Mid-size, medium speed */
+        .flake-6 { left: 55%; animation-duration: 14s; animation-delay: -4s; width: 4px; height: 4px; opacity: 0.7; }
+        .flake-7 { left: 65%; animation-duration: 17s; animation-delay: -2s; width: 6px; height: 6px; opacity: 0.6; }
+        .flake-8 { left: 75%; animation-duration: 19s; animation-delay: -7s; width: 4px; height: 4px; opacity: 0.9; }
+        .flake-9 { left: 85%; animation-duration: 13s; animation-delay: -5s; width: 5px; height: 5px; opacity: 0.8; }
+        .flake-10 { left: 95%; animation-duration: 22s; animation-delay: -10s; width: 3px; height: 3px; opacity: 0.5; }
+
+        /* Group 3: Small, fast flakes (Filling out the screen) */
+        .flake-11 { left: 1%; animation-duration: 10s; animation-delay: 0s; width: 3px; height: 3px; opacity: 0.9; }
+        .flake-12 { left: 12%; animation-duration: 11s; animation-delay: -1s; width: 3px; height: 3px; opacity: 0.9; }
+        .flake-13 { left: 28%; animation-duration: 10.5s; animation-delay: -2.5s; width: 3px; height: 3px; opacity: 0.9; }
+        .flake-14 { left: 40%; animation-duration: 9s; animation-delay: -0.5s; width: 3px; height: 3px; opacity: 0.9; }
+        .flake-15 { left: 52%; animation-duration: 11s; animation-delay: -3s; width: 3px; height: 3px; opacity: 0.9; }
+
+        /* Adding a few more random flakes to ensure full coverage */
+        .flake-16 { left: 70%; animation-duration: 13s; animation-delay: -4s; width: 4px; height: 4px; opacity: 0.7; }
+        .flake-17 { left: 88%; animation-duration: 15s; animation-delay: -6s; width: 3px; height: 3px; opacity: 0.8; }
+        .flake-18 { left: 3%; animation-duration: 12s; animation-delay: -5s; width: 3px; height: 3px; opacity: 0.9; }
+        .flake-19 { left: 20%; animation-duration: 14s; animation-delay: -1s; width: 4px; height: 4px; opacity: 0.8; }
+        .flake-20 { left: 90%; animation-duration: 16s; animation-delay: -2s; width: 4px; height: 4px; opacity: 0.7; }
+
+    </style>
+</head>
+<body>
+
+    <div class="snowfall-container">
+        <!-- Populating the container with 20 individually styled flakes -->
+        <div class="snowflake flake-1"></div>
+        <div class="snowflake flake-2"></div>
+        <div class="snowflake flake-3"></div>
+        <div class="snowflake flake-4"></div>
+        <div class="snowflake flake-5"></div>
+
+        <div class="snowflake flake-6"></div>
+        <div class="snowflake flake-7"></div>
+        <div class="snowflake flake-8"></div>
+        <div class="snowflake flake-9"></div>
+        <div class="snowflake flake-10"></div>
+
+        <div class="snowflake flake-11"></div>
+        <div class="snowflake flake-12"></div>
+        <div class="snowflake flake-13"></div>
+        <div class="snowflake flake-14"></div>
+        <div class="snowflake flake-15"></div>
+
+        <div class="snowflake flake-16"></div>
+        <div class="snowflake flake-17"></div>
+        <div class="snowflake flake-18"></div>
+        <div class="snowflake flake-19"></div>
+        <div class="snowflake flake-20"></div>
+    </div>
+
+</body>
+</html>

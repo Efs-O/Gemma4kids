@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Fireworks Display</title>
+    <style>
+        :root {
+            /* Base Colors */
+            --night-sky-dark: #03001c;
+            --star-color: #ffffff;
+            
+            /* Firework Colors */
+            --color-red: #ff416c;
+            --color-blue: #4c72b0;
+            --color-gold: #ffd93b;
+            --color-cyan: #40e0d0;
+            --color-magenta: #ff1493;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #0f0c2d 0%, #03001c 100%);
+            color: white;
+            font-family: sans-serif;
+        }
+
+        /* Star Background Animation (Deep Space Feel) */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at center, transparent 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: twinkle 100s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes twinkle {
+            from { background-position: 0 0; }
+            to { background-position: 100px 100px; }
+        }
+
+        /* Container for all fireworks elements */
+        .fireworks-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        /* Base style for all firework elements (sparks/trails) */
+        .firework-spark {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            will-change: transform, opacity;
+            pointer-events: none;
+        }
+
+        /* Keyframes for the general "burst expansion" effect */
+        @keyframes burst-expand {
+            0% {
+                transform: scale(0) translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3) translate(var(--end-x), var(--end-y));
+                opacity: 0;
+            }
+        }
+
+        /* --- FIREWORK 1: Red/Magenta Cluster (High Altitude) --- */
+        .fw-red .spark {
+            background-color: var(--color-red);
+            animation: burst-expand 1.5s cubic-bezier(0.2, 1.5, 0.6, 1) forwards;
+        }
+
+        /* --- FIREWORK 2: Blue/Cyan Cluster (Mid Altitude) --- */
+        .fw-blue .spark {
+            background-color: var(--color-cyan);
+            animation: burst-expand 1.8s ease-out forwards;
+        }
+        
+        /* --- FIREWORK 3: Gold/Mixed Cluster (Lower Altitude/Trailing) --- */
+        .fw-gold .spark {
+            background-color: var(--color-gold);
+            animation: burst-expand 1.3s cubic-bezier(0.6, 1, 0.4, 1) forwards;
+        }
+
+        /* Specific adjustments for timing and position */
+        
+        /* Firework 1 Animation Group */
+        .firework-1 {
+            /* Starts emitting sparks */
+            animation: explode-1 3s ease-out forwards;
+            top: 20%;
+            left: 15%;
+            transform: translate(-50%, 0);
+        }
+        
+        /* Firework 2 Animation Group */
+        .firework-2 {
+            animation: explode-2 4s ease-out forwards;
+            top: 50%;
+            left: 80%;
+            transform: translate(-50%, 0);
+        }
+
+        /* Firework 3 Animation Group */
+        .firework-3 {
+            animation: explode-3 2.5s ease-out forwards;
+            top: 85%;
+            left: 40%;
+            transform: translate(-50%, 0);
+        }
+
+        /* Keyframes for the launch and burst triggers */
+        @keyframes explode-1 {
+            0%, 100% { opacity: 1; }
+        }
+        @keyframes explode-2 {
+            0%, 100% { opacity: 1; }
+        }
+        @keyframes explode-3 {
+            0%, 100% { opacity: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <div class="fireworks-container">
+
+        <!-- FIREWORK 1: Red/Magenta (High Burst) -->
+        <div class="firework-1" style="display: flex; justify-content: center; align-items: center;">
+            <div class="firework-spark fw-red" style="width: 10px; height: 10px; top: 0; left: 0; --end-x: -100px; --end-y: -100px; animation-delay: 0s;"></div>
+            <div class="firework-spark fw-red" style="width: 8px; height: 8px; top: 0; left: 0; --end-x: 80px; --end-y: 150px; animation-delay: 0.2s;"></div>
+            <div class="firework-spark fw-red" style="width: 12px; height: 12px; top: 0; left: 0; --end-x: 50px; --end-y: 50px; animation-delay: 0.4s;"></div>
+            <div class="firework-spark fw-red" style="width: 5px; height: 5px; top: 0; left: 0; --end-x: -80px; --end-y: -80px; animation-delay: 0.6s;"></div>
+        </div>
+
+        <!-- FIREWORK 2: Blue/Cyan (Mid Burst) -->
+        <div class="firework-2" style="display: flex; justify-content: center; align-items: center;">
+            <div class="firework-spark fw-blue" style="width: 10px; height: 10px; top: 0; left: 0; --end-x: 120px; --end-y: 80px; animation-delay: 0.1s;"></div>
+            <div class="firework-spark fw-blue" style="width: 7px; height: 7px; top: 0; left: 0; --end-x: -90px; --end-y: 110px; animation-delay: 0.3s;"></div>
+            <div class="firework-spark fw-blue" style="width: 15px; height: 15px; top: 0; left: 0; --end-x: 30px; --end-y: -150px; animation-delay: 0.5s;"></div>
+            <div class="firework-spark fw-blue" style="width: 6px; height: 6px; top: 0; left: 0; --end-x: 0px; --end-y: 180px; animation-delay: 0.7s;"></div>
+        </div>
+        
+        <!-- FIREWORK 3: Gold/Mixed (Lower, trailing burst) -->
+        <div class="firework-3" style="display: flex; justify-content: center; align-items: center;">
+            <div class="firework-spark fw-gold" style="width: 14px; height: 14px; top: 0; left: 0; --end-x: 100px; --end-y: 50px; animation-delay: 0.0s;"></div>
+            <div class="firework-spark fw-gold" style="width: 10px; height: 10px; top: 0; left: 0; --end-x: -50px; --end-y: 100px; animation-delay: 0.2s;"></div>
+            <div class="firework-spark fw-gold" style="width: 8px; height: 8px; top: 0; left: 0; --end-x: 0px; --end-y: 200px; animation-delay: 0.4s;"></div>
+            <div class="firework-spark fw-gold" style="width: 11px; height: 11px; top: 0; left: 0; --end-x: 60px; --end-y: 20px; animation-delay: 0.6s;"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Optional: Add a slight twinkle effect to the body every few seconds using JS if desired, 
+        // but CSS handles the main visual effect already.
+    </script>
+</body>
+</html>

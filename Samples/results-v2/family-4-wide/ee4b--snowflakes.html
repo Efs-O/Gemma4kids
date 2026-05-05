@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Falling Snowflakes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #0d002a 0%, #4b0082 70%, #0d002a 100%);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .snowflake {
+            position: absolute;
+            width: 0; /* Will be set dynamically or via inline styles for variation */
+            height: 0;
+            background-color: transparent;
+            border-radius: 50%;
+            animation-name: fall-drift;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+            animation-fill-mode: forwards;
+            opacity: 0.9;
+            pointer-events: none; /* Ensure they don't block interaction */
+        }
+
+        /* Keyframes for the falling and drifting motion */
+        @keyframes fall-drift {
+            0% {
+                transform: translateY(-50px) translateX(0);
+                opacity: 0.8;
+            }
+            100% {
+                /* Moves down the full viewport height and drifts horizontally */
+                transform: translateY(calc(100vh + 50px)) translateX(100vw); 
+                opacity: 0.2;
+            }
+        }
+
+        /* -------------------------------------------------- */
+        /* SNOWFLAKE GROUP 1: Slow, Large, Cyan (Background Layer) */
+        /* -------------------------------------------------- */
+        .flake-bg {
+            width: 15px;
+            height: 15px;
+            background-color: rgba(173, 216, 230, 0.7); /* Light Cyan */
+            border-radius: 50%;
+            animation: fall-drift 40s linear infinite;
+            animation-delay: -10s;
+            top: -50px;
+            left: 10%;
+        }
+
+        /* -------------------------------------------------- */
+        /* SNOWFLAKE GROUP 2: Medium, Magenta, Fast/Varied (Midground Layer) */
+        /* -------------------------------------------------- */
+        .flake-mid-1 {
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 0, 255, 0.8); /* Magenta */
+            border-radius: 50%;
+            animation: fall-drift 25s linear infinite;
+            animation-delay: 0s;
+            top: -50px;
+            left: 30%;
+        }
+        .flake-mid-2 {
+            width: 12px;
+            height: 12px;
+            background-color: rgba(255, 192, 203, 0.8); /* Pink/Vivid */
+            border-radius: 50%;
+            animation: fall-drift 30s linear infinite;
+            animation-delay: 5s;
+            top: -50px;
+            left: 60%;
+        }
+
+        /* -------------------------------------------------- */
+        /* SNOWFLAKE GROUP 3: Small, Yellow/Electric Blue (Foreground Layer) */
+        /* -------------------------------------------------- */
+        .flake-fg-1 {
+            width: 5px;
+            height: 5px;
+            background-color: rgba(255, 255, 0, 0.9); /* Vivid Yellow */
+            border-radius: 50%;
+            animation: fall-drift 18s linear infinite;
+            animation-delay: -15s;
+            top: -50px;
+            left: 5%;
+        }
+        .flake-fg-2 {
+            width: 8px;
+            height: 8px;
+            background-color: rgba(0, 191, 255, 0.9); /* Electric Blue */
+            border-radius: 50%;
+            animation: fall-drift 22s linear infinite;
+            animation-delay: 10s;
+            top: -50px;
+            left: 80%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background elements simulate different depth layers/speeds -->
+
+    <!-- Background Layer (Slow, Large, Cyan) -->
+    <div class="snowflake flake-bg" style="animation-duration: 50s; left: 5%; transform: translate(-50%, 0); opacity: 0.5;"></div>
+    <div class="snowflake flake-bg" style="animation-duration: 45s; left: 75%; transform: translate(-50%, 0); opacity: 0.7;"></div>
+    <div class="snowflake flake-bg" style="animation-duration: 60s; left: 35%; transform: translate(-50%, 0); opacity: 0.6;"></div>
+
+    <!-- Midground Layer (Varied colors/speeds) -->
+    <div class="snowflake flake-mid-1" style="animation-duration: 20s; left: 20%; transform: translate(-50%, 0);"></div>
+    <div class="snowflake flake-mid-2" style="animation-duration: 35s; left: 85%; transform: translate(-50%, 0);"></div>
+
+    <!-- Foreground Layer (Fast, Small, Vivid Pop) -->
+    <div class="snowflake flake-fg-1" style="animation-duration: 15s; left: 40%; transform: translate(-50%, 0); opacity: 0.9;"></div>
+    <div class="snowflake flake-fg-2" style="animation-duration: 28s; left: 15%; transform: translate(-50%, 0); opacity: 1.0;"></div>
+    
+    <div class="snowflake flake-fg-1" style="animation-duration: 20s; left: 90%; transform: translate(-50%, 0); opacity: 0.9;"></div>
+
+</body>
+</html>

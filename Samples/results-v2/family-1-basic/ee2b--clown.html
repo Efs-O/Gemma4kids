@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Clown Juggling</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #ff99cc, #88b3ff, #99ff99);
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Clown Styling (Simple visual center) */
+        .clown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            color: #ff00ff; /* Bright Pink/Magenta */
+            text-shadow: 0 0 20px #ffff00, 0 0 40px #ff00ff;
+            z-index: 10;
+            animation: pulse 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            to { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; }
+        }
+
+        /* Ball Container Styling */
+        .juggling-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        /* Ball Base Styling */
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+
+        /* Ball Animation Keyframes (Bouncing and slight movement) */
+        @keyframes bounce {
+            0% {
+                transform: translateY(-50px) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(200px) scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-50px) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Specific Ball Colors and Initial Positions */
+        .ball:nth-child(1) { background-color: #ff4444; animation-delay: 0s; left: 10%; top: 60%; } /* Red */
+        .ball:nth-child(2) { background-color: #4444ff; animation-delay: 0.3s; left: 30%; top: 50%; } /* Blue */
+        .ball:nth-child(3) { background-color: #ffff44; animation-delay: 0.6s; left: 50%; top: 60%; } /* Yellow */
+        .ball:nth-child(4) { background-color: #44ff44; animation-delay: 0.9s; left: 70%; top: 50%; } /* Green */
+        .ball:nth-child(5) { background-color: #ff9900; animation-delay: 1.2s; left: 90%; top: 60%; } /* Orange */
+        .ball:nth-child(6) { background-color: #ff66ff; animation-delay: 1.5s; left: 20%; top: 50%; } /* Pink */
+
+    </style>
+</head>
+<body>
+
+    <div class="juggling-area">
+        <!-- The Clown Figure -->
+        <div class="clown">🤡</div>
+
+        <!-- The Juggling Balls -->
+        <div class="ball"></div>
+        <div class="ball"></div>
+        <div class="ball"></div>
+        <div class="ball"></div>
+        <div class="ball"></div>
+        <div class="ball"></div>
+    </div>
+
+</body>
+</html>

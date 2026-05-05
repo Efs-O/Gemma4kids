@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Ocean Waves</title>
+    <style>
+        :root {
+            --sky-color: #87CEEB; /* Bright Sky Blue */
+            --shallow-water-color: #4DB6AC; /* Turquoise/Cyan */
+            --deep-ocean-color: #0056b3; /* Deep Royal Blue */
+            --foam-color: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            /* Gradient from bright sky down to deep ocean blue */
+            background: linear-gradient(to bottom, #87CEEB 0%, #4DB6AC 60%, var(--deep-ocean-color) 100%);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            min-height: 100vh;
+        }
+
+        /* The entire water area container */
+        .ocean-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60vh; /* Waves occupy the bottom 60% of the screen */
+            overflow: hidden;
+        }
+
+        /* Shared styling for wave layers */
+        .wave {
+            position: absolute;
+            width: 100%;
+            background: currentColor; /* Color set inline/by class */
+            animation-name: waveMotion;
+            animation-timing-function: cubic-bezier(0.2, 1, 0.4, 1);
+        }
+
+        /* Wave 1: Foreground/Breaking Foam (Fastest, whitest) */
+        .wave-1 {
+            height: 40px;
+            background: linear-gradient(to bottom, var(--foam-color) 50%, rgba(255, 255, 255, 0.1) 100%);
+            /* Stronger animation effect */
+            animation-duration: 4s;
+            animation-delay: -2s;
+            opacity: 0.9;
+        }
+
+        /* Wave 2: Mid-ground Crest (Brightest Teal/Cyan) */
+        .wave-2 {
+            height: 80px;
+            background: linear-gradient(to bottom, var(--shallow-water-color) 50%, rgba(77, 182, 172, 0.5) 100%);
+            animation-duration: 7s;
+            animation-delay: -1.5s;
+            opacity: 0.8;
+        }
+
+        /* Wave 3: Deep Background Layer (Subtle Blue Ripple) */
+        .wave-3 {
+            height: 120px;
+            background: linear-gradient(to bottom, var(--deep-ocean-color) 50%, rgba(0, 86, 179, 0.4) 100%);
+            animation-duration: 10s;
+            animation-delay: -0.5s;
+            opacity: 0.7;
+        }
+
+        /* Keyframes for continuous wave motion */
+        @keyframes waveMotion {
+            0% {
+                transform: translateX(0);
+                opacity: 0.7;
+            }
+            50% {
+                /* Moves left/right slightly to simulate large body wave movement */
+                transform: translateX(-10vw); 
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 0.7;
+            }
+        }
+
+        /* Optional: Adding a sunny beach foreground element */
+        .beach {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20vh;
+            background-color: #FFD700; /* Bright Gold Sand */
+            z-index: 10;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="ocean-container">
+        <!-- Layer 1: Foreground Foam/Crest (Fastest, most detailed) -->
+        <div class="wave wave-1" style="transform: translateY(0px);"></div>
+        
+        <!-- Layer 2: Mid-ground Wave (Brightest, main body wave) -->
+        <div class="wave wave-2" style="transform: translateY(0px);"></div>
+
+        <!-- Layer 3: Background Deep Water Wave (Slowest, largest movement) -->
+        <div class="wave wave-3" style="transform: translateY(0px);"></div>
+    </div>
+
+    <div class="beach"></div>
+
+    <script>
+        // JavaScript is not strictly necessary for this pure CSS wave animation,
+        // but we can use it to ensure dynamic behavior or adjust parameters if needed.
+        // For this case, the CSS keyframes handle the required continuous animation.
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clown Juggling Show</title>
+    <style>
+        :root {
+            --clown-red: #FF4136;
+            --clown-yellow: #FFDC00;
+            --clown-blue: #0074D9;
+            --background-primary: #FF6B6B; /* Vivid Red Base */
+            --background-secondary: #FFE66D; /* Yellow Highlights */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to bottom, var(--background-primary) 0%, #FFC300 100%);
+            font-family: sans-serif;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding-bottom: 5vh; /* Keeps action visible */
+        }
+
+        /* --- Clown Character --- */
+        .clown {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .clown-head {
+            width: 150px;
+            height: 150px;
+            background-color: var(--clown-yellow);
+            border-radius: 50%;
+            border: 8px solid var(--clown-red);
+            box-shadow: 0 10px 0 var(--clown-red);
+            z-index: 15;
+            animation: bobbing 1.5s infinite alternate;
+        }
+
+        .clown-mouth {
+            width: 60px;
+            height: 20px;
+            background-color: var(--clown-red);
+            border-radius: 0 0 30px 30px;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 16;
+        }
+
+        .clown-body {
+            width: 180px;
+            height: 200px;
+            background-color: var(--clown-blue);
+            border-radius: 50% 50% 50px 50px / 100% 100% 40px 40px;
+            box-shadow: 0 15px 0 #005b9e;
+            z-index: 14;
+            margin-top: -30px;
+        }
+
+        /* --- Juggling Balls --- */
+        .ball {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FF007A; /* Initial vivid color */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3), 0 5px 10px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s;
+            z-index: 11;
+            /* Animation properties will be set via JS/CSS keyframes */
+        }
+
+        /* Keyframe Animations */
+        @keyframes bobbing {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-10px); }
+        }
+
+        @keyframes juggle-arc {
+            /* This complex animation simulates the parabolic path */
+            0% { transform: translate(-50vw, 100vh) scale(1); }
+            20% { transform: translate(-40vw, 50vh) scale(1.1); }
+            40% { transform: translate(-10vw, 30vh) scale(1); }
+            60% { transform: translate(30vw, 40vh) scale(1.1); }
+            80% { transform: translate(50vw, 60vh) scale(1); }
+            100% { transform: translate(-50vw, 100vh) scale(1); }
+        }
+
+        /* Helper Styles for Juggling */
+        #ball1 { background-color: #FFC300; animation-name: juggle-arc; animation-timing-function: ease-in-out; animation-duration: 3s; }
+        #ball2 { background-color: #33FFD1; animation-name: juggle-arc; animation-delay: 0.2s; animation-timing-function: ease-in-out; animation-duration: 3s; }
+        #ball3 { background-color: #0074D9; animation-name: juggle-arc; animation-delay: 0.4s; animation-timing-function: ease-in-out; animation-duration: 3s; }
+        #ball4 { background-color: #FF007A; animation-name: juggle-arc; animation-delay: 0.6s; animation-timing-function: ease-in-out; animation-duration: 3s; }
+
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <!-- Clown Character -->
+        <div class="clown">
+            <div class="clown-head"></div>
+            <div class="clown-mouth"></div>
+            <div class="clown-body"></div>
+        </div>
+
+        <!-- Juggling Balls (These elements are styled to move via CSS keyframes) -->
+        <div id="ball1" class="ball"></div>
+        <div id="ball2" class="ball"></div>
+        <div id="ball3" class="ball"></div>
+        <div id="ball4" class="ball"></div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const balls = document.querySelectorAll('.ball');
+            const scene = document.querySelector('.scene');
+            
+            // We need to dynamically adjust the animation paths/timing slightly to look more coordinated 
+            // and less like they are all running the exact same predefined path.
+            
+            const adjustBallPosition = (ballId, startLeft, startTop, endLeft, endTop) => {
+                const ball = document.getElementById(ballId);
+                
+                // Overwrite the general animation keyframe structure for better visual control
+                const styleSheet = document.styleSheets[0];
+                
+                // 1. Clear existing animation rules for this ball in the keyframes block
+                styleSheet.deleteRule(`@keyframes juggle-arc`);
+
+                // 2. Define a more complex, multi-stage keyframe to better simulate the arc between hands.
+                const newKeyframes = `@keyframes juggle-arc-${ballId} {
+                    0%, 100% { transform: translate(${startLeft}vw, ${startTop}vh) scale(1); }
+                    15% { transform: translate(${startLeft + 10}vw, ${startTop - 15}vh) scale(1.1); }
+                    35% { transform: translate(${endLeft - 10}vw, ${startTop - 5}vh) scale(0.9); }
+                    55% { transform: translate(${endLeft + 20}vw, ${startTop + 10}vh) scale(1.1); }
+                    75% { transform: translate(${startLeft + 5}vw, ${startTop - 30}vh) scale(1); }
+                    95% { transform: translate(${startLeft}vw, ${startTop}vh) scale(1); }
+                }`;
+
+                styleSheet.insertRule(newKeyframes, styleSheet.cssRules.length);
+
+                // 3. Apply the new animation name and custom parameters
+                ball.style.animationName = `juggle-arc-${ballId}`;
+                ball.style.animationDuration = `${Math.random() * 1.5 + 2.5}s`; // 2.5s to 4s duration
+                ball.style.animationDelay = `${Math.random() * 0.4}s`;
+                ball.style.animationTimingFunction = 'ease-in-out';
+            };
+
+            // Assign staggered, unique paths to each ball for a coordinated look
+            // (Left hand arc, Middle arc, Right hand arc, Cross arc)
+            adjustBallPosition('ball1', -30, 90, 10, 20);
+            adjustBallPosition('ball2', -15, 70, 30, 40);
+            adjustBallPosition('ball3', 5, 100, 45, 50);
+            adjustBallPosition('ball4', 20, 50, -20, 60);
+
+        });
+    </script>
+</body>
+</html>

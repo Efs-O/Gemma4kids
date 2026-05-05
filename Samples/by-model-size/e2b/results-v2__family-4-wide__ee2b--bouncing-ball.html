@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Bouncing Scene</title>
+    <style>
+        body {
+            background-color: #00ffff; /* Vivid Cyan Background */
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Keyframes for general bouncing motion */
+        @keyframes bounce {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(calc(100% - 50px)); } /* Bounce up to a relative point */
+            100% { transform: translateY(0px); }
+        }
+
+        /* Ball 1: Fast and High */
+        .ball-red {
+            background-color: #ff00ff; /* Vivid Magenta */
+            width: 60px;
+            height: 60px;
+            animation: bounce-fast 1.5s ease-in-out infinite alternate;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        @keyframes bounce-fast {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(150px); } /* Moves further up and down */
+        }
+
+        /* Ball 2: Slow and Mid-speed, delayed */
+        .ball-blue {
+            background-color: #00ffff; /* Bright Cyan */
+            width: 50px;
+            height: 50px;
+            animation: bounce-slow 3s ease-in-out infinite alternate;
+            top: 40%;
+            left: 30%;
+            animation-delay: 1s; /* Delayed start */
+        }
+
+        @keyframes bounce-slow {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(200px); }
+        }
+
+        /* Ball 3: Medium speed, background layer, different timing */
+        .ball-green {
+            background-color: #00ff00; /* Vivid Lime Green */
+            width: 70px;
+            height: 70px;
+            animation: bounce-medium 2.5s ease-in-out infinite alternate;
+            top: 65%;
+            left: 15%;
+            animation-delay: 2s; /* Further delayed */
+        }
+
+        @keyframes bounce-medium {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(180px); }
+        }
+
+        /* Add a background element for extra visual depth */
+        .background-shape {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background-color: rgba(255, 0, 255, 0.2);
+            border-radius: 50%;
+            top: 20%;
+            left: 20%;
+            animation: pulse 4s ease-in-out infinite alternate;
+            z-index: 0; /* Background layer */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Layer 1: Background Shape (Depth Layer) -->
+    <div class="background-shape"></div>
+
+    <!-- Ball 1: Foreground/Fast -->
+    <div class="ball ball-red"></div>
+
+    <!-- Ball 2: Midground/Slow -->
+    <div class="ball ball-blue"></div>
+
+    <!-- Ball 3: Foreground/Medium -->
+    <div class="ball ball-green"></div>
+
+</body>
+</html>

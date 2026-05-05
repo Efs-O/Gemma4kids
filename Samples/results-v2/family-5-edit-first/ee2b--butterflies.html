@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Butterfly Garden</title>
+    <style>
+        body {
+            background-color: #f0f8ff; /* Light sky blue background */
+            overflow: hidden;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- Flower Styling --- */
+        .flower {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 165, 0, 0.8), 0 0 30px rgba(255, 69, 0, 0.5);
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        /* Vivid Flower Colors */
+        .flower:nth-child(1) { background-color: #ff69b4; border: 5px solid #ff1493; top: 30%; left: 15%; } /* Pink */
+        .flower:nth-child(2) { background-color: #00ced4; border: 5px solid #008b8b; top: 60%; left: 70%; } /* Turquoise */
+        .flower:nth-child(3) { background-color: #3cb37c; border: 5px solid #2e8b57; top: 20%; left: 45%; } /* Green */
+        .flower:nth-child(4) { background-color: #ffd700; border: 5px solid #daa520; top: 50%; left: 80%; } /* Gold */
+        .flower:nth-child(5) { background-color: #ff4500; border: 5px solid #ff8c00; top: 75%; left: 35%; } /* OrangeRed */
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* --- Butterfly Styling --- */
+        .butterfly {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            opacity: 0.9;
+            animation: fly-around linear infinite;
+        }
+
+        /* Vivid Butterfly Colors */
+        .butterfly:nth-child(1) { background-color: #ff00ff; } /* Magenta */
+        .butterfly:nth-child(2) { background-color: #00ffff; } /* Cyan */
+        .butterfly:nth-child(3) { background-color: #ff8c00; } /* Dark Orange */
+        .butterfly:nth-child(4) { background-color: #00ff7f; } /* Spring Green */
+        .butterfly:nth-child(5) { background-color: #ff0000; } /* Bright Red */
+        .butterfly:nth-child(6) { background-color: #ffff00; } /* Bright Yellow */
+        .butterfly:nth-child(7) { background-color: #ff00ff; } /* Pink */
+
+        /* --- Butterfly Animation --- */
+        @keyframes fly-around {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0.9;
+            }
+            25% {
+                transform: translate(20vw, 5vh) rotate(45deg);
+            }
+            50% {
+                transform: translate(80vw, 30vh) rotate(90deg);
+            }
+            75% {
+                transform: translate(60vw, 70vh) rotate(135deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(180deg);
+                opacity: 0.9;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <!-- Flowers -->
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+
+        <!-- Butterflies (Using 7 instances for variety) -->
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+        <div class="butterfly"></div>
+    </div>
+</body>
+</html>

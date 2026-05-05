@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Sign</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            height: 100vh;
+            background-color: #ff69b4; /* Vivid background color */
+            overflow: hidden;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 90vw;
+            height: 90vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0e68c; /* Light contrasting background for the scene */
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Welcome Sign Styling */
+        .welcome-sign {
+            background-color: #ff4500; /* Bright orange/red for the sign */
+            color: #ffffff;
+            padding: 30px 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive;
+            position: relative;
+            z-index: 10;
+        }
+
+        .welcome-sign h1 {
+            margin: 0;
+            font-size: 4em;
+            text-shadow: 3px 3px #8b0000;
+        }
+
+        /* Flower Styling */
+        .flower {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: transparent; /* Base transparent */
+            border: 5px solid;
+            box-sizing: border-box;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+
+        /* Specific Flower Styles (Creating variety) */
+
+        /* Flower 1: Large Pink Circle */
+        .flower:nth-child(1) {
+            background-color: #ffb6c1; /* Light Pink */
+            border-color: #ff1493; /* Deep Pink */
+            width: 120px;
+            height: 120px;
+            top: 20%;
+            left: 10%;
+            border-radius: 50% 50% 0 0; /* Top half shape */
+        }
+
+        /* Flower 2: Large Yellow Circle */
+        .flower:nth-child(2) {
+            background-color: #ffd700; /* Gold/Yellow */
+            border-color: #ffa500; /* Orange border */
+            width: 110px;
+            height: 110px;
+            top: 60%;
+            right: 15%;
+            border-radius: 50%;
+        }
+
+        /* Flower 3: Small Blue Accent */
+        .flower:nth-child(3) {
+            background-color: #4169e1; /* Royal Blue */
+            border-color: #1e90ff;
+            width: 80px;
+            height: 80px;
+            top: 80%;
+            left: 30%;
+            border-radius: 20px; /* Squareish shape */
+        }
+
+        /* Flower 4: Small Red Accent */
+        .flower:nth-child(4) {
+            background-color: #ff6347; /* Tomato Red */
+            border-color: #dc143c;
+            width: 90px;
+            height: 90px;
+            top: 30%;
+            right: 5%;
+            border-radius: 50%;
+        }
+
+        /* Flower 5: Green Leaf Shape */
+        .flower:nth-child(5) {
+            background-color: #3cb371; /* Medium Sea Green */
+            border-color: #2e8b57;
+            width: 130px;
+            height: 60px;
+            top: 50%;
+            left: 40%;
+            transform: translate(-50%, -50%) rotate(10deg);
+            border-radius: 30px;
+        }
+
+        /* Flower 6: Small Purple Accent */
+        .flower:nth-child(6) {
+            background-color: #9370db; /* Medium Purple */
+            border-color: #6a5acd;
+            width: 70px;
+            height: 70px;
+            top: 10%;
+            right: 10%;
+            border-radius: 50%;
+        }
+
+        /* Adding more simple elements for fullness */
+        .flower:nth-child(7) {
+            background-color: #ffd700;
+            border-color: #daa520;
+            width: 100px;
+            height: 100px;
+            top: 75%;
+            left: 5%;
+            border-radius: 50%;
+        }
+
+        .flower:nth-child(8) {
+            background-color: #ffb6c1;
+            border-color: #ff69b4;
+            width: 100px;
+            height: 100px;
+            top: 25%;
+            right: 10%;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="welcome-sign">
+            <h1>Welcome!</h1>
+        </div>
+
+        <!-- Flowers surrounding the sign -->
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+    </div>
+</body>
+</html>

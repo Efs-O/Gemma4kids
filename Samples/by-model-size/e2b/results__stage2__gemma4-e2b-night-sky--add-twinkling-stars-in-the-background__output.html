@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twinkling Night Sky</title>
+    <style>
+        :root {
+            --sky-color-dark: #0a0a1a;
+            --star-color: #ffffff;
+            --shooting-star-color: #ffdd44;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #1a1a2e, #0a0a1a);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden; /* Hides anything that goes outside the screen */
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: var(--star-color);
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.3; }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 5px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--shooting-star-color), transparent);
+            animation: shoot 3s linear forwards;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(-100vw);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Stars will be dynamically added here by JavaScript -->
+
+    <script>
+        const body = document.body;
+        const numStars = 150;
+
+        // 1. Create Stars
+        for (let i = 0; i < numStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            
+            // Random position
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            
+            // Random size variation (to make them look more like stars)
+            const size = Math.random() * 2 + 1; // Size between 1px and 3px
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+
+            body.appendChild(star);
+        }
+
+        // 2. Create Shooting Stars
+        const numShootingStars = 10;
+
+        const shootingStarColors = ['#ffdd44', '#00ffff', '#ff6347', '#7C3AED'];
+
+        for (let i = 0; i < numShootingStars; i++) {
+            const shootingStar = document.createElement('div');
+            shootingStar.className = 'shooting-star';
+            shootingStar.style.backgroundColor = shootingStarColors[Math.floor(Math.random() * shootingStarColors.length)];
+            
+            // Random starting position (from the bottom)
+            shootingStar.style.left = `${Math.random() * 100}vw`;
+            shootingStar.style.top = `100vh`; // Start at the bottom
+
+            // Random delay and speed for staggered effect
+            const delay = Math.random() * 2;
+            const duration = 3 + Math.random() * 2; // Slightly varied speed
+            shootingStar.style.animationDelay = `-${delay}s`;
+            shootingStar.style.animationDuration = `${duration}s`;
+
+            body.appendChild(shootingStar);
+        }
+    </script>
+
+</body>
+</html>

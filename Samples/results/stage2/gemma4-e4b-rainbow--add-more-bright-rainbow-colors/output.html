@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow After Rain</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #a8c0ff, #5a86c5); /* Sky blue gradient */
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* --- Rain Styling --- */
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(174, 200, 255, 0.8) 0%, rgba(174, 200, 255, 0) 100%);
+            opacity: 0.8;
+            animation: fall linear infinite;
+            pointer-events: none; /* So the rain doesn't block clicks */
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        /* --- Rainbow Styling --- */
+        .rainbow-container {
+            position: absolute;
+            bottom: 15vh; /* Position it slightly above the ground/horizon */
+            left: 5%;
+            width: 90%;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            opacity: 0; /* Start hidden */
+            transform: scale(0.9);
+            transition: opacity 2s ease-in-out, transform 2s ease-out;
+            z-index: 10;
+        }
+
+        .rainbow-visible {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+        .rainbow-arc {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            /* Using a complex gradient to simulate the curve and colors */
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                transparent 10%,
+                /* Red */
+                #ff0000 10%, #ff0000 25%,
+                /* Orange */
+                #ff8c00 25%, #ff8c00 35%,
+                /* Yellow */
+                #ffff00 35%, #ffff00 45%,
+                /* Green */
+                #00cc00 45%, #00cc00 55%,
+                /* Cyan/Blue */
+                #00ffff 55%, #00ffff 65%,
+                /* Blue */
+                #0000ff 65%, #0000ff 75%,
+                /* Indigo */
+                #4b0082 75%, #4b0082 85%,
+                /* Violet */
+                #9932cc 85%, #9932cc 100%
+            );
+            /* Clipping the gradient to give the rainbow shape */
+            clip-path: path('M 0 100 Q 25% 0, 50% 100, 75% 0, 100% 100 Z');
+            box-shadow: 0 0 50px 10px rgba(255, 255, 0, 0.8); /* Glow effect */
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Raindrops will be added by JavaScript -->
+
+    <div id="rainbow" class="rainbow-container">
+        <div class="rainbow-arc"></div>
+    </div >
+
+    <script>
+        const rainContainer = document.body;
+        const rainbow = document.getElementById('rainbow');
+
+        // 1. Rain Simulation Function
+        function addRaindrop() {
+            const drop = document.createElement('div');
+            drop.classList.add('raindrop');
+            
+            // Random starting horizontal position across the screen
+            const startX = Math.random() * 100;
+            drop.style.left = `${startX}vw`;
+            
+            // Random animation duration and delay for natural variation
+            const duration = Math.random() * 2 + 1.5; // Between 1.5s and 3.5s
+            const delay = Math.random() * 0.5;
+
+            drop.style.animationDuration = `${duration}s`;
+            drop.style.animationDelay = `${delay}s`;
+
+            rainContainer.appendChild(drop);
+
+            // Clean up the element after it falls off screen (gets too long)
+            setTimeout(() => {
+                drop.remove();
+            }, duration * 1000 + 1000);
+        }
+
+        // Keep adding raindrops every 100ms to simulate continuous rain
+        setInterval(addRaindrop, 100);
+
+
+        // 2. Rainbow Appearance Timing
+        // We wait for 6 seconds to let the rain fall nicely, and then the rainbow pops!
+        setTimeout(() => {
+            console.log("Rain stopping, rainbow appearing!");
+            rainbow.classList.add('rainbow-visible');
+        }, 6000); // Wait 6 seconds (6000 milliseconds)
+
+    </script>
+</body >
+</html>

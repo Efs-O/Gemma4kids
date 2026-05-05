@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Night Sky</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: radial-gradient(circle at center, #1a0033 0%, #000022 100%); /* Deep space background */
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .sky {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* The Moon */
+        .moon {
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            width: 150px;
+            height: 150px;
+            background-color: #ffff99; /* Bright yellow/white for the moon */
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 255, 0, 0.8), 0 0 80px rgba(255, 255, 0, 0.5);
+            z-index: 10;
+        }
+
+        /* Stars (using multiple overlapping circles for effect) */
+        .star {
+            position: absolute;
+            background-color: #ff44ff; /* Vivid purple/pink for stars */
+            border-radius: 50%;
+        }
+
+        /* Creating a scattered pattern of stars */
+        .star:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            width: 3px;
+            height: 3px;
+            background-color: #ffcc00;
+        }
+        .star:nth-child(2) {
+            top: 50%;
+            left: 40%;
+            width: 2px;
+            height: 2px;
+            background-color: #ff00ff;
+        }
+        .star:nth-child(3) {
+            top: 10%;
+            left: 80%;
+            width: 4px;
+            height: 4px;
+            background-color: #00ffff;
+        }
+        .star:nth-child(4) {
+            top: 75%;
+            left: 5%;
+            width: 2px;
+            height: 2px;
+            background-color: #ffcc00;
+        }
+        .star:nth-child(5) {
+            top: 30%;
+            left: 65%;
+            width: 3px;
+            height: 3px;
+            background-color: #ff66ff;
+        }
+        .star:nth-child(6) {
+            top: 85%;
+            left: 35%;
+            width: 2px;
+            height: 2px;
+            background-color: #00ff00;
+        }
+        .star:nth-child(7) {
+            top: 5%;
+            left: 90%;
+            width: 2px;
+            height: 2px;
+            background-color: #ffcc00;
+        }
+        .star:nth-child(8) {
+            top: 60%;
+            left: 25%;
+            width: 3px;
+            height: 3px;
+            background-color: #ff00ff;
+        }
+        .star:nth-child(9) {
+            top: 95%;
+            left: 50%;
+            width: 2px;
+            height: 2px;
+            background-color: #00ffff;
+        }
+        .star:nth-child(10) {
+            top: 45%;
+            left: 8%;
+            width: 4px;
+            height: 4px;
+            background-color: #ff66ff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sky">
+        <div class="moon"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+</body>
+</html>

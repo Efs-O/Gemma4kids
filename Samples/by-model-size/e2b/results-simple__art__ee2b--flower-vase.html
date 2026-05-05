@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colourful Flower Vase</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #00ff99; /* Bright background */
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        .scene-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        /* The Vase */
+        .vase {
+            width: 150px;
+            height: 250px;
+            background: linear-gradient(to bottom, #ff6b6b, #ffb36b); /* Warm vase colors */
+            border: 8px solid #333;
+            border-radius: 10px 10px 50px 50px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* The Stem/Neck */
+        .stem {
+            width: 20px;
+            height: 50px;
+            background-color: #4CAF50; /* Green stem */
+            position: absolute;
+            top: 230px;
+            z-index: 5;
+        }
+
+        /* Petals Container */
+        .petals {
+            position: absolute;
+            top: 150px;
+            width: 200px;
+            height: 200px;
+            z-index: 20;
+        }
+
+        /* Individual Petals (Symmetry and Color) */
+        .petal {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background-color: hsl(120, 70%, 200); /* Light blue/purple base */
+            border-radius: 50% 50% 50% 50%;
+            transform-origin: center bottom;
+        }
+
+        /* Creating the Flower arrangement */
+        .petal:nth-child(1) {
+            background-color: #ff6b6b; /* Red */
+            left: 50px;
+            top: 30px;
+            transform: rotate(0deg);
+        }
+
+        .petal:nth-child(2) {
+            background-color: #4ecdc4; /* Teal */
+            right: 50px;
+            top: 50px;
+            transform: rotate(120deg);
+        }
+
+        .petal:nth-child(3) {
+            background-color: #feca57; /* Orange */
+            left: 100px;
+            top: 100px;
+            transform: rotate(240deg);
+        }
+
+        .petal:nth-child(4) {
+            background-color: #ffffff; /* White center accent */
+            right: 100px;
+            top: 100px;
+            transform: rotate(360deg);
+        }
+
+        /* Adding more petals for fullness */
+        .petal:nth-child(5) {
+            background-color: #6a1b9a; /* Purple */
+            left: 30px;
+            top: 80px;
+            transform: rotate(150deg);
+        }
+
+        .petal:nth-child(6) {
+            background-color: #ff8a65; /* Salmon */
+            right: 30px;
+            top: 80px;
+            transform: rotate(210deg);
+        }
+
+        /* Vase placement adjustment to make the flower emerge */
+        .vase {
+            /* Adjust vase to sit below the petals visually */
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <div class="vase">
+            <div class="stem"></div>
+        </div>
+        <div class="petals">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+        </div>
+    </div>
+</body>
+</html>

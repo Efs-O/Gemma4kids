@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Birthday Celebration</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #ff6b6b; /* Brighter, more vivid background */
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .birthday-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px; /* Increased gap */
+            padding: 50px; /* Increased padding */
+            background-color: #a8e6cf; /* Mint green base for the card area */
+            border-radius: 30px; /* More rounded */
+            box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.3);
+            border: 12px solid #ff4081; /* Bolder, brighter border */
+        }
+
+        .cake {
+            width: 300px; /* Bigger cake */
+            height: 200px; /* Bigger cake */
+            background-color: #ffc107; /* Yellow cake */
+            border-radius: 60% / 100% 100% 0 0;
+            position: relative;
+            border: 15px solid #d4a017;
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .frosting {
+            width: 100%;
+            height: 40px; /* Bigger frosting */
+            background-color: #ff6b6b; /* Red frosting */
+            border-radius: 15px 15px 0 0;
+            position: absolute;
+            top: 15px;
+            left: 0;
+        }
+
+        .candle {
+            width: 20px; /* Bigger candle */
+            height: 60px; /* Bigger candle */
+            background-color: #ffeb3b; /* Yellow candle */
+            border-radius: 8px;
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 3px solid #333;
+        }
+
+        .flame {
+            width: 12px; /* Bigger flame */
+            height: 24px; /* Bigger flame */
+            background-color: #ff9800; /* Orange flame */
+            border-radius: 50% 50% 50% 50%;
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 8px #ffeb3b;
+        }
+
+        /* Balloon Styles */
+        .balloon-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 60px; /* Increased spacing */
+        }
+
+        .balloon {
+            width: 100px; /* Bigger balloon */
+            height: 130px; /* Bigger balloon */
+            border-radius: 50%;
+            position: relative;
+            margin: 0 20px; /* Increased margin */
+            border: 6px solid #333;
+            box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .balloon::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 40px;
+            background-color: var(--balloon-color);
+            border-radius: 50% 50% 0 0;
+        }
+
+        .balloon:nth-child(1) { --balloon-color: #ff4081; } /* Pink */
+        .balloon:nth-child(2) { --balloon-color: #42a5f5; } /* Blue */
+        .balloon:nth-child(3) { --balloon-color: #66bb6a; } /* Green */
+        .balloon:nth-child(4) { --balloon-color: #ff8a65; } /* Coral */
+
+        /* Strings (Simplification for static look) */
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -45px;
+            left: 50%;
+            width: 3px;
+            height: 60px;
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="birthday-card">
+        <h1 style="font-size: 3em; color: #ff4081;">Happy Birthday!</h1>
+        <div class="cake">
+            <div class="frosting"></div>
+            <div class="candle"></div>
+            <div class="flame"></div>
+        </div>
+        <div class="balloon-container">
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+        </div>
+    </div>
+</body>
+</html>

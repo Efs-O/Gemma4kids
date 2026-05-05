@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>House and Garden</title>
+<style>
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    min-height: 100vh;
+    background-color: #87CEEB; /* Sky Blue background */
+    overflow: hidden;
+}
+
+.scene-container {
+    width: 90vw;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* --- House Structure --- */
+.house {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.house-body {
+    width: 300px;
+    height: 200px;
+    background-color: #FFD700; /* Yellow body */
+    border: 5px solid #B22222; /* Brown/Red outline */
+    border-radius: 15px 15px 0 0;
+    position: relative;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.roof {
+    width: 0;
+    height: 0;
+    border-left: 150px solid transparent;
+    border-right: 150px solid transparent;
+    border-bottom: 100px solid #DC143C; /* Crimson Red roof */
+    position: absolute;
+    top: -50px;
+    left: 0;
+    z-index: 1;
+}
+
+/* Windows and Door */
+.window {
+    width: 60px;
+    height: 80px;
+    background-color: #ADD8E6; /* Light Blue window glass */
+    border: 5px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.window::before {
+    content: '';
+    width: 3px;
+    height: 100%;
+    background-color: #333;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.door {
+    width: 70px;
+    height: 100px;
+    background-color: #8B4513; /* Brown door */
+    border: 5px solid #5C3317;
+    border-radius: 5px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.door::after {
+    content: '🏡'; /* Simple detail for the door */
+    font-size: 30px;
+}
+
+/* --- Garden Area --- */
+.garden {
+    width: 95%;
+    height: 150px;
+    background-color: #38761D; /* Dark Green grass base */
+    border-radius: 0 0 20px 20px;
+    position: relative;
+    z-index: 2;
+}
+
+/* Flowers */
+.flower-cluster {
+    position: absolute;
+    bottom: 0;
+    z-index: 3;
+}
+
+/* Flower Base */
+.flower-base {
+    width: 15px;
+    height: 20px;
+    background-color: #228B22; /* Stem green */
+    border-radius: 5px 5px 0 0;
+}
+
+/* Individual Flower Styling */
+.flower {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-radius: 50%;
+    position: absolute;
+    transform: translateY(-100%); /* Position above the stem base */
+}
+
+/* Red Flower (Can be mirrored) */
+.flower-red {
+    border-width: 20px 0px 20px 20px;
+    border-color: transparent transparent #FF0000 transparent;
+    width: 0;
+    height: 0;
+    top: 0;
+}
+
+/* Yellow Flower */
+.flower-yellow {
+    border-width: 20px 0px 20px 20px;
+    border-color: transparent transparent #FFD700 transparent;
+    width: 0;
+    height: 0;
+    top: 0;
+}
+
+/* Pink Flower */
+.flower-pink {
+    border-width: 20px 0px 20px 20px;
+    border-color: transparent transparent #FF69B4 transparent;
+    width: 0;
+    height: 0;
+    top: 0;
+}
+
+/* Specific Flower Placements (Symmetry/Layout) */
+.flower-group-1 {
+    left: 50px;
+}
+.flower-group-2 {
+    left: 180px;
+}
+.flower-group-3 {
+    left: 320px;
+}
+</style>
+</head>
+<body>
+
+<div class="scene-container">
+    
+    <div class="house">
+        <div class="roof"></div>
+        <div class="house-body">
+            <div class="window" style="margin-left: 40px; margin-right: 40px;"></div>
+            <div class="door"></div>
+        </div>
+    </div>
+
+    <div class="garden">
+        <!-- Flowers on the left side -->
+        <div class="flower-cluster flower-group-1">
+            <div class="flower-base" style="left: 10px; transform: translateX(-50%);"></div>
+            <div class="flower" style="top: -30px; left: 10px;"></div>
+            <div class="flower-yellow" style="top: -30px; left: 10px;"></div>
+        </div>
+        
+        <!-- Flowers in the center -->
+        <div class="flower-cluster flower-group-2">
+            <div class="flower-base" style="left: 160px; transform: translateX(-50%);"></div>
+            <div class="flower" style="top: -40px; left: 160px;"></div>
+            <div class="flower-red" style="top: -40px; left: 160px;"></div>
+            <div class="flower-pink" style="top: -20px; left: 160px;"></div>
+        </div>
+        
+        <!-- Flowers on the right side -->
+        <div class="flower-cluster flower-group-3">
+            <div class="flower-base" style="left: 380px; transform: translateX(-50%);"></div>
+            <div class="flower" style="top: -30px; left: 380px;"></div>
+            <div class="flower-yellow" style="top: -30px; left: 380px;"></div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

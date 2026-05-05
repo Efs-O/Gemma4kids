@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flower Garden House</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* Use min-height to ensure it fills the screen */
+            margin: 0;
+            background-color: #f0f8ff; /* Light background, though the focus is on the scene elements */
+        }
+
+        .scene-container {
+            width: 80vw;
+            height: 60vh;
+            border: 10px solid #333; /* Optional border for definition */
+            background-color: #ffffff; /* White base area */
+            position: relative;
+            overflow: hidden; /* Keep everything contained */
+        }
+
+        /* --- The House --- */
+        .house {
+            width: 200px;
+            height: 150px;
+            background-color: #ff69b4; /* Bright Pink Body */
+            position: relative;
+            margin: 0 auto;
+            border: 5px solid #ff1493; /* Hot Pink outline */
+        }
+
+        .roof {
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 80px solid #ff4500; /* Orange Roof */
+            position: absolute;
+            top: -80px;
+            left: 0;
+            width: 200px;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        /* --- The Garden (Ground) --- */
+        .garden {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background-color: #90ee90; /* Light Green Grass */
+            border-top: 5px dashed #3cb37c;
+        }
+
+        /* --- Flowers --- */
+        .flower {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ffd700; /* Yellow base */
+            border: 3px solid #ff8c00;
+            top: 10%;
+        }
+
+        /* Specific Flower Placement (Symmetric/Random placement for visual appeal) */
+
+        /* Flower 1 (Near House) */
+        .flower:nth-child(1) {
+            left: 50px;
+            top: 40%;
+            background-color: #ff69b4; /* Pink Petals */
+        }
+
+        /* Flower 2 (Garden area) */
+        .flower:nth-child(2) {
+            left: 150px;
+            top: 65%;
+            background-color: #00ced1; /* Turquoise Petals */
+        }
+
+        /* Flower 3 (Garden area) */
+        .flower:nth-child(3) {
+            left: 300px;
+            top: 50%;
+            background-color: #ff00ff; /* Purple Petals */
+        }
+
+        /* Flower 4 (Garden area) */
+        .flower:nth-child(4) {
+            left: 450px;
+            top: 70%;
+            background-color: #ffa500; /* Orange Petals */
+        }
+
+        /* Add some simple 'stems' (optional visual enhancement) */
+        .flower::before {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background-color: #32cd32; /* Green stem */
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="scene-container">
+        <!-- The House Structure -->
+        <div class="house">
+            <div class="roof"></div>
+        </div>
+
+        <!-- The Garden Area -->
+        <div class="garden"></div>
+
+        <!-- The Flowers -->
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+        <div class="flower"></div>
+    </div>
+</body>
+</html>

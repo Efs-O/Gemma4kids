@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twinkling Night Sky</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a3d); /* Deep night gradient */
+            overflow: hidden; /* Keeps everything contained */
+            height: 100vh;
+            cursor: default;
+        }
+
+        .stars-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Twinkling Star Animation */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            /* Initial size variation */
+            width: 2px;
+            height: 2px;
+            animation: twinkle 3s ease-in-out infinite alternate;
+            opacity: 0; /* Start hidden to make the animation pop */
+        }
+
+        /* Star placement variations - we need many! */
+        .star:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; animation-duration: 3s; }
+        .star:nth-child(2) { top: 50%; left: 20%; animation-delay: 1.5s; animation-duration: 3s; }
+        .star:nth-child(3) { top: 80%; left: 15%; animation-delay: 0.8s; animation-duration: 3s; }
+        .star:nth-child(4) { top: 25%; left: 70%; animation-delay: 2.2s; animation-duration: 3s; }
+        .star:nth-child(5) { top: 65%; left: 90%; animation-delay: 0.3s; animation-duration: 3s; }
+        .star:nth-child(6) { top: 5%; left: 40%; animation-delay: 1.0s; animation-duration: 3s; }
+        .star:nth-child(7) { top: 95%; left: 55%; animation-delay: 2.5s; animation-duration: 3s; }
+        .star:nth-child(8) { top: 40%; left: 95%; animation-delay: 0.1s; animation-duration: 3s; }
+        /* Adding a few more for depth */
+        .star:nth-child(9) { top: 70%; left: 10%; width: 1px; height: 1px; animation-delay: 2s; animation-duration: 3s; }
+        .star:nth-child(10) { top: 30%; left: 85%; width: 2px; height: 2px; animation-delay: 1.8s; animation-duration: 3s; }
+
+        /* Shooting Star Animation */
+        @keyframes shoot {
+            0% {
+                transform: translate(-10vw, 0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(110vw, -100vh);
+                opacity: 0;
+            }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 100px; /* Length of the visible trail */
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 0, 0, 0) 0%, rgba(255, 165, 0, 0.7) 15%, rgba(255, 255, 0, 0.7) 35%, rgba(0, 255, 0, 0.7) 55%, rgba(0, 0, 255, 0.7) 75%, rgba(75, 0, 130, 0.7) 95%, rgba(255, 0, 255, 0) 100%);
+            top: 0; /* Start at the very top edge */
+            left: 0;
+            animation: shoot linear forwards;
+            pointer-events: none; /* Ensures it doesn't block clicks */
+        }
+
+        /* Staggering the shooting stars */
+        .s1 {
+            animation-delay: 1s;
+            animation-duration: 4s;
+            transform: translate(-10vw, 0);
+        }
+        .s2 {
+            animation-delay: 3s;
+            animation-duration: 5s;
+            transform: translate(-10vw, 0);
+        }
+        .s3 {
+            animation-delay: 0.5s;
+            animation-duration: 3.5s;
+            transform: translate(-10vw, 0);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars-container">
+        <!-- Twinkling Stars (10 instances created with varying styles and delays) -->
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+
+        <!-- Shooting Stars (3 instances) -->
+        <div class="shooting-star s1"></div>
+        <div class="shooting-star s2"></div>
+        <div class="shooting-star s3"></div>
+    </div>
+
+</body>
+</html>

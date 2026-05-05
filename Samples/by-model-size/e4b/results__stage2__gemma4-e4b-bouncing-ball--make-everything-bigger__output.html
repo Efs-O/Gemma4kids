@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bouncing Ball</title>
+<style>
+body {
+    background: linear-gradient(to bottom, #ff9a9e, #ff6347); /* Sunset gradient */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.ball {
+    width: 150px;
+    height: 150px;
+    background-color: #10B981; /* Bright green ball */
+    border-radius: 50%; /* Makes it a perfect circle */
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    animation: bounce 2s infinite alternate ease-in-out; /* Bounces forever */
+}
+
+/* The keyframe animation for bouncing */
+@keyframes bounce {
+    from {
+        /* Start near the top */
+        transform: translateY(0px);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1); /* Controls the bounce "feel" */
+    }
+    to {
+        /* Move down and slightly wobble */
+        transform: translateY(300px) rotate(10deg);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+}
+</style>
+</head>
+<body >
+    <div class="ball"></div>
+</body>
+</html>

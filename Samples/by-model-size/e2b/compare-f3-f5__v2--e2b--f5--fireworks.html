@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Fireworks</title>
+    <style>
+        /* --- Global Setup: The Night Sky --- */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a2a; /* Deep dark blue/purple for night sky */
+            overflow: hidden; /* Hide anything that might spill outside */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- Firework Container Styling --- */
+        .firework-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Important: Allows clicks to pass through */
+        }
+
+        /* --- Keyframe Animation for Explosion --- */
+        @keyframes explode {
+            0% {
+                transform: scale(0.1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(20) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* --- Individual Particle (Spark) Styling --- */
+        .spark {
+            position: absolute;
+            border-radius: 50%;
+            animation: explode 1.5s ease-out forwards;
+            pointer-events: none;
+            /* Initial size will be set by JS/inline style for precise control */
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Fireworks will be injected here by JavaScript -->
+
+    <script>
+        const body = document.body;
+        const numFireworks = 5; // How many fireworks to launch
+
+        /**
+         * Generates a random, vibrant color string.
+         * @returns {string} A CSS color string.
+         */
+        function getRandomColor() {
+            const colors = ['#ff3333', '#33ff33', '#3333ff', '#ff33ff', '#33ffff', '#ffff33', '#ff33cc'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        /**
+         * Creates a single firework explosion effect at a random location.
+         * @param {number} x - X coordinate for the explosion center.
+         * @param {number} y - Y coordinate for the explosion center.
+         */
+        function createFirework(x, y) {
+            const container = document.createElement('div');
+            container.className = 'firework-container';
+            container.style.left = `${x}px`;
+            container.style.top = `${y}px`;
+
+            // Create the main burst element
+            const burst = document.createElement('div');
+            burst.style.position = 'absolute';
+            burst.style.width = '10px';
+            burst.style.height = '10px';
+            burst.style.borderRadius = '50%';
+            burst.style.backgroundColor = getRandomColor();
+            burst.style.left = '50%';
+            burst.style.top = '50%';
+            burst.style.transform = 'translate(-50%, -50%)';
+
+            // Add a class that triggers the actual expansion animation
+            burst.style.animation = 'explode 1.5s ease-out forwards';
+            burst.style.opacity = '1';
+            
+            container.appendChild(burst);
+            body.appendChild(container);
+
+            // --- Create Sparks (Particles) ---
+            const sparkCount = 30;
+            for (let i = 0; i < sparkCount; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'spark';
+                
+                // Random starting position relative to the burst center
+                const angle = Math.random() * 360;
+                const distance = Math.random() * 100; // Spread distance
+                
+                const startX = x + (Math.random() * 20 - 10); // Slight initial offset
+                const startY = y + (Math.random() * 20 - 10);
+
+                spark.style.backgroundColor = getRandomColor();
+                spark.style.left = `${startX}px`;
+                spark.style.top = `${startY}px`;
+                
+                // Apply unique animation delay and transform for the outward burst effect
+                const delay = Math.random() * 0.3;
+                const duration = 1.5 + Math.random() * 0.5;
+                const rotation = Math.random() * 360;
+                
+                spark.style.animation = `
+                    explode ${duration}s ease-out forwards,
+                    fadeIn 1.5s ease-in;
+                `;
+                
+                // Custom transform for radiating effect
+                spark.style.setProperty('--initial-size', `${Math.random() * 5 + 2}px`);
+                spark.style.setProperty('transform', `translate(-50%, -50%) rotate(${rotation}deg) scale(${Math.random() * 1.5 + 1})`);
+                
+                // Ensure the spark fades in slightly later
+                spark.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(spark);
+            }
+            
+            // Remove the firework container after the animation finishes to clean up DOM
+            setTimeout(() => {
+                container.remove();
+            }, 2000);
+        }
+
+        // --- Main Loop: Launch Fireworks Randomly ---
+        function launchFireworks() {
+            // Random X position across the screen width
+            const launchX = Math.random() * window.innerWidth;
+            // Random Y position (simulate explosion high up)
+            const launchY = Math.random() * window.innerHeight * 0.7; 
+
+            createFirework(launchX, launchY);
+        }
+
+        // Launch fireworks repeatedly to create the show effect
+        const fireworkInterval = 1000; // Launch a new firework every second
+        
+        setInterval(launchFireworks, fireworkInterval);
+
+    </script>
+</body>
+</html>

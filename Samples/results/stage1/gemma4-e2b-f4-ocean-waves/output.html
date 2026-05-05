@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivid Ocean Crash</title>
+    <style>
+        /* Define dynamic colors for vibrancy */
+        :root {
+            --sky-blue: #87CEEB;
+            --ocean-deep: #1E90FF;
+            --sand-gold: #FFD700;
+            --foam-white: #FFFFFF;
+            --surf-blue: #00BFFF;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* Full viewport background simulating a sunny beach scene */
+            background: linear-gradient(to bottom, var(--sky-blue) 50%, var(--ocean-deep) 100%);
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        .scene-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- Background Elements (Midground/Deep Water) --- */
+        .ocean-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60vh; /* Ocean occupies the lower half */
+            background-color: var(--ocean-deep);
+            z-index: 1;
+        }
+
+        /* Animation for slow, deep water movement (Layered Depth: Slowest) */
+        @keyframes slowWave {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(30px); }
+            100% { transform: translateY(0); }
+        }
+
+        .water-surface {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--ocean-deep);
+            z-index: 2;
+            /* Apply slow wave motion */
+            animation: slowWave 15s ease-in-out infinite alternate;
+        }
+
+        /* --- Foreground Elements (Foam/Crashing) --- */
+        .foam-crash {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            z-index: 3;
+            background-color: var(--foam-white);
+            /* Create dynamic, fast movement for foam */
+            animation: fastCrash 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes fastCrash {
+            0% {
+                transform: translateX(0);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateX(50px);
+                opacity: 1.0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 0.9;
+            }
+        }
+
+        /* --- Beach/Sand Elements (Foreground Base) --- */
+        .sand-base {
+            position: absolute;
+            bottom: 60vh; /* Starts where the water ends */
+            left: 0;
+            width: 100%;
+            height: 40vh;
+            background-color: var(--sand-gold);
+            z-index: 4;
+        }
+
+        /* Subtle animation for sand shimmer/texture */
+        @keyframes sandShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .sand-texture {
+            position: absolute;
+            bottom: 60vh;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 100% 100%;
+            background-image: repeating-linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0.1) 0px,
+                rgba(255, 255, 255, 0.05) 25px
+            );
+            animation: sandShimmer 5s linear infinite;
+            z-index: 5;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="scene-container">
+        
+        <!-- 1. Ocean Layer (Deepest background movement) -->
+        <div class="water-surface"></div>
+
+        <!-- 2. Foam/Crashing Effect (Fastest foreground movement) -->
+        <div class="foam-crash"></div>
+
+        <!-- 3. Sand Base (Mid-foreground, static color) -->
+        <div class="sand-base"></div>
+        
+        <!-- 4. Sand Texture (Subtle surface movement) -->
+        <div class="sand-texture"></div>
+        
+    </div>
+
+</body>
+</html>
