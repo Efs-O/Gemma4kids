@@ -36,7 +36,7 @@ jobs:
           }
       - run: npm run build
       - run: npm run typecheck
-      - run: npm run dist:win
+      - run: npx electron-builder --win --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: gemma4kids-windows
@@ -70,7 +70,7 @@ jobs:
           chmod +x piper/mac/x64/piper/espeak-ng
       - run: npm run build
       - run: npm run typecheck
-      - run: npm run dist:mac
+      - run: npx electron-builder --mac --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: gemma4kids-macos
@@ -103,7 +103,7 @@ jobs:
           chmod +x piper/linux/x64/piper/espeak-ng
       - run: npm run build
       - run: npm run typecheck
-      - run: npm run dist:linux
+      - run: npx electron-builder --linux --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: gemma4kids-linux
