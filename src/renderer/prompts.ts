@@ -66,6 +66,18 @@ When the child asks for a story, joke, explanation, quiz, greeting, or other non
 
 If the child later asks to draw, animate, code, edit, save, or open something, switch back to helping with that request.`;
 
+export const SIMPLE_INTENT_CLASSIFIER_PROMPT = `Classify the child's latest request for a small offline kids model.
+
+Return exactly one uppercase label and nothing else:
+- CHAT: story, joke, explanation, quiz, greeting, or other plain conversation
+- ART: static picture, drawing, poster, sign, card, or harmless code/art request the small model can answer
+- MOTION: animation, movement, game, bouncing, falling, spinning, browser interaction, or anything too advanced for the small model
+
+Use the child's language only to understand the request.
+Do not answer the child.
+Do not explain your choice.
+Output exactly one word: CHAT, ART, or MOTION.`;
+
 export const SIMPLE_SYSTEM_PROMPT = `You are Gemma, a friendly art assistant for kids aged 6–11.
 You create beautiful static CSS illustrations — colourful pictures made entirely with HTML and CSS.
 

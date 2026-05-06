@@ -2,7 +2,14 @@ import { useState, useCallback, useRef } from 'react';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
-import { CREATE_SYSTEM_PROMPT, EDIT_SYSTEM_PROMPT, KID_CHAT_SYSTEM_PROMPT, SIMPLE_SYSTEM_PROMPT, SISTER_MESSAGE } from '../prompts';
+import {
+  CREATE_SYSTEM_PROMPT,
+  EDIT_SYSTEM_PROMPT,
+  KID_CHAT_SYSTEM_PROMPT,
+  SIMPLE_INTENT_CLASSIFIER_PROMPT,
+  SIMPLE_SYSTEM_PROMPT,
+  SISTER_MESSAGE,
+} from '../prompts';
 import type { ModelTier } from '../utils/pickCodingModel';
 import type { LLMRuntimeAdapter } from '../services/OllamaService';
 import {
@@ -13,6 +20,7 @@ import {
 import { auditHtml } from '../htmlAudit';
 import { isGemma4EdgeE2b, isGemma4EdgeE4b, isGemma426b, isGemma431b } from '../utils/pickCodingModel';
 const INLINE_TOOL_QUOTE = '<|"|>';
+type SimpleMode = 'art' | 'chat' | 'motion';
 
 const SIMPLE_MOTION_KEYWORDS = [
   'bounce', 'bouncing', 'fall', 'falling', 'spin', 'spinning',
@@ -155,19 +163,85 @@ function isGeneralChatIntent(text: string): boolean {
 
 function getSystemPrompt(history: ChatMessage[], tier: ModelTier): string {
   const latestUserText = getLatestUserText(history);
-  if (isGeneralChatIntent(latestUserText)) return KID_CHAT_SYSTEM_PROMPT;
   if (tier === 'simple') return SIMPLE_SYSTEM_PROMPT;
   return isEditIntent(latestUserText) ? EDIT_SYSTEM_PROMPT : CREATE_SYSTEM_PROMPT;
 }
 
+function getPromptForMode(history: ChatMessage[], tier: ModelTier, simpleMode: SimpleMode | null): string {
+  if (tier === 'simple') {
+    return simpleMode === 'chat' ? KID_CHAT_SYSTEM_PROMPT : SIMPLE_SYSTEM_PROMPT;
+  }
+  return getSystemPrompt(history, tier);
+}
+
+function parseSimpleModeLabel(text: string): SimpleMode | null {
+  const normalized = text.trim().toUpperCase();
+  if (normalized === 'CHAT') return 'chat';
+  if (normalized === 'ART') return 'art';
+  if (normalized === 'MOTION') return 'motion';
+  const match = normalized.match(/\b(CHAT|ART|MOTION)\b/);
+  if (!match) return null;
+  return match[1] === 'CHAT' ? 'chat' : match[1] === 'ART' ? 'art' : 'motion';
+}
+
+async function classifySimpleMode(
+  runtimeAdapter: LLMRuntimeAdapter,
+  model: string,
+  text: string,
+  signal: AbortSignal,
+): Promise<SimpleMode> {
+  const fallback: SimpleMode = isSimpleMotionKeyword(text)
+    ? 'motion'
+    : isGeneralChatIntent(text)
+      ? 'chat'
+      : 'art';
+
+  if (isEditIntent(text)) return 'art';
+
+  let assembled = '';
+  let loopError: Error | null = null;
+
+  await new Promise<void>((resolve) => {
+    runtimeAdapter.streamChat(
+      {
+        model,
+        messages: [
+          { role: 'system', content: SIMPLE_INTENT_CLASSIFIER_PROMPT },
+          { role: 'user', content: text },
+        ],
+        think: false,
+        temperature: 0,
+        topP: 1,
+        topK: 1,
+        numCtx: 2048,
+        numPredict: 12,
+      },
+      {
+        onToken: (token) => { assembled += token; },
+        onDone: () => resolve(),
+        onError: (err) => { loopError = err; resolve(); },
+      },
+      signal,
+    );
+  });
+
+  if (signal.aborted) {
+    return fallback;
+  }
+  if (loopError) {
+    return fallback;
+  }
+  return parseSimpleModeLabel(assembled) ?? fallback;
+}
+
 /** Keep system prompt + last 10 user/assistant pairs + last 4 tool results. */
-function buildRequestMessages(history: ChatMessage[], tier: ModelTier): ChatMessage[] {
+function buildRequestMessages(history: ChatMessage[], tier: ModelTier, simpleMode: SimpleMode | null): ChatMessage[] {
   const toolMessages = history.filter((m) => m.role === 'tool');
   const conversationMessages = history.filter((m) => m.role === 'user' || m.role === 'assistant');
   const keptConversation = conversationMessages.slice(-20);
   const keptTools = toolMessages.slice(-4);
   const kept = history.filter((m) => keptConversation.includes(m) || keptTools.includes(m));
-  const systemPrompt = getSystemPrompt(history, tier);
+  const systemPrompt = getPromptForMode(history, tier, simpleMode);
   return [{ role: 'system', content: systemPrompt }, ...kept];
 }
 
@@ -316,6 +390,31 @@ export function useChat(
     const defaultNumPredict = workstationLarge ? OLLAMA_CHAT_WORKSTATION_PREDICT : OLLAMA_CHAT_PROFILE.numPredict;
     const numCtx = runtimeLimits?.numCtx ?? defaultNumCtx;
     const numPredict = runtimeLimits?.numPredict ?? defaultNumPredict;
+    const latestUserText = getLatestUserText(history);
+    let simpleMode: SimpleMode | null = null;
+
+    if (modelTier === 'simple') {
+      simpleMode = await classifySimpleMode(runtimeAdapter, model, latestUserText, token.signal);
+      if (token.signal.aborted) {
+        setStreamingText('');
+        setStreamingThinking('');
+        setStatus('idle');
+        return;
+      }
+      if (simpleMode === 'motion') {
+        const msg: ChatMessage = {
+          role: 'assistant',
+          content: SISTER_MESSAGE[detectLang(latestUserText)],
+        };
+        history = [...history, msg];
+        historyRef.current = history;
+        setMessages([...history]);
+        setStreamingText('');
+        setStreamingThinking('');
+        setStatus('idle');
+        return;
+      }
+    }
 
     while (true) {
       // Guard re-entry: abort may have fired during a tool dispatch IPC round-trip.
@@ -326,8 +425,6 @@ export function useChat(
         return;
       }
 
-      const latestUserText = getLatestUserText(history);
-      const generalChat = isGeneralChatIntent(latestUserText);
       let assembled = '';
       let thinking = '';
       let firedToolCalls: ToolCall[] | null = null;
@@ -337,12 +434,12 @@ export function useChat(
         runtimeAdapter.streamChat(
           {
             model,
-            messages: buildRequestMessages(history, modelTier),
+            messages: buildRequestMessages(history, modelTier, simpleMode),
             think: thinkEnabled,
             temperature: OLLAMA_CHAT_PROFILE.temperature,
             topP: OLLAMA_CHAT_PROFILE.topP,
             topK: OLLAMA_CHAT_PROFILE.topK,
-            tools: generalChat ? undefined : KIDS_TOOLS,
+            tools: simpleMode === 'chat' ? undefined : KIDS_TOOLS,
             numCtx,
             numPredict,
           },
