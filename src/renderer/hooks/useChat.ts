@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
-import { CREATE_SYSTEM_PROMPT, EDIT_SYSTEM_PROMPT, SIMPLE_SYSTEM_PROMPT, SISTER_MESSAGE } from '../prompts';
+import { CREATE_SYSTEM_PROMPT, EDIT_SYSTEM_PROMPT, KID_CHAT_SYSTEM_PROMPT, SIMPLE_SYSTEM_PROMPT, SISTER_MESSAGE } from '../prompts';
 import type { ModelTier } from '../utils/pickCodingModel';
 import type { LLMRuntimeAdapter } from '../services/OllamaService';
 import {
@@ -11,7 +11,7 @@ import {
   OLLAMA_CHAT_WORKSTATION_PREDICT,
 } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
-import { isGemma426b, isGemma431b } from '../utils/pickCodingModel';
+import { isGemma4EdgeE2b, isGemma4EdgeE4b, isGemma426b, isGemma431b } from '../utils/pickCodingModel';
 const INLINE_TOOL_QUOTE = '<|"|>';
 
 const SIMPLE_MOTION_KEYWORDS = [
@@ -101,6 +101,65 @@ function isEditIntent(text: string): boolean {
   ].some((term) => lower.includes(term));
 }
 
+function isGeneralChatIntent(text: string): boolean {
+  const lower = text.toLowerCase().trim();
+  if (!lower || lower.startsWith('[context:')) return false;
+  const generalPrefixes = [
+    'tell me',
+    'say',
+    'write',
+    'explain',
+    'what is',
+    'who is',
+    'why',
+    'how',
+    'can you',
+    'do you know',
+    'πες μου',
+    'πες',
+    'γράψε',
+    'εξήγησε',
+    'τι είναι',
+    'ποιος είναι',
+    'γιατί',
+    'πως',
+    'πώς',
+    'μπορείς',
+  ];
+  const generalKeywords = [
+    'story', 'joke', 'riddle', 'quiz', 'poem', 'song',
+    'explain', 'meaning', 'planet', 'animal', 'space',
+    'math', 'science', 'hello', 'hi', 'hey',
+    'ιστορια', 'ιστορία', 'παραμυθι', 'παραμύθι', 'ανεκδοτο', 'ανέκδοτο',
+    'αινιγμα', 'αίνιγμα', 'κουιζ', 'κουίζ', 'ποιημα', 'ποίημα', 'τραγουδι', 'τραγούδι',
+    'εξηγ', 'σημαινει', 'σημαίνει', 'πλανητ', 'πλανήτ', 'ζωο', 'ζώο',
+    'διαστημα', 'διάστημα', 'μαθηματικ', 'μαθηματικά', 'επιστημη', 'επιστήμη',
+    'γεια', 'γεια σου', 'γεια σου',
+  ];
+  const visualKeywords = [
+    'make', 'draw', 'paint', 'create', 'build', 'code',
+    'animation', 'animate', 'html', 'css', 'javascript',
+    'picture', 'illustration', 'card', 'scene', 'browser',
+    'save', 'open', 'edit', 'fix', 'change', 'faster', 'slower',
+    'φτιαξε', 'φτιάξε', 'ζωγραφισε', 'ζωγράφισε', 'δημιουργησε', 'δημιούργησε',
+    'κωδικ', 'κώδικ', 'εικονα', 'εικόνα', 'ζωγραφια', 'ζωγραφιά',
+    'κινηση', 'κίνηση', 'animation', 'html', 'css', 'browser',
+    'αποθηκευ', 'άνοιξε', 'ανοιξε', 'διορθω', 'αλλαξε', 'άλλαξε',
+    'πιο γρηγ', 'πιο αργ',
+  ];
+
+  if (visualKeywords.some((term) => lower.includes(term))) return false;
+  if (generalPrefixes.some((prefix) => lower.startsWith(prefix))) return true;
+  return generalKeywords.some((term) => lower.includes(term));
+}
+
+function getSystemPrompt(history: ChatMessage[], tier: ModelTier): string {
+  const latestUserText = getLatestUserText(history);
+  if (isGeneralChatIntent(latestUserText)) return KID_CHAT_SYSTEM_PROMPT;
+  if (tier === 'simple') return SIMPLE_SYSTEM_PROMPT;
+  return isEditIntent(latestUserText) ? EDIT_SYSTEM_PROMPT : CREATE_SYSTEM_PROMPT;
+}
+
 /** Keep system prompt + last 10 user/assistant pairs + last 4 tool results. */
 function buildRequestMessages(history: ChatMessage[], tier: ModelTier): ChatMessage[] {
   const toolMessages = history.filter((m) => m.role === 'tool');
@@ -108,12 +167,7 @@ function buildRequestMessages(history: ChatMessage[], tier: ModelTier): ChatMess
   const keptConversation = conversationMessages.slice(-20);
   const keptTools = toolMessages.slice(-4);
   const kept = history.filter((m) => keptConversation.includes(m) || keptTools.includes(m));
-  let systemPrompt: string;
-  if (tier === 'simple') {
-    systemPrompt = SIMPLE_SYSTEM_PROMPT;
-  } else {
-    systemPrompt = isEditIntent(getLatestUserText(history)) ? EDIT_SYSTEM_PROMPT : CREATE_SYSTEM_PROMPT;
-  }
+  const systemPrompt = getSystemPrompt(history, tier);
   return [{ role: 'system', content: systemPrompt }, ...kept];
 }
 
@@ -172,6 +226,33 @@ function parseInlineExecuteTool(text: string): ToolCall[] | null {
       arguments: JSON.stringify(args),
     },
   }];
+}
+
+function smallerModelHint(model: string): string {
+  if (isGemma431b(model)) return 'gemma4:26b or gemma4:e4b';
+  if (isGemma426b(model)) return 'gemma4:e4b or gemma4:e2b';
+  if (isGemma4EdgeE4b(model)) return 'gemma4:e2b';
+  if (isGemma4EdgeE2b(model)) return 'a smaller Gemma model or close other apps first';
+  return 'a smaller Gemma model';
+}
+
+function formatRuntimeError(error: Error, model: string): string {
+  const raw = error.message.trim();
+  const memoryMatch = raw.match(/requires more system memory\s+([0-9.]+\s+GiB)\s+than is available\s+([0-9.]+\s+GiB)/i);
+
+  if (memoryMatch) {
+    const required = memoryMatch[1];
+    const available = memoryMatch[2];
+    return [
+      'This Gemma model is too big for this computer right now.',
+      'Try closing other apps, then press Try Again.',
+      `If it still happens, ask a grown-up to switch to ${smallerModelHint(model)} in the model menu.`,
+      '',
+      `Grown-up note: Ollama could not load ${model} because it needs ${required} RAM and only ${available} was free.`,
+    ].join('\n');
+  }
+
+  return raw;
 }
 
 export interface AuditSummary {
@@ -245,6 +326,8 @@ export function useChat(
         return;
       }
 
+      const latestUserText = getLatestUserText(history);
+      const generalChat = isGeneralChatIntent(latestUserText);
       let assembled = '';
       let thinking = '';
       let firedToolCalls: ToolCall[] | null = null;
@@ -259,7 +342,7 @@ export function useChat(
             temperature: OLLAMA_CHAT_PROFILE.temperature,
             topP: OLLAMA_CHAT_PROFILE.topP,
             topK: OLLAMA_CHAT_PROFILE.topK,
-            tools: KIDS_TOOLS,
+            tools: generalChat ? undefined : KIDS_TOOLS,
             numCtx,
             numPredict,
           },
@@ -306,7 +389,7 @@ export function useChat(
 
       if (loopError) {
         setStatus('error');
-        setErrorMsg((loopError as Error).message);
+        setErrorMsg(formatRuntimeError(loopError as Error, model));
         setStreamingText('');
         setStreamingThinking('');
         return;
@@ -448,6 +531,9 @@ export function useChat(
   }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict]);
 
   const sendMessage = useCallback((input: string | { text: string; images?: string[] }) => {
+    if (ctxUsedPct >= 90) {
+      return;
+    }
     const { text, images } = normalizeMessageInput(input);
     // Layer 1: instant keyword block — no model call, no streaming.
     if (modelTier === 'simple' && isSimpleMotionKeyword(text)) {
@@ -472,7 +558,7 @@ export function useChat(
     historyRef.current = updated;
     setMessages(updated);
     runLoop(updated, token);
-  }, [runLoop, modelTier]);
+  }, [ctxUsedPct, runLoop, modelTier]);
 
   const cancel = useCallback(() => {
     cancelRef.current?.cancel();
