@@ -47,6 +47,11 @@ function detectLang(text: string): 'en' | 'de' | 'el' {
   return 'en';
 }
 
+function previewText(text: string, max = 140): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
+}
+
 function extractHtml(text: string): string | null {
   const match = text.match(/```(?:html)?\n([\s\S]*?)```/i);
   return match ? match[1].trim() : null;
@@ -196,10 +201,18 @@ async function classifySimpleMode(
       ? 'chat'
       : 'art';
 
-  if (isEditIntent(text)) return 'art';
+  if (isEditIntent(text)) {
+    console.info('[chat:simple-classifier:bypass-edit]', {
+      model,
+      lang: detectLang(text),
+      route: 'art',
+      textPreview: previewText(text),
+    });
+    return 'art';
+  }
 
   let assembled = '';
-  let loopError: Error | null = null;
+  let loopErrorMessage = '';
 
   await new Promise<void>((resolve) => {
     runtimeAdapter.streamChat(
@@ -219,19 +232,41 @@ async function classifySimpleMode(
       {
         onToken: (token) => { assembled += token; },
         onDone: () => resolve(),
-        onError: (err) => { loopError = err; resolve(); },
+        onError: (err) => { loopErrorMessage = err.message; resolve(); },
       },
       signal,
     );
   });
 
   if (signal.aborted) {
+    console.info('[chat:simple-classifier:aborted]', {
+      model,
+      lang: detectLang(text),
+      fallback,
+      textPreview: previewText(text),
+    });
     return fallback;
   }
-  if (loopError) {
+  if (loopErrorMessage) {
+    console.info('[chat:simple-classifier:fallback-error]', {
+      model,
+      lang: detectLang(text),
+      fallback,
+      error: loopErrorMessage,
+      textPreview: previewText(text),
+    });
     return fallback;
   }
-  return parseSimpleModeLabel(assembled) ?? fallback;
+  const parsed = parseSimpleModeLabel(assembled) ?? fallback;
+  console.info('[chat:simple-classifier:result]', {
+    model,
+    lang: detectLang(text),
+    labelRaw: assembled.trim(),
+    route: parsed,
+    fallback,
+    textPreview: previewText(text),
+  });
+  return parsed;
 }
 
 /** Keep system prompt + last 10 user/assistant pairs + last 4 tool results. */
@@ -401,6 +436,14 @@ export function useChat(
         setStatus('idle');
         return;
       }
+      console.info('[chat:route]', {
+        model,
+        tier: modelTier,
+        lang: detectLang(latestUserText),
+        simpleMode,
+        toolExposure: simpleMode === 'chat' ? 'off' : 'on',
+        textPreview: previewText(latestUserText),
+      });
       if (simpleMode === 'motion') {
         const msg: ChatMessage = {
           role: 'assistant',
@@ -632,6 +675,13 @@ export function useChat(
       return;
     }
     const { text, images } = normalizeMessageInput(input);
+    console.info('[chat:user-message]', {
+      model,
+      tier: modelTier,
+      lang: detectLang(text),
+      inputKind: Array.isArray(images) && images.length > 0 ? 'multimodal' : 'text',
+      textPreview: previewText(text),
+    });
     // Layer 1: instant keyword block — no model call, no streaming.
     if (modelTier === 'simple' && isSimpleMotionKeyword(text)) {
       const userMsg: ChatMessage = { role: 'user', content: text, images };

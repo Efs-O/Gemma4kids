@@ -152,6 +152,11 @@ function buildTranscribePrompt(languageHint?: string): string {
   return 'Transcribe exactly what is spoken in the audio. Keep the original language and script exactly as spoken. Never translate. Never transliterate. If the speaker uses Greek, return Greek characters. Output only the transcription text, with no newlines. Write numbers as digits.';
 }
 
+function previewText(text: string, max = 140): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
+}
+
 /**
  * Convert any browser audio blob (WebM/Ogg/etc.) to a 16kHz mono WAV with a
  * proper RIFF header — required by Ollama's Gemma4 audio workaround.
@@ -215,6 +220,13 @@ export async function transcribe(
   keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<string> {
+  console.info('[transcribe:start]', {
+    model,
+    keepAlive,
+    languageHint: languageHint ?? '',
+    numCtx: OLLAMA_TRANSCRIBE_PROFILE.numCtx,
+    audioBase64Length: audioBase64.length,
+  });
   const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -238,6 +250,11 @@ export async function transcribe(
   const data = await res.json() as { message?: { content?: string } };
   const text = (data.message?.content ?? '').trim();
   if (!text) throw new Error('Empty transcription returned');
+  console.info('[transcribe:done]', {
+    model,
+    languageHint: languageHint ?? '',
+    textPreview: previewText(text),
+  });
   return text;
 }
 

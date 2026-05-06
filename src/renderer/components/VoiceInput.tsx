@@ -8,6 +8,11 @@ function estimateWarmKeepAlive(durationSeconds: number): string {
   return `${seconds}s`;
 }
 
+function previewText(text: string, max = 140): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
+}
+
 interface Props {
   e4bAvailable: boolean;
   greekTranscribeModel: string | null;
@@ -70,7 +75,21 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
       const keepAlive = activeTranscribeModel === codingModel
         ? estimateWarmKeepAlive(encoded.durationSeconds)
         : 0;
+      console.info('[voice:transcribe:selected-model]', {
+        attempt,
+        languageHint,
+        activeTranscribeModel,
+        codingModel,
+        keepAlive,
+        durationSeconds: Number(encoded.durationSeconds.toFixed(2)),
+      });
       const text = await transcribe(encoded.audioBase64, activeTranscribeModel, keepAlive, languageHint);
+      console.info('[voice:transcribe:deliver]', {
+        attempt,
+        languageHint,
+        activeTranscribeModel,
+        textPreview: previewText(text),
+      });
       setVoiceStateSafe('idle');
       // Short delay gives E4B a moment to release VRAM before the coding model starts.
       clearTimer(deliverTimerRef);
