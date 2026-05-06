@@ -529,7 +529,7 @@ export function useChat(
     setLatestCode(null);
 
     const userMsg: ChatMessage = { role: 'user', content: text, images, videos };
-    if (videos?.length && videoAttachmentFileRef?.current) {
+    if (videoAttachmentFileRef?.current) {
       lastVideoFileRef.current = videoAttachmentFileRef.current;
     }
     const updated = [...historyRef.current, userMsg];

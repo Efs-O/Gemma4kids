@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { audioBlobToWav16k, transcribe } from '../services/OllamaService';
+import { transcribeAudioBlob } from '../services/OllamaService';
 
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
 
@@ -57,7 +57,6 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceStateSafe('transcribing');
     try {
-      const encoded = await audioBlobToWav16k(blob);
       const languageHint = navigator.languages?.[0] ?? navigator.language;
       // Revisit this override if future Gemma/Ollama releases improve Greek ASR
       // on E4B. Current local tests on both synthetic and real Greek audio show
@@ -68,9 +67,10 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
           ? greekTranscribeModel
           : transcribeModel;
       const keepAlive = activeTranscribeModel === codingModel
-        ? estimateWarmKeepAlive(encoded.durationSeconds)
+        ? estimateWarmKeepAlive(15)
         : 0;
-      const text = await transcribe(encoded.audioBase64, activeTranscribeModel, keepAlive, languageHint);
+      const result = await transcribeAudioBlob(blob, activeTranscribeModel, keepAlive, languageHint);
+      const text = result.text;
       setVoiceStateSafe('idle');
       // Short delay gives E4B a moment to release VRAM before the coding model starts.
       clearTimer(deliverTimerRef);

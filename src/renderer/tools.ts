@@ -27,7 +27,7 @@ export const KIDS_TOOLS: ToolDefinition[] = [
     function: {
       name: 'save_video_frame',
       description:
-        'Save ONE JPEG still from the attached video to Documents/KidAnimations/video-frames/. Use when the child wants image files on disk (favorite frame, random stills, or time_seconds). The app sends the full short video in the chat request so you can see the motion—this tool only exports a chosen frame.',
+        'Save ONE JPEG still from the attached video to Documents/KidAnimations/video-frames/. Use when the child wants image files on disk (favorite frame, random stills, or time_seconds). The chat includes sampled frames and maybe a transcript for understanding, and this tool exports a chosen frame from the original video file.',
       parameters: {
         type: 'object',
         properties: {

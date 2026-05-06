@@ -6,13 +6,12 @@ import {
   type AttachmentState,
 } from './AttachmentPreview';
 import {
-  extractAudioFromVideo,
   prepareAudioAttachment,
   prepareImageAttachment,
   prepareVideoAttachment,
-  readVideoClipBase64ForOllama,
+  prepareVideoMessagePayload,
 } from '../services/MediaAttachmentService';
-import { transcribeAudioBlob } from '../services/OllamaService';
+import { transcribe, transcribeAudioBlob } from '../services/OllamaService';
 import type { SendMessageInput } from '../hooks/useChat';
 
 const ACCEPTED_IMAGE_EXTENSIONS = '.png,.jpg,.jpeg,.webp,.gif,.bmp,.heic,.heif';
@@ -74,8 +73,9 @@ function buildVideoPrompt(text: string, transcript: string | null): string {
   if (trimmed) {
     parts.push(trimmed);
   } else {
-    parts.push('Please look at the short video I attached and help me.');
+    parts.push('Please look at these sampled pictures from my short video and help me.');
   }
+  parts.push('The attached pictures are sampled frames from one short video, in time order.');
   if (transcript) {
     parts.push(`Spoken audio transcript:\n${transcript}`);
   }
@@ -267,21 +267,30 @@ export function InputRow({
     if (!supportsVisualAttachments) {
       throw new Error('Video needs the Ollama runtime.');
     }
-    const videoBase64 = await readVideoClipBase64ForOllama(attachment.item.file);
+    const preparedVideo = await prepareVideoMessagePayload(
+      attachment.item.file,
+      attachment.item.durationSeconds,
+    );
+    if (preparedVideo.warning) {
+      setAttachmentError("I couldn't hear the video words, so Gemma will use the pictures only.");
+    }
     let transcriptText: string | null = null;
     try {
-      const extractedAudio = await extractAudioFromVideo(attachment.item.file);
-      if (extractedAudio) {
-        const transcript = await transcribeAudioBlob(extractedAudio, activeTranscribeModel, 0, languageHint);
-        transcriptText = transcript.text;
+      if (preparedVideo.audioWavBase64) {
+        transcriptText = await transcribe(
+          preparedVideo.audioWavBase64,
+          activeTranscribeModel,
+          0,
+          languageHint,
+        );
       }
     } catch {
-      setAttachmentError("I couldn't hear the video words — the video is still sent, just without a transcript.");
+      setAttachmentError("I couldn't hear the video words, so Gemma will use the pictures only.");
     }
 
     return {
       text: buildVideoPrompt(messageText, transcriptText),
-      videos: [videoBase64],
+      images: preparedVideo.frames,
       hasAttachment: true,
     };
   }

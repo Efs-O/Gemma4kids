@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('save-animation', { filename, html_content, source }),
   saveVideoFrame: (filename: string, jpeg_base64: string, source?: 'gemma' | 'kid') =>
     ipcRenderer.invoke('save-video-frame', { filename, jpeg_base64, source }),
+  preprocessVideoAttachment: (videoPath: string, durationSeconds: number) =>
+    ipcRenderer.invoke('preprocess-video-attachment', { videoPath, durationSeconds }),
   readAnimation: (filename: string) =>
     ipcRenderer.invoke('read-animation', { filename }),
   listAnimations: () =>

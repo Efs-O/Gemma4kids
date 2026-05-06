@@ -23,6 +23,13 @@ export interface PreparedVideoAttachment {
   posterDataUrl: string;
 }
 
+export interface PreparedVideoMessagePayload {
+  frames: string[];
+  frameTimes: number[];
+  audioWavBase64: string | null;
+  warning?: string;
+}
+
 function createAttachmentId(): string {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -44,10 +51,7 @@ function readBlobAsBase64(blob: Blob, errorMessage: string): Promise<string> {
   });
 }
 
-/** Raw base64 of the whole clip for Ollama native chat `videos` (no data: prefix). */
-export async function readVideoClipBase64ForOllama(file: File): Promise<string> {
-  return readBlobAsBase64(file, 'Could not read that video file.');
-}
+type ElectronFileWithPath = File & { path?: string };
 
 /** Windows file picker often leaves `file.type` empty; a typed <source> helps Chromium open MP4/MOV. */
 const VIDEO_EXT_MIME: Record<string, string> = {
@@ -250,117 +254,29 @@ export async function prepareVideoAttachment(file: File): Promise<PreparedVideoA
   };
 }
 
-export async function extractAudioFromVideo(file: File): Promise<Blob | null> {
-  return withObjectUrl(file, async (objectUrl) => {
-    const video = document.createElement('video');
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    await loadMediaMetadata(video, objectUrl, file);
+function getLocalVideoPath(file: File): string {
+  const candidate = (file as ElectronFileWithPath).path;
+  if (!candidate || candidate.trim().length === 0) {
+    throw new Error('That video file is not available on disk for ffmpeg preprocessing.');
+  }
+  return candidate;
+}
 
-    const captureStream = (video as HTMLVideoElement & {
-      captureStream?: () => MediaStream;
-      mozCaptureStream?: () => MediaStream;
-    }).captureStream ?? (video as HTMLVideoElement & {
-      mozCaptureStream?: () => MediaStream;
-    }).mozCaptureStream;
+export async function prepareVideoMessagePayload(file: File, durationSeconds: number): Promise<PreparedVideoMessagePayload> {
+  const result = await window.electronAPI.preprocessVideoAttachment(getLocalVideoPath(file), durationSeconds);
+  if (!result.success) {
+    throw new Error(result.error ?? 'That video could not be prepared here.');
+  }
+  if (result.frames.length === 0) {
+    throw new Error('That video did not produce any frames for Gemma.');
+  }
 
-    if (!captureStream) {
-      clearVideoElement(video);
-      return null;
-    }
-
-    const captured = captureStream.call(video);
-    const audioTracks = captured.getAudioTracks();
-    if (audioTracks.length === 0) {
-      captured.getTracks().forEach((track) => track.stop());
-      clearVideoElement(video);
-      return null;
-    }
-
-    const audioOnlyStream = new MediaStream(audioTracks);
-    const mimeType = pickRecorderMimeType();
-    const recorder = mimeType
-      ? new MediaRecorder(audioOnlyStream, { mimeType })
-      : new MediaRecorder(audioOnlyStream);
-    const chunks: BlobPart[] = [];
-
-    return await new Promise<Blob | null>((resolve) => {
-      let settled = false;
-      let safetyTimer: number | null = null;
-
-      const finalize = (audioBlob: Blob | null) => {
-        if (settled) return;
-        settled = true;
-        if (safetyTimer !== null) {
-          window.clearTimeout(safetyTimer);
-          safetyTimer = null;
-        }
-        recorder.ondataavailable = null;
-        recorder.onstop = null;
-        video.onended = null;
-        video.onerror = null;
-        video.ontimeupdate = null;
-        video.pause();
-        captured.getTracks().forEach((track) => track.stop());
-        audioOnlyStream.getTracks().forEach((track) => track.stop());
-        clearVideoElement(video);
-        resolve(audioBlob);
-      };
-
-      const requestRecorderStop = () => {
-        if (recorder.state !== 'inactive') {
-          recorder.stop();
-        }
-      };
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-      recorder.onstop = () => {
-        const type = mimeType ?? 'audio/webm';
-        const audioBlob = chunks.length > 0 ? new Blob(chunks, { type }) : null;
-        finalize(audioBlob);
-      };
-      video.onended = () => {
-        requestRecorderStop();
-      };
-      video.ontimeupdate = () => {
-        if (!Number.isFinite(video.duration) || video.duration <= 0) return;
-        if (video.currentTime >= video.duration - 0.2) {
-          requestRecorderStop();
-        }
-      };
-      video.onerror = () => {
-        requestRecorderStop();
-        window.setTimeout(() => {
-          if (!settled) finalize(null);
-        }, 400);
-      };
-
-      const durationMs =
-        Number.isFinite(video.duration) && video.duration > 0
-          ? video.duration * 1000
-          : VIDEO_MAX_SECONDS * 1000;
-      safetyTimer = window.setTimeout(() => {
-        safetyTimer = null;
-        requestRecorderStop();
-        window.setTimeout(() => {
-          if (!settled) finalize(null);
-        }, 1500);
-      }, Math.min(durationMs + 3500, VIDEO_MAX_SECONDS * 1000 + 6000));
-
-      recorder.start();
-      void video.play().catch(() => {
-        requestRecorderStop();
-        window.setTimeout(() => {
-          if (!settled) finalize(null);
-        }, 400);
-      });
-    });
-  });
+  return {
+    frames: result.frames.map((frame) => frame.base64),
+    frameTimes: result.frames.map((frame) => frame.timeSeconds),
+    audioWavBase64: result.audioWavBase64,
+    warning: result.warning,
+  };
 }
 
 /** One JPEG frame (raw base64) for Gemma's save_video_frame tool — Gemma decides time vs random. */

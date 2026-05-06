@@ -60,10 +60,23 @@ interface OllamaCleanupState {
   models: string[];
 }
 
+interface VideoPreprocessResult {
+  success: boolean;
+  frames: Array<{ base64: string; timeSeconds: number }>;
+  audioWavBase64: string | null;
+  ffmpegPath?: string;
+  warning?: string;
+  error?: string;
+}
+
 const LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS = 240000;
 const LLAMA_DEFAULT_BATCH_SIZE = 512;
 const LLAMA_RUNTIME_LOG = 'llama-cpp-runtime.log';
+const VIDEO_PREPROCESS_MIN_FRAMES = 3;
+const VIDEO_PREPROCESS_MAX_FRAMES = 6;
+const VIDEO_PREPROCESS_AUDIO_MAX_SECONDS = 30;
+const VIDEO_PREPROCESS_FRAME_MAX_DIMENSION = 640;
 const managedAbortControllers = new Map<string, AbortController>();
 let managedLlamaServer: ManagedLlamaServer | null = null;
 let managedLlamaStartup: { configKey: string; promise: Promise<LlamaCppHealthResult> } | null = null;
@@ -712,6 +725,225 @@ function getAnimationsDir(): string {
   return path.join(app.getPath('documents'), 'KidAnimations');
 }
 
+function fileExists(fullPath: string): boolean {
+  try {
+    return fs.existsSync(fullPath) && fs.statSync(fullPath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function findBinaryOnPath(binaryName: string): string | null {
+  const pathEnv = process.env.PATH ?? '';
+  const parts = pathEnv.split(path.delimiter).map((part) => part.trim()).filter(Boolean);
+  for (const part of parts) {
+    const candidate = path.join(part, binaryName);
+    if (fileExists(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function searchWinGetPackageTreeForFfmpeg(rootDir: string): string | null {
+  if (!fs.existsSync(rootDir)) {
+    return null;
+  }
+
+  const pending = [rootDir];
+  let visited = 0;
+  while (pending.length > 0 && visited < 2500) {
+    const currentDir = pending.pop();
+    if (!currentDir) {
+      break;
+    }
+    visited += 1;
+
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const entryPath = path.join(currentDir, entry.name);
+      if (entry.isFile() && entry.name.toLowerCase() === 'ffmpeg.exe') {
+        return entryPath;
+      }
+      if (entry.isDirectory()) {
+        pending.push(entryPath);
+      }
+    }
+  }
+
+  return null;
+}
+
+function findFfmpegBinary(): string | null {
+  const explicit = process.env.FFMPEG_PATH?.trim();
+  if (explicit && fileExists(explicit)) {
+    return explicit;
+  }
+
+  const binaryName = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+  const fromPath = findBinaryOnPath(binaryName);
+  if (fromPath) {
+    return fromPath;
+  }
+
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA?.trim();
+    if (localAppData) {
+      const wingetDir = path.join(localAppData, 'Microsoft', 'WinGet', 'Packages');
+      const fromWinGet = searchWinGetPackageTreeForFfmpeg(wingetDir);
+      if (fromWinGet) {
+        return fromWinGet;
+      }
+    }
+  }
+
+  return null;
+}
+
+function runFfmpeg(ffmpegPath: string, args: string[]): Promise<{ code: number; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(ffmpegPath, args, { windowsHide: true });
+    let stderr = '';
+
+    child.stderr.on('data', (chunk: Buffer) => {
+      stderr += chunk.toString();
+      if (stderr.length > 12000) {
+        stderr = stderr.slice(-12000);
+      }
+    });
+    child.once('error', reject);
+    child.once('close', (code) => {
+      resolve({ code: code ?? 0, stderr: stderr.trim() });
+    });
+  });
+}
+
+function buildRepresentativeFrameTimes(durationSeconds: number): number[] {
+  const safeDuration = Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : 6;
+  const frameCount = Math.min(
+    VIDEO_PREPROCESS_MAX_FRAMES,
+    Math.max(VIDEO_PREPROCESS_MIN_FRAMES, Math.round(safeDuration / 5)),
+  );
+  const safeEnd = Math.max(safeDuration - 0.12, 0);
+
+  return Array.from({ length: frameCount }, (_, index) => {
+    const centerTime = safeDuration * ((index + 0.5) / frameCount);
+    return Math.max(0, Math.min(centerTime, safeEnd));
+  });
+}
+
+async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: number): Promise<VideoPreprocessResult> {
+  if (!path.isAbsolute(videoPath) || !fileExists(videoPath)) {
+    return { success: false, frames: [], audioWavBase64: null, error: 'The selected video file could not be found on disk.' };
+  }
+
+  const ffmpegPath = findFfmpegBinary();
+  if (!ffmpegPath) {
+    return {
+      success: false,
+      frames: [],
+      audioWavBase64: null,
+      error: 'ffmpeg was not found. Install ffmpeg or set FFMPEG_PATH so Gemma can prepare video attachments.',
+    };
+  }
+
+  const tempRoot = fs.mkdtempSync(path.join(app.getPath('temp'), 'gemma4kids-video-'));
+  try {
+    const framesDir = path.join(tempRoot, 'frames');
+    fs.mkdirSync(framesDir, { recursive: true });
+
+    const frameTimes = buildRepresentativeFrameTimes(durationSeconds);
+    const frames: Array<{ base64: string; timeSeconds: number }> = [];
+
+    for (let i = 0; i < frameTimes.length; i++) {
+      const timeSeconds = frameTimes[i];
+      const outputPath = path.join(framesDir, `frame-${String(i + 1)}.jpg`);
+      const result = await runFfmpeg(ffmpegPath, [
+        '-y',
+        '-ss',
+        timeSeconds.toFixed(3),
+        '-i',
+        videoPath,
+        '-frames:v',
+        '1',
+        '-q:v',
+        '3',
+        '-update',
+        '1',
+        '-vf',
+        `scale=${String(VIDEO_PREPROCESS_FRAME_MAX_DIMENSION)}:-2:force_original_aspect_ratio=decrease`,
+        outputPath,
+      ]);
+      if (result.code !== 0 || !fileExists(outputPath)) {
+        return {
+          success: false,
+          frames: [],
+          audioWavBase64: null,
+          ffmpegPath,
+          error: result.stderr || 'ffmpeg could not extract video frames.',
+        };
+      }
+
+      frames.push({
+        base64: fs.readFileSync(outputPath).toString('base64'),
+        timeSeconds,
+      });
+    }
+
+    const audioPath = path.join(tempRoot, 'audio.wav');
+    const audioResult = await runFfmpeg(ffmpegPath, [
+      '-y',
+      '-i',
+      videoPath,
+      '-map',
+      '0:a:0?',
+      '-vn',
+      '-ac',
+      '1',
+      '-ar',
+      '16000',
+      '-t',
+      String(VIDEO_PREPROCESS_AUDIO_MAX_SECONDS),
+      audioPath,
+    ]);
+
+    let audioWavBase64: string | null = null;
+    let warning: string | undefined;
+    if (fileExists(audioPath)) {
+      const audioBuffer = fs.readFileSync(audioPath);
+      if (audioBuffer.length > 44) {
+        audioWavBase64 = audioBuffer.toString('base64');
+      }
+    } else if (audioResult.code !== 0) {
+      warning = audioResult.stderr || 'Audio could not be extracted from the video.';
+    }
+
+    return {
+      success: true,
+      frames,
+      audioWavBase64,
+      ffmpegPath,
+      warning,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      frames: [],
+      audioWavBase64: null,
+      ffmpegPath,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
 function ensureAnimationsDir(): void {
   const dir = getAnimationsDir();
   if (!fs.existsSync(dir)) {
@@ -975,6 +1207,10 @@ ipcMain.handle('save-video-frame', async (_event, { filename, jpeg_base64, sourc
   } catch (err) {
     return { success: false, error: String(err) };
   }
+});
+
+ipcMain.handle('preprocess-video-attachment', async (_event, { videoPath, durationSeconds }: { videoPath: string; durationSeconds: number }) => {
+  return preprocessVideoWithFfmpeg(videoPath, durationSeconds);
 });
 
 ipcMain.handle('read-animation', async (_event, { filename }: { filename: string }) => {
