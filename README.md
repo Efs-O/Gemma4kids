@@ -137,6 +137,27 @@ All benchmark scripts and results live under [`scripts/`](scripts/) and [`gemma_
 
 ---
 
+
+## Optional performance experiment: MTP drafters on a side branch
+
+If some machines are too slow on **e2b/e4b**, it is reasonable to test Gemma 4 speculative decoding with model-matched `-assistant` drafters in a **non-main branch** first.
+
+- Use the **matching pair** only (for example `gemma-4-31b` with `gemma-4-31b-assistant`).
+- Expect better single-request gains on **31B dense** than on **26B-A4B MoE** at batch size 1.
+- For MoE, gains can improve with higher concurrency/batch because expert reuse is better.
+- Keep the drafter as resident as possible on GPU when available; measure acceptance rate and tokens/sec with and without MTP.
+
+Important compatibility note:
+
+- **Transformers checkpoints and GGUF checkpoints are different formats/runtime paths.** You cannot directly “mix” HF Transformer weights into a GGUF runtime process.
+- You can run either:
+  1. **HF/Transformers stack** (target + assistant both from HF format), or
+  2. **GGUF stack** (target + assistant both GGUF, e.g., llama.cpp family).
+
+For this project, treat MTP as an **experimental deployment profile** and gate it behind config flags until throughput is validated per hardware tier.
+
+---
+
 ## Development
 
 ```bash
