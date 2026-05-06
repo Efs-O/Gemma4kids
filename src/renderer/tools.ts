@@ -25,6 +25,32 @@ export const KIDS_TOOLS: ToolDefinition[] = [
   {
     type: 'function',
     function: {
+      name: 'save_video_frame',
+      description:
+        'Save ONE JPEG still from the attached video to Documents/KidAnimations/video-frames/. Use when the child wants image files on disk (favorite frame, random stills, or time_seconds). The app sends the full short video in the chat request so you can see the motion—this tool only exports a chosen frame.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filename: {
+            type: 'string',
+            description: 'Base name without .jpg, lowercase words separated by hyphens, e.g. "garden-snapshot"',
+          },
+          pick_random: {
+            type: 'boolean',
+            description: 'If true, grab a random moment in the clip (good default).',
+          },
+          time_seconds: {
+            type: 'number',
+            description: 'Seconds into the video to capture (0 … length). Ignored when pick_random is true.',
+          },
+        },
+        required: ['filename'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'read_animation',
       description: 'Read an existing animation file so you can edit it. Always call this before modifying saved code.',
       parameters: {

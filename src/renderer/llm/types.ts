@@ -6,6 +6,11 @@ export interface ChatMessage {
   content: string | null;
   /** Optional base64 image payloads for multimodal user turns. */
   images?: string[];
+  /**
+   * Optional base64-encoded short video file (e.g. MP4) for Ollama native /api/chat `videos` field.
+   * Gemma4kids: one clip per user turn; not all runtimes/models accept it — Ollama + Gemma 4 builds that support video.
+   */
+  videos?: string[];
   /** Optional reasoning text returned by Ollama when think=true. */
   thinking?: string | null;
   tool_call_id?: string;

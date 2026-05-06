@@ -542,6 +542,14 @@ body {
 
 .input-file-picker { display: none; }
 
+.input-attachment-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.input-attachment-card,
 .input-attachment-preview {
   display: flex;
   align-items: center;
@@ -551,6 +559,12 @@ body {
   border: 1.5px solid #ddd6fe;
   border-radius: 14px;
   background: #faf5ff;
+}
+
+.input-attachment-card {
+  min-width: 220px;
+  max-width: 260px;
+  flex-shrink: 0;
 }
 
 .input-attachment-thumb,
@@ -593,6 +607,23 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.input-attachment-detail {
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.input-attachment-video-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ede9fe;
+  color: #6d28d9;
+  flex-shrink: 0;
 }
 
 .input-attachment-remove {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, type MutableRefObject } from 'react';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
@@ -11,6 +11,7 @@ import {
   OLLAMA_CHAT_WORKSTATION_PREDICT,
 } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
+import { extractVideoFrameForTool } from '../services/MediaAttachmentService';
 import { isGemma426b, isGemma431b } from '../utils/pickCodingModel';
 const INLINE_TOOL_QUOTE = '<|"|>';
 
@@ -57,7 +58,7 @@ function extractPartialHtml(text: string): string | null {
 
 type ToolArgs =
   | { filename: string; html_content: string }
-  | { filename: string }
+  | { filename: string; pick_random?: boolean; time_seconds?: number }
   | Record<string, never>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -174,6 +175,34 @@ function parseInlineExecuteTool(text: string): ToolCall[] | null {
   }];
 }
 
+export type SendMessageInput = string | { text: string; images?: string[]; videos?: string[]; hasAttachment?: boolean };
+
+/** Avoid huge base64 in React state; full multimodal payloads live only in {@link useChat}'s historyRef. */
+function stripHeavyMultimodalForUi(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((m) => {
+    if (m.role !== 'user' || (!m.images?.length && !m.videos?.length)) {
+      return m;
+    }
+    const { images: _i, videos: _v, ...rest } = m;
+    return rest;
+  });
+}
+
+function normalizeMessageInput(input: SendMessageInput): {
+  text: string;
+  images?: string[];
+  videos?: string[];
+  hasAttachment: boolean;
+} {
+  if (typeof input === 'string') return { text: input, hasAttachment: false };
+  return {
+    text: input.text,
+    images: input.images?.filter((image) => image.trim().length > 0),
+    videos: input.videos?.filter((v) => v.trim().length > 0),
+    hasAttachment: input.hasAttachment === true,
+  };
+}
+
 export interface AuditSummary {
   fixes: string[];
   visualWarnings: string[];
@@ -189,7 +218,7 @@ export interface UseChatResult {
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
   ctxUsedPct: number;
-  sendMessage: (input: string | { text: string; images?: string[] }) => void;
+  sendMessage: (input: SendMessageInput) => void;
   cancel: () => void;
   retry: () => void;
   clearContext: () => void;
@@ -202,6 +231,7 @@ export function useChat(
   thinkEnabled: boolean,
   modelTier: ModelTier = 'full',
   runtimeLimits?: { numCtx?: number; numPredict?: number },
+  videoAttachmentFileRef?: MutableRefObject<File | null>,
 ): UseChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingText, setStreamingText] = useState('');
@@ -215,17 +245,10 @@ export function useChat(
 
   // Canonical message history — updated synchronously, avoids stale closure in runLoop.
   const historyRef = useRef<ChatMessage[]>([]);
+  const lastVideoFileRef = useRef<File | null>(null);
   const cancelRef = useRef<CancellationToken | null>(null);
   // Incremented on clearContext so an in-flight runLoop knows not to write stale history.
   const clearIdRef = useRef(0);
-
-  function normalizeMessageInput(input: string | { text: string; images?: string[] }): { text: string; images?: string[] } {
-    if (typeof input === 'string') return { text: input };
-    return {
-      text: input.text,
-      images: input.images?.filter((image) => image.trim().length > 0),
-    };
-  }
 
   const runLoop = useCallback(async (startHistory: ChatMessage[], token: CancellationToken) => {
     const myClearId = clearIdRef.current;
@@ -296,7 +319,7 @@ export function useChat(
           };
           history = [...history, msg];
           historyRef.current = history;
-          setMessages([...history]);
+          setMessages(stripHeavyMultimodalForUi(history));
         }
         setStreamingText('');
         setStreamingThinking('');
@@ -332,7 +355,7 @@ export function useChat(
         };
         history = [...history, assistantMsg];
         historyRef.current = history;
-        setMessages([...history]);
+        setMessages(stripHeavyMultimodalForUi(history));
         setStreamingText('');
         setStreamingThinking('');
 
@@ -361,6 +384,44 @@ export function useChat(
                 if (res.success) {
                   setLatestCode(audited.html);
                   setLastSaved(res.filename);
+                }
+                break;
+              }
+              case 'save_video_frame': {
+                const vArgs = args as { filename: string; pick_random?: boolean; time_seconds?: number };
+                const file = videoAttachmentFileRef?.current ?? lastVideoFileRef.current ?? null;
+                if (!file) {
+                  result = { error: 'No video is attached. Ask the child to attach a short video first.' };
+                  break;
+                }
+                if (!('filename' in vArgs) || typeof vArgs.filename !== 'string') {
+                  throw new Error('save_video_frame requires filename');
+                }
+                const stem = vArgs.filename;
+                const pickRandom = vArgs.pick_random === true;
+                const tsRaw = vArgs.time_seconds;
+                const timeSeconds = typeof tsRaw === 'number' && Number.isFinite(tsRaw) ? tsRaw : undefined;
+                let snap: { base64: string; timeSeconds: number; durationSeconds: number };
+                try {
+                  snap = await extractVideoFrameForTool(file, {
+                    pickRandom: pickRandom || timeSeconds === undefined,
+                    timeSeconds,
+                  });
+                } catch (e) {
+                  result = { error: e instanceof Error ? e.message : String(e) };
+                  break;
+                }
+                const res = await window.electronAPI.saveVideoFrame(stem, snap.base64, 'gemma');
+                if (res.success) {
+                  result = {
+                    ok: true,
+                    saved_as: res.filename,
+                    path: res.path,
+                    captured_at_seconds: snap.timeSeconds,
+                    video_duration_seconds: snap.durationSeconds,
+                  };
+                } else {
+                  result = { error: res.error ?? 'Could not save the frame.' };
                 }
                 break;
               }
@@ -394,7 +455,7 @@ export function useChat(
           };
           history = [...history, toolMsg];
           historyRef.current = history;
-          setMessages([...history]);
+          setMessages(stripHeavyMultimodalForUi(history));
         }
 
         // If Gemma already wrote text before the tool call, that IS the response — no follow-up needed.
@@ -428,7 +489,7 @@ export function useChat(
       };
       history = [...history, finalMsg];
       historyRef.current = history;
-      setMessages([...history]);
+      setMessages(stripHeavyMultimodalForUi(history));
       setStreamingText('');
       setStreamingThinking('');
 
@@ -445,17 +506,17 @@ export function useChat(
       setStatus('idle');
       return;
     }
-  }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict]);
+  }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
 
-  const sendMessage = useCallback((input: string | { text: string; images?: string[] }) => {
-    const { text, images } = normalizeMessageInput(input);
+  const sendMessage = useCallback((input: SendMessageInput) => {
+    const { text, images, videos, hasAttachment } = normalizeMessageInput(input);
     // Layer 1: instant keyword block — no model call, no streaming.
-    if (modelTier === 'simple' && isSimpleMotionKeyword(text)) {
+    if (modelTier === 'simple' && !hasAttachment && !images?.length && !videos?.length && isSimpleMotionKeyword(text)) {
       const userMsg: ChatMessage = { role: 'user', content: text, images };
       const sisterMsg: ChatMessage = { role: 'assistant', content: SISTER_MESSAGE[detectLang(text)] };
       const updated = [...historyRef.current, userMsg, sisterMsg];
       historyRef.current = updated;
-      setMessages(updated);
+      setMessages(stripHeavyMultimodalForUi(updated));
       return;
     }
 
@@ -467,10 +528,13 @@ export function useChat(
     setStreamingThinking('');
     setLatestCode(null);
 
-    const userMsg: ChatMessage = { role: 'user', content: text, images };
+    const userMsg: ChatMessage = { role: 'user', content: text, images, videos };
+    if (videos?.length && videoAttachmentFileRef?.current) {
+      lastVideoFileRef.current = videoAttachmentFileRef.current;
+    }
     const updated = [...historyRef.current, userMsg];
     historyRef.current = updated;
-    setMessages(updated);
+    setMessages(stripHeavyMultimodalForUi(updated));
     runLoop(updated, token);
   }, [runLoop, modelTier]);
 
@@ -495,6 +559,7 @@ export function useChat(
     ++clearIdRef.current;
     cancelRef.current?.cancel();
     historyRef.current = [];
+    lastVideoFileRef.current = null;
     setMessages([]);
     setStreamingText('');
     setStreamingThinking('');
@@ -516,7 +581,7 @@ export function useChat(
     const msg: ChatMessage = { role: 'user', content: text };
     const updated = [...filtered, msg];
     historyRef.current = updated;
-    setMessages(updated);
+    setMessages(stripHeavyMultimodalForUi(updated));
   }, []);
 
   return { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext, injectContext };

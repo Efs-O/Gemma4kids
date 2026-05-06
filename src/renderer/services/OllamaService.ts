@@ -203,6 +203,20 @@ export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
   return encoded.audioBase64;
 }
 
+export async function transcribeAudioBlob(
+  blob: Blob,
+  model: string = 'gemma4:e4b',
+  keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+  languageHint?: string,
+): Promise<{ text: string; durationSeconds: number }> {
+  const encoded = await audioBlobToWav16k(blob);
+  const text = await transcribe(encoded.audioBase64, model, keepAlive, languageHint);
+  return {
+    text,
+    durationSeconds: encoded.durationSeconds,
+  };
+}
+
 /**
  * Transcribe audio via Gemma 4 E4B.
  * audioBase64 must be a base64-encoded 16kHz mono WAV (use audioBlobToWav16kBase64).
@@ -266,6 +280,17 @@ function mapLlamaToolCall(raw: {
   };
 }): { id: string; type: 'function'; function: { name: string; arguments: string } } {
   return raw;
+}
+
+/** llama-server IPC payload rejects Ollama-only `images` / `videos` on chat rows. */
+function chatMessagesForLlamaCppIpc(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((m) => {
+    if (m.role !== 'user' || (!m.images && !m.videos)) {
+      return m;
+    }
+    const { images, videos, ...rest } = m;
+    return rest;
+  });
 }
 
 export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntimeAdapter {
@@ -343,7 +368,7 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
 
         void window.electronAPI.llamaCppStartStream(requestId, config, {
           model: params.model,
-          messages: params.messages,
+          messages: chatMessagesForLlamaCppIpc(params.messages),
           tools: params.tools,
           max_tokens: params.numPredict,
           temperature: params.temperature,
