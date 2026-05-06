@@ -19,6 +19,7 @@ assets/icon.icns
 *.md
 !README.md
 !SETUP.md
+!mtp_speculative_decoding_plan.md
 
 # Local tooling / artifacts — never commit
 **/tts-test-output/
