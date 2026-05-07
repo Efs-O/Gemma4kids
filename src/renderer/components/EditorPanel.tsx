@@ -89,7 +89,7 @@ export function EditorPanel({ code, onChange, auditResult, isStreaming, saveStat
     <div className="editor-panel">
       <div className="editor-label">
         ✏️ Your Code
-        {saveStatus === 'unsaved' && <span className="save-dot save-dot--unsaved" title="Unsaved changes — press Save before asking Gemma to review">●</span>}
+        {saveStatus === 'unsaved' && <span className="save-dot save-dot--unsaved" title="Unsaved changes — press Save animation before asking Gemma to review">●</span>}
         {saveStatus === 'saved' && <span className="save-dot save-dot--saved" title="Saved!">●</span>}
         {badgeText && <span className="audit-badge">{badgeText}</span>}
         <button

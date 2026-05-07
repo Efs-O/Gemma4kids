@@ -3,6 +3,14 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
   saveAnimation: (filename: string, html_content: string, source?: 'gemma' | 'kid') =>
     ipcRenderer.invoke('save-animation', { filename, html_content, source }),
+  saveVideoFrame: (filename: string, jpeg_base64: string, source?: 'gemma' | 'kid') =>
+    ipcRenderer.invoke('save-video-frame', { filename, jpeg_base64, source }),
+  inspectVideoAttachment: (videoPath: string) =>
+    ipcRenderer.invoke('inspect-video-attachment', { videoPath }),
+  preprocessVideoAttachment: (videoPath: string, durationSeconds: number) =>
+    ipcRenderer.invoke('preprocess-video-attachment', { videoPath, durationSeconds }),
+  appendRendererDebugLog: (scope: string, payload: unknown) =>
+    ipcRenderer.invoke('append-renderer-debug-log', { scope, payload }),
   readAnimation: (filename: string) =>
     ipcRenderer.invoke('read-animation', { filename }),
   listAnimations: () =>

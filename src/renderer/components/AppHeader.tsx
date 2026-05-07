@@ -59,7 +59,7 @@ export function AppHeader(props: Props) {
       </div>
       <div className="header-controls">
         <input className="filename-input" value={filename} onChange={(event) => onFilenameChange(event.target.value)} placeholder="animation name" />
-        <button className="btn-save" onClick={onSave} disabled={!displayCode}>Save</button>
+        <button className="btn-save" onClick={onSave} disabled={!displayCode}>Save animation</button>
         <button className="btn-preview" onClick={onOpenBrowser} disabled={!currentProjectFilename || isStreaming}>Open in Browser</button>
         <button className="btn-setup" onClick={onOpenSetup} aria-label="Setup assistant" title="Open Setup Assistant">Setup</button>
         <button className="btn-help" onClick={onToggleHelp} aria-label="Help" title="How to use Gemma4kids">?</button>

@@ -4,6 +4,7 @@ import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
 import type { ChatMessage, ToolDefinition } from '../llm/types';
 
 const OLLAMA_BASE = 'http://localhost:11434';
+const OLLAMA_TRANSCRIBE_TIMEOUT_MS = 25000;
 
 export type RuntimeKind = 'ollama' | 'llama_cpp';
 
@@ -147,9 +148,15 @@ export interface EncodedAudioPayload {
 function buildTranscribePrompt(languageHint?: string): string {
   const hint = (languageHint ?? '').trim().toLowerCase();
   if (hint.startsWith('el')) {
-    return 'The spoken language is Greek (el-GR). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Return only Greek characters. Never translate. Never transliterate. Output only the transcription text, with no newlines. Write numbers as digits.';
+    return 'The spoken language is most likely Greek (el-GR). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is Greek, return only Greek script. If a short foreign word is clearly spoken, keep that word exactly as spoken. Output only the transcription text, with no newlines. Write numbers as digits.';
   }
-  return 'Transcribe exactly what is spoken in the audio. Keep the original language and script exactly as spoken. Never translate. Never transliterate. If the speaker uses Greek, return Greek characters. Output only the transcription text, with no newlines. Write numbers as digits.';
+  if (hint.startsWith('de')) {
+    return 'The spoken language is most likely German (de-DE). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is German, return only German text with normal German spelling. If the speaker switches briefly to another language, keep those exact spoken words only where they were actually said. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
+  if (hint.startsWith('en')) {
+    return 'The spoken language is most likely English (en). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is English, return only English text. If the speaker switches briefly to another language, keep those exact spoken words only where they were actually said. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
+  return 'Transcribe exactly what is spoken in the audio. First infer whether the speech is Greek, German, English, or another language. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages unless the speaker actually switches languages. If the speech is Greek, return Greek script. If the speech is German, return German spelling. If the speech is English, return English text. Output only the transcription text, with no newlines. Write numbers as digits.';
 }
 
 function previewText(text: string, max = 140): string {
@@ -208,6 +215,20 @@ export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
   return encoded.audioBase64;
 }
 
+export async function transcribeAudioBlob(
+  blob: Blob,
+  model: string = 'gemma4:e4b',
+  keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+  languageHint?: string,
+): Promise<{ text: string; durationSeconds: number }> {
+  const encoded = await audioBlobToWav16k(blob);
+  const text = await transcribe(encoded.audioBase64, model, keepAlive, languageHint);
+  return {
+    text,
+    durationSeconds: encoded.durationSeconds,
+  };
+}
+
 /**
  * Transcribe audio via Gemma 4 E4B.
  * audioBase64 must be a base64-encoded 16kHz mono WAV (use audioBlobToWav16kBase64).
@@ -227,23 +248,32 @@ export async function transcribe(
     numCtx: OLLAMA_TRANSCRIBE_PROFILE.numCtx,
     audioBase64Length: audioBase64.length,
   });
-  const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      messages: [{
-        role: 'user',
-        // Audio must come before text prompt per Ollama workaround
-        images: [audioBase64],
-        content: buildTranscribePrompt(languageHint),
-      }],
-      think: OLLAMA_TRANSCRIBE_PROFILE.think,
-      keep_alive: keepAlive,
-      stream: false,
-      options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${OLLAMA_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [{
+          role: 'user',
+          // Audio must come before text prompt per Ollama workaround
+          images: [audioBase64],
+          content: buildTranscribePrompt(languageHint),
+        }],
+        think: OLLAMA_TRANSCRIBE_PROFILE.think,
+        keep_alive: keepAlive,
+        stream: false,
+        options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
+      }),
+      signal: AbortSignal.timeout(OLLAMA_TRANSCRIBE_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      throw new Error('Transcription took too long. Try again, or keep going without audio words.');
+    }
+    throw error;
+  }
 
   if (!res.ok) throw new Error(`Transcribe HTTP ${res.status}`);
 
@@ -283,6 +313,16 @@ function mapLlamaToolCall(raw: {
   };
 }): { id: string; type: 'function'; function: { name: string; arguments: string } } {
   return raw;
+}
+
+function chatMessagesForLlamaCppIpc(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((message) => {
+    if (message.role !== 'user' || (!message.images && !message.videos)) {
+      return message;
+    }
+    const { images, videos, ...rest } = message;
+    return rest;
+  });
 }
 
 export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntimeAdapter {
@@ -360,7 +400,7 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
 
         void window.electronAPI.llamaCppStartStream(requestId, config, {
           model: params.model,
-          messages: params.messages,
+          messages: chatMessagesForLlamaCppIpc(params.messages),
           tools: params.tools,
           max_tokens: params.numPredict,
           temperature: params.temperature,

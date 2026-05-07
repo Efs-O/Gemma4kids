@@ -32,8 +32,26 @@ function toolCallsForOllamaReplay(calls: ToolCall[]): Record<string, unknown>[] 
 }
 
 /** Ollama /api/chat expects non-null string content on tool rows. */
+function lastUserTurnIndexWithImages(messages: ChatMessage[]): number {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role === 'user' && Array.isArray(m.images) && m.images.length > 0) return i;
+  }
+  return -1;
+}
+
+function lastUserTurnIndexWithVideos(messages: ChatMessage[]): number {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role === 'user' && Array.isArray(m.videos) && m.videos.length > 0) return i;
+  }
+  return -1;
+}
+
 function messagesForOllamaApi(messages: ChatMessage[]): Record<string, unknown>[] {
-  return messages.map((m) => {
+  const lastImagesIdx = lastUserTurnIndexWithImages(messages);
+  const lastVideosIdx = lastUserTurnIndexWithVideos(messages);
+  return messages.map((m, i) => {
     const row: Record<string, unknown> = { role: m.role };
     if (m.role === 'tool') {
       row.name = m.name;
@@ -47,8 +65,11 @@ function messagesForOllamaApi(messages: ChatMessage[]): Record<string, unknown>[
     } else {
       row.content = m.content ?? '';
     }
-    if (m.role === 'user' && Array.isArray(m.images) && m.images.length > 0) {
+    if (m.role === 'user' && Array.isArray(m.images) && m.images.length > 0 && i === lastImagesIdx) {
       row.images = m.images;
+    }
+    if (m.role === 'user' && Array.isArray(m.videos) && m.videos.length > 0 && i === lastVideosIdx) {
+      row.videos = m.videos;
     }
     return row;
   });

@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import { Message } from './Message';
 import { InputRow } from './InputRow';
 import type { ChatMessage } from '../llm/types';
 import { createTTSService } from '../services/TTSService';
 import type { ModelTier } from '../utils/pickCodingModel';
+import type { SendMessageInput } from '../hooks/useChat';
 
 const ALL_STARTERS: { label: string; text: string }[] = [
   { label: '🏀 Make a bouncing ball animation', text: 'Make a bouncing ball animation' },
@@ -75,7 +76,7 @@ interface Props {
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
   hasCode: boolean;
-  onSend: (input: string | { text: string; images?: string[] }) => void;
+  onSend: (input: SendMessageInput) => void;
   onCancel: () => void;
   onRetry: () => void;
   e4bAvailable: boolean;
@@ -86,6 +87,8 @@ interface Props {
   ctxUsedPct?: number;
   onClearContext?: () => void;
   modelTier?: ModelTier;
+  supportsVisualAttachments: boolean;
+  videoAttachmentFileRef?: MutableRefObject<File | null>;
 }
 
 export function ChatPanel({
@@ -106,9 +109,12 @@ export function ChatPanel({
   ctxUsedPct,
   onClearContext,
   modelTier = 'full',
+  supportsVisualAttachments,
+  videoAttachmentFileRef,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const effectiveShowThinking = false;
   const userScrolledUpRef = useRef(false);
   /** True only while we assign scrollTop — ignore synthetic scroll events for stick-to-bottom heuristics. */
   const programmaticScrollRef = useRef(false);
@@ -186,12 +192,12 @@ export function ChatPanel({
       m.role === 'assistant' &&
       (
         (m.content != null && m.content !== '') ||
-        (!m.tool_calls && showThinking && !!m.thinking)
+        (!m.tool_calls && effectiveShowThinking && !!m.thinking)
       )
     ),
   );
 
-  const hasStreamingMessage = !!streamingText || (showThinking && !!streamingThinking);
+  const hasStreamingMessage = !!streamingText || (effectiveShowThinking && !!streamingThinking);
   const lastIsAssistant = visible.length > 0 && visible[visible.length - 1].role === 'assistant';
   // Show starters when no animation exists yet (no code generated), regardless of message count.
   const showStarters = !hasCode && !hasStreamingMessage && status === 'idle';
@@ -237,16 +243,16 @@ export function ChatPanel({
             role={msg.role as string}
             content={msg.content ?? ''}
             thinking={msg.thinking ?? ''}
-            showThinking={showThinking}
+            showThinking={effectiveShowThinking}
             tts={tts}
           />
         ))}
-        {(streamingText || (showThinking && streamingThinking)) && (
+        {(streamingText || (effectiveShowThinking && streamingThinking)) && (
           <Message
             role="assistant"
             content={streamingText}
             thinking={streamingThinking}
-            showThinking={showThinking}
+            showThinking={effectiveShowThinking}
             streaming
             tts={tts}
           />
@@ -283,8 +289,10 @@ export function ChatPanel({
           transcribeModel={transcribeModel}
           codingModel={codingModel}
           ctxUsedPct={ctxUsedPct}
-        onClearContext={onClearContext}
-      />
+          onClearContext={onClearContext}
+          supportsVisualAttachments={supportsVisualAttachments}
+          videoAttachmentFileRef={videoAttachmentFileRef}
+        />
     </div>
   );
 }

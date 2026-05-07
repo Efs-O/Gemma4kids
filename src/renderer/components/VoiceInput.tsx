@@ -62,8 +62,8 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceStateSafe('transcribing');
     try {
-      const encoded = await audioBlobToWav16k(blob);
       const languageHint = navigator.languages?.[0] ?? navigator.language;
+      const encoded = await audioBlobToWav16k(blob);
       // Revisit this override if future Gemma/Ollama releases improve Greek ASR
       // on E4B. Current local tests on both synthetic and real Greek audio show
       // E2B stays in Greek script more reliably, while E4B often drifts into

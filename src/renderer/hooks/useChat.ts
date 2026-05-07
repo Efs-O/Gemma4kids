@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, type MutableRefObject } from 'react';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
@@ -12,6 +12,7 @@ import {
 } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
 import { isGemma426b, isGemma431b } from '../utils/pickCodingModel';
+import { SIMPLE_VIDEO_UNDERSTANDING_CONTEXT, VIDEO_EXPORT_TOOL_CONTEXT } from '../videoPromptNotes';
 import {
   buildRequestMessages,
   classifySimpleMode,
@@ -28,6 +29,100 @@ import { executeToolCall, parseInlineExecuteTool, type AuditSummary } from '../c
 
 export type { AuditSummary } from '../chatTools';
 
+export type SendMessageInput =
+  | string
+  | { text: string; images?: string[]; videos?: string[]; hasAttachment?: boolean; contextNote?: string };
+
+function stripHeavyMultimodalForUi(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((message) => {
+    if (message.role !== 'user' || (!message.images?.length && !message.videos?.length)) {
+      return message;
+    }
+    const { images: _images, videos: _videos, ...rest } = message;
+    return rest;
+  });
+}
+
+function isEditIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  if (lower.startsWith('[context:')) return true;
+  return [
+    'fix', 'bug', 'broken', 'check', 'review', 'debug', 'read', 'update',
+    'change', 'edit', 'continue', 'improve', 'make it', 'add more',
+    'faster', 'slower', 'color', 'bigger', 'smaller', 'wrong',
+  ].some((term) => lower.includes(term));
+}
+
+function isCodeCreationIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return [
+    'animation',
+    'animate',
+    'game',
+    'html',
+    'code',
+    'canvas',
+    'css',
+    'javascript',
+    'js',
+    'web page',
+    'webpage',
+    'editor',
+    'open in browser',
+  ].some((term) => lower.includes(term));
+}
+
+function isVideoFrameExportIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return [
+    'save frame',
+    'save frames',
+    'save some frames',
+    'save a few frames',
+    'export frame',
+    'export frames',
+    'grab frame',
+    'grab frames',
+    'pick frame',
+    'pick frames',
+    'capture frame',
+    'capture frames',
+    'video frame',
+    'video frames',
+    'still frame',
+    'still frames',
+    'snapshot',
+    'snapshots',
+  ].some((term) => lower.includes(term));
+}
+
+function isVideoUnderstandingIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return [
+    'what is happening',
+    "what's happening",
+    'what happens',
+    'what is this video about',
+    "what's this video about",
+    'what this video is about',
+    'what is in this video',
+    "what's in this video",
+    'what does this video show',
+    'describe this video',
+    'describe the video',
+    'summarize this video',
+    'summarise this video',
+    'about this video',
+    'tell me about this video',
+    'what do you see',
+    'who is in the video',
+    'what color',
+    'what colour',
+    'is it',
+    'are they',
+  ].some((term) => lower.includes(term));
+}
+
 export interface UseChatResult {
   messages: ChatMessage[];
   streamingText: string;
@@ -38,7 +133,7 @@ export interface UseChatResult {
   status: 'idle' | 'streaming' | 'error';
   errorMsg: string;
   ctxUsedPct: number;
-  sendMessage: (input: string | { text: string; images?: string[] }) => void;
+  sendMessage: (input: SendMessageInput) => void;
   cancel: () => void;
   retry: () => void;
   clearContext: () => void;
@@ -51,6 +146,7 @@ export function useChat(
   thinkEnabled: boolean,
   modelTier: ModelTier = 'full',
   runtimeLimits?: { numCtx?: number; numPredict?: number },
+  videoAttachmentFileRef?: MutableRefObject<File | null>,
 ): UseChatResult {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamingText, setStreamingText] = useState('');
@@ -63,14 +159,24 @@ export function useChat(
   const [ctxUsedPct, setCtxUsedPct] = useState(0);
 
   const historyRef = useRef<ChatMessage[]>([]);
+  const lastVideoFileRef = useRef<File | null>(null);
   const cancelRef = useRef<CancellationToken | null>(null);
   const clearIdRef = useRef(0);
 
-  function normalizeMessageInput(input: string | { text: string; images?: string[] }): { text: string; images?: string[] } {
-    if (typeof input === 'string') return { text: input };
+  function normalizeMessageInput(input: SendMessageInput): {
+    text: string;
+    images?: string[];
+    videos?: string[];
+    hasAttachment: boolean;
+    contextNote?: string;
+  } {
+    if (typeof input === 'string') return { text: input, hasAttachment: false };
     return {
       text: input.text,
       images: input.images?.filter((image) => image.trim().length > 0),
+      videos: input.videos?.filter((video) => video.trim().length > 0),
+      hasAttachment: input.hasAttachment === true,
+      contextNote: input.contextNote?.trim() || undefined,
     };
   }
 
@@ -108,7 +214,7 @@ export function useChat(
         };
         history = [...history, msg];
         historyRef.current = history;
-        setMessages([...history]);
+        setMessages(stripHeavyMultimodalForUi(history));
         setStreamingText('');
         setStreamingThinking('');
         setStatus('idle');
@@ -175,7 +281,7 @@ export function useChat(
           };
           history = [...history, msg];
           historyRef.current = history;
-          setMessages([...history]);
+          setMessages(stripHeavyMultimodalForUi(history));
         }
         setStreamingText('');
         setStreamingThinking('');
@@ -209,7 +315,7 @@ export function useChat(
         };
         history = [...history, assistantMsg];
         historyRef.current = history;
-        setMessages([...history]);
+        setMessages(stripHeavyMultimodalForUi(history));
         setStreamingText('');
         setStreamingThinking('');
 
@@ -218,6 +324,7 @@ export function useChat(
             setLastAudit,
             setLatestCode,
             setLastSaved,
+            getAttachedVideoFile: () => videoAttachmentFileRef?.current ?? lastVideoFileRef.current ?? null,
           });
 
           const toolMsg: ChatMessage = {
@@ -228,7 +335,7 @@ export function useChat(
           };
           history = [...history, toolMsg];
           historyRef.current = history;
-          setMessages([...history]);
+          setMessages(stripHeavyMultimodalForUi(history));
         }
 
         if (assembled.trim()) {
@@ -257,7 +364,7 @@ export function useChat(
       };
       history = [...history, finalMsg];
       historyRef.current = history;
-      setMessages([...history]);
+      setMessages(stripHeavyMultimodalForUi(history));
       setStreamingText('');
       setStreamingThinking('');
 
@@ -274,26 +381,23 @@ export function useChat(
       setStatus('idle');
       return;
     }
-  }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict]);
+  }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
 
-  const sendMessage = useCallback((input: string | { text: string; images?: string[] }) => {
-    if (ctxUsedPct >= 90) {
-      return;
-    }
-    const { text, images } = normalizeMessageInput(input);
+  const sendMessage = useCallback((input: SendMessageInput) => {
+    const { text, images, videos, hasAttachment, contextNote } = normalizeMessageInput(input);
     console.info('[chat:user-message]', {
       model,
       tier: modelTier,
       lang: detectLang(text),
-      inputKind: Array.isArray(images) && images.length > 0 ? 'multimodal' : 'text',
+      inputKind: hasAttachment ? 'multimodal' : 'text',
       textPreview: previewText(text),
     });
-    if (modelTier === 'simple' && isSimpleMotionKeyword(text)) {
-      const userMsg: ChatMessage = { role: 'user', content: text, images };
+    if (modelTier === 'simple' && !hasAttachment && !images?.length && !videos?.length && isSimpleMotionKeyword(text)) {
+      const userMsg: ChatMessage = { role: 'user', content: text, images, videos };
       const sisterMsg: ChatMessage = { role: 'assistant', content: SISTER_MESSAGE[detectLang(text)] };
       const updated = [...historyRef.current, userMsg, sisterMsg];
       historyRef.current = updated;
-      setMessages(updated);
+      setMessages(stripHeavyMultimodalForUi(updated));
       return;
     }
 
@@ -305,12 +409,37 @@ export function useChat(
     setStreamingThinking('');
     setLatestCode(null);
 
-    const userMsg: ChatMessage = { role: 'user', content: text, images };
-    const updated = [...historyRef.current, userMsg];
+    const userMsg: ChatMessage = { role: 'user', content: text, images, videos };
+    if (videoAttachmentFileRef?.current) {
+      lastVideoFileRef.current = videoAttachmentFileRef.current;
+    }
+    const contextMessages: ChatMessage[] = [];
+    if (contextNote) {
+      contextMessages.push({ role: 'user', content: `[Context: ${contextNote}]` });
+    }
+    if (
+      videos?.length &&
+      isVideoFrameExportIntent(text) &&
+      !isCodeCreationIntent(text) &&
+      !isEditIntent(text)
+    ) {
+      contextMessages.push({ role: 'user', content: `[Context: ${VIDEO_EXPORT_TOOL_CONTEXT}]` });
+    }
+    if (
+      modelTier === 'simple' &&
+      videos?.length &&
+      isVideoUnderstandingIntent(text) &&
+      !isVideoFrameExportIntent(text) &&
+      !isCodeCreationIntent(text) &&
+      !isEditIntent(text)
+    ) {
+      contextMessages.push({ role: 'user', content: `[Context: ${SIMPLE_VIDEO_UNDERSTANDING_CONTEXT}]` });
+    }
+    const updated = [...historyRef.current, userMsg, ...contextMessages];
     historyRef.current = updated;
-    setMessages(updated);
+    setMessages(stripHeavyMultimodalForUi(updated));
     void runLoop(updated, token);
-  }, [ctxUsedPct, model, modelTier, runLoop]);
+  }, [model, modelTier, runLoop, videoAttachmentFileRef]);
 
   const cancel = useCallback(() => {
     cancelRef.current?.cancel();
@@ -333,6 +462,7 @@ export function useChat(
     ++clearIdRef.current;
     cancelRef.current?.cancel();
     historyRef.current = [];
+    lastVideoFileRef.current = null;
     setMessages([]);
     setStreamingText('');
     setStreamingThinking('');
@@ -351,7 +481,7 @@ export function useChat(
     const msg: ChatMessage = { role: 'user', content: text };
     const updated = [...filtered, msg];
     historyRef.current = updated;
-    setMessages(updated);
+    setMessages(stripHeavyMultimodalForUi(updated));
   }, []);
 
   return { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext, injectContext };

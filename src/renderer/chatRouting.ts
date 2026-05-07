@@ -58,7 +58,13 @@ export function extractPartialHtml(text: string): string | null {
 export function getLatestUserText(history: ChatMessage[]): string {
   for (let i = history.length - 1; i >= 0; i--) {
     const msg = history[i];
-    if (msg.role === 'user' && typeof msg.content === 'string') return msg.content;
+    if (
+      msg.role === 'user' &&
+      typeof msg.content === 'string' &&
+      !msg.content.startsWith('[Context:')
+    ) {
+      return msg.content;
+    }
   }
   return '';
 }

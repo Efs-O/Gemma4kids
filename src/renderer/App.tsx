@@ -52,11 +52,12 @@ export default function App() {
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const greekTranscribeModel = useMemo(() => pickGreekTranscribeModel(models), [models]);
   const voiceInputAvailable = useMemo(() => runtimeInUse === 'ollama' && (models.some(isGemma4EdgeE4b) || models.some(isGemma4EdgeE2b)), [models, runtimeInUse]);
+  const supportsVisualAttachments = runtimeAdapter.capabilities.supportsMultimodal;
   const availableCodingModels = useMemo(() => (
     runtimeInUse === 'llama_cpp'
       ? llamaCodingModels
       : sortGemma4CodingModelsSmallestFirst(
-        models.filter((m) => isGemma431b(m) || isGemma426b(m) || isGemma4EdgeE4b(m) || isGemma4EdgeE2b(m)),
+        models.filter((m) => /gemma/i.test(m)),
       )
   ), [llamaCodingModels, models, runtimeInUse]);
 
@@ -75,7 +76,8 @@ export default function App() {
     () => runtimeInUse === 'llama_cpp' ? { numCtx: llamaSetup.numCtx, numPredict: llamaSetup.numPredict } : undefined,
     [llamaSetup.numCtx, llamaSetup.numPredict, runtimeInUse],
   );
-  const { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext, injectContext } = useChat(runtimeAdapter, codingModel, chatThinkEnabled, modelTier, customRuntimeLimits);
+  const videoAttachmentFileRef = useRef<File | null>(null);
+  const { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext, injectContext } = useChat(runtimeAdapter, codingModel, chatThinkEnabled, modelTier, customRuntimeLimits, videoAttachmentFileRef);
 
   const [sidebarWidth, setSidebarWidth] = useState(() => { const stored = localStorage.getItem('g4k-sidebar-width'); const value = stored ? parseInt(stored, 10) : 196; return Number.isNaN(value) || value < 80 || value > 400 ? 196 : value; });
   const [chatWidth, setChatWidth] = useState(() => { const stored = localStorage.getItem('g4k-chat-width'); const value = stored ? parseInt(stored, 10) : 390; return Number.isNaN(value) || value < 200 || value > 700 ? 390 : value; });
@@ -314,6 +316,8 @@ export default function App() {
               ctxUsedPct={ctxUsedPct}
               onClearContext={handleClearContext}
               modelTier={modelTier}
+              supportsVisualAttachments={supportsVisualAttachments}
+              videoAttachmentFileRef={videoAttachmentFileRef}
             />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { auditHtml } from './htmlAudit';
 import type { ToolCall } from './llm/types';
+import { extractVideoFrameForTool } from './services/MediaAttachmentService';
 
 const INLINE_TOOL_QUOTE = '<|"|>';
 
@@ -10,13 +11,14 @@ export interface AuditSummary {
 
 type ToolArgs =
   | { filename: string; html_content: string }
-  | { filename: string }
+  | { filename: string; pick_random?: boolean; time_seconds?: number }
   | Record<string, never>;
 
 interface ToolExecutionCallbacks {
   setLastAudit: (summary: AuditSummary) => void;
   setLatestCode: (html: string) => void;
   setLastSaved: (filename: string) => void;
+  getAttachedVideoFile?: () => File | null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -132,6 +134,37 @@ export async function executeToolCall(
           throw new Error('read_animation requires filename');
         }
         return window.electronAPI.readAnimation(args.filename);
+      case 'save_video_frame': {
+        if (!('filename' in args)) {
+          throw new Error('save_video_frame requires filename');
+        }
+        const file = callbacks.getAttachedVideoFile?.() ?? null;
+        if (!file) {
+          return { error: 'No video is attached. Ask the child to attach a short video first.' };
+        }
+
+        const videoArgs = args as { filename: string; pick_random?: boolean; time_seconds?: number };
+        const pickRandom = videoArgs.pick_random === true;
+        const timeSeconds =
+          typeof videoArgs.time_seconds === 'number' && Number.isFinite(videoArgs.time_seconds)
+            ? videoArgs.time_seconds
+            : undefined;
+        const snap = await extractVideoFrameForTool(file, {
+          pickRandom: pickRandom || timeSeconds === undefined,
+          timeSeconds,
+        });
+        const res = await window.electronAPI.saveVideoFrame(args.filename, snap.base64, 'gemma');
+        if (!res.success) {
+          return { error: res.error ?? 'Could not save the frame.' };
+        }
+        return {
+          ok: true,
+          saved_as: res.filename,
+          path: res.path,
+          captured_at_seconds: snap.timeSeconds,
+          video_duration_seconds: snap.durationSeconds,
+        };
+      }
       case 'list_animations':
         return window.electronAPI.listAnimations();
       case 'open_in_browser':
