@@ -69,10 +69,19 @@ interface VideoPreprocessResult {
   error?: string;
 }
 
+interface VideoInspectResult {
+  success: boolean;
+  durationSeconds?: number;
+  posterDataUrl?: string | null;
+  ffmpegPath?: string;
+  error?: string;
+}
+
 const LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS = 240000;
 const LLAMA_DEFAULT_BATCH_SIZE = 512;
 const LLAMA_RUNTIME_LOG = 'llama-cpp-runtime.log';
+const VIDEO_PREPROCESS_LOG = 'video-preprocess.log';
 const VIDEO_PREPROCESS_MIN_FRAMES = 3;
 const VIDEO_PREPROCESS_MAX_FRAMES = 6;
 const VIDEO_PREPROCESS_AUDIO_MAX_SECONDS = 30;
@@ -123,6 +132,31 @@ function resetLlamaRuntimeLog(): string {
   const logPath = getLlamaRuntimeLogPath();
   fs.writeFileSync(logPath, '', 'utf8');
   return logPath;
+}
+
+function getVideoPreprocessLogPath(): string {
+  return path.join(app.getPath('userData'), VIDEO_PREPROCESS_LOG);
+}
+
+function appendVideoPreprocessLog(line: string): void {
+  const logPath = getVideoPreprocessLogPath();
+  const stamped = `${new Date().toISOString()} ${line}`;
+  try {
+    fs.appendFileSync(logPath, `${stamped}\n`, 'utf8');
+  } catch {
+    // Logging should never break video preprocessing.
+  }
+  console.info(stamped);
+}
+
+function appendRendererDebugLog(scope: string, payload: unknown): void {
+  let serialized: string;
+  try {
+    serialized = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  } catch {
+    serialized = String(payload);
+  }
+  appendVideoPreprocessLog(`[renderer:${scope}] ${serialized}`);
 }
 
 function appendLlamaRuntimeLog(logPath: string, line: string): void {
@@ -838,13 +872,91 @@ function buildRepresentativeFrameTimes(durationSeconds: number): number[] {
   });
 }
 
-async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: number): Promise<VideoPreprocessResult> {
+function parseDurationFromFfmpegStderr(stderr: string): number | null {
+  const match = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/i.exec(stderr);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const seconds = Number(match[3]);
+  if (![hours, minutes, seconds].every(Number.isFinite)) return null;
+  return (hours * 3600) + (minutes * 60) + seconds;
+}
+
+async function inspectVideoWithFfmpeg(videoPath: string): Promise<VideoInspectResult> {
+  appendVideoPreprocessLog(`[inspect:start] video="${videoPath}"`);
   if (!path.isAbsolute(videoPath) || !fileExists(videoPath)) {
+    appendVideoPreprocessLog(`[inspect:error] video file missing or not absolute: "${videoPath}"`);
+    return { success: false, error: 'The selected video file could not be found on disk.' };
+  }
+
+  const ffmpegPath = findFfmpegBinary();
+  if (!ffmpegPath) {
+    appendVideoPreprocessLog('[inspect:error] ffmpeg not found');
+    return { success: false, error: 'ffmpeg was not found. Install ffmpeg or set FFMPEG_PATH so Gemma can prepare video attachments.' };
+  }
+
+  const tempRoot = fs.mkdtempSync(path.join(app.getPath('temp'), 'gemma4kids-video-inspect-'));
+  appendVideoPreprocessLog(`[inspect:ffmpeg] path="${ffmpegPath}" temp="${tempRoot}"`);
+  try {
+    const probe = await runFfmpeg(ffmpegPath, ['-hide_banner', '-i', videoPath]);
+    const durationSeconds = parseDurationFromFfmpegStderr(probe.stderr);
+    appendVideoPreprocessLog(`[inspect:duration] parsed=${String(durationSeconds)}`);
+    if (!durationSeconds || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+      return { success: false, ffmpegPath, error: 'That video could not be read here.' };
+    }
+    if (durationSeconds > VIDEO_PREPROCESS_AUDIO_MAX_SECONDS) {
+      return { success: false, ffmpegPath, error: `Please pick a short video under ${VIDEO_PREPROCESS_AUDIO_MAX_SECONDS} seconds.` };
+    }
+
+    const posterPath = path.join(tempRoot, 'poster.jpg');
+    const poster = await runFfmpeg(ffmpegPath, [
+      '-y',
+      '-ss',
+      '0.1',
+      '-i',
+      videoPath,
+      '-frames:v',
+      '1',
+      '-q:v',
+      '3',
+      '-update',
+      '1',
+      '-vf',
+      `scale=${String(VIDEO_PREPROCESS_FRAME_MAX_DIMENSION)}:-2:force_original_aspect_ratio=decrease`,
+      posterPath,
+    ]);
+    appendVideoPreprocessLog(`[inspect:poster] code=${String(poster.code)} exists=${String(fileExists(posterPath))}`);
+
+    let posterDataUrl: string | null = null;
+    if (fileExists(posterPath)) {
+      posterDataUrl = `data:image/jpeg;base64,${fs.readFileSync(posterPath).toString('base64')}`;
+    }
+
+    appendVideoPreprocessLog(`[inspect:success] duration=${String(durationSeconds)} poster=${posterDataUrl ? 'yes' : 'no'}`);
+    return { success: true, durationSeconds, posterDataUrl, ffmpegPath };
+  } catch (error) {
+    appendVideoPreprocessLog(`[inspect:exception] ${error instanceof Error ? error.message : String(error)}`);
+    return {
+      success: false,
+      ffmpegPath,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  } finally {
+    appendVideoPreprocessLog(`[inspect:cleanup] temp="${tempRoot}"`);
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
+async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: number): Promise<VideoPreprocessResult> {
+  appendVideoPreprocessLog(`[start] video="${videoPath}" duration=${String(durationSeconds)}`);
+  if (!path.isAbsolute(videoPath) || !fileExists(videoPath)) {
+    appendVideoPreprocessLog(`[error] video file missing or not absolute: "${videoPath}"`);
     return { success: false, frames: [], audioWavBase64: null, error: 'The selected video file could not be found on disk.' };
   }
 
   const ffmpegPath = findFfmpegBinary();
   if (!ffmpegPath) {
+    appendVideoPreprocessLog('[error] ffmpeg not found');
     return {
       success: false,
       frames: [],
@@ -854,16 +966,19 @@ async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: num
   }
 
   const tempRoot = fs.mkdtempSync(path.join(app.getPath('temp'), 'gemma4kids-video-'));
+  appendVideoPreprocessLog(`[ffmpeg] path="${ffmpegPath}" temp="${tempRoot}"`);
   try {
     const framesDir = path.join(tempRoot, 'frames');
     fs.mkdirSync(framesDir, { recursive: true });
 
     const frameTimes = buildRepresentativeFrameTimes(durationSeconds);
+    appendVideoPreprocessLog(`[frames] count=${String(frameTimes.length)} times=${frameTimes.map((time) => time.toFixed(3)).join(',')}`);
     const frames: Array<{ base64: string; timeSeconds: number }> = [];
 
     for (let i = 0; i < frameTimes.length; i++) {
       const timeSeconds = frameTimes[i];
       const outputPath = path.join(framesDir, `frame-${String(i + 1)}.jpg`);
+      appendVideoPreprocessLog(`[frame:start] index=${String(i + 1)} time=${timeSeconds.toFixed(3)} output="${outputPath}"`);
       const result = await runFfmpeg(ffmpegPath, [
         '-y',
         '-ss',
@@ -880,7 +995,9 @@ async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: num
         `scale=${String(VIDEO_PREPROCESS_FRAME_MAX_DIMENSION)}:-2:force_original_aspect_ratio=decrease`,
         outputPath,
       ]);
+      appendVideoPreprocessLog(`[frame:done] index=${String(i + 1)} code=${String(result.code)} exists=${String(fileExists(outputPath))}`);
       if (result.code !== 0 || !fileExists(outputPath)) {
+        appendVideoPreprocessLog(`[frame:error] index=${String(i + 1)} stderr=${JSON.stringify(result.stderr.slice(-1000))}`);
         return {
           success: false,
           frames: [],
@@ -897,6 +1014,7 @@ async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: num
     }
 
     const audioPath = path.join(tempRoot, 'audio.wav');
+    appendVideoPreprocessLog(`[audio:start] output="${audioPath}"`);
     const audioResult = await runFfmpeg(ffmpegPath, [
       '-y',
       '-i',
@@ -912,6 +1030,7 @@ async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: num
       String(VIDEO_PREPROCESS_AUDIO_MAX_SECONDS),
       audioPath,
     ]);
+    appendVideoPreprocessLog(`[audio:done] code=${String(audioResult.code)} exists=${String(fileExists(audioPath))}`);
 
     let audioWavBase64: string | null = null;
     let warning: string | undefined;
@@ -919,11 +1038,14 @@ async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: num
       const audioBuffer = fs.readFileSync(audioPath);
       if (audioBuffer.length > 44) {
         audioWavBase64 = audioBuffer.toString('base64');
+        appendVideoPreprocessLog(`[audio:bytes] size=${String(audioBuffer.length)}`);
       }
     } else if (audioResult.code !== 0) {
       warning = audioResult.stderr || 'Audio could not be extracted from the video.';
+      appendVideoPreprocessLog(`[audio:warning] ${JSON.stringify(warning.slice(-1000))}`);
     }
 
+    appendVideoPreprocessLog(`[success] frames=${String(frames.length)} audio=${audioWavBase64 ? 'yes' : 'no'} warning=${warning ? 'yes' : 'no'}`);
     return {
       success: true,
       frames,
@@ -940,6 +1062,7 @@ async function preprocessVideoWithFfmpeg(videoPath: string, durationSeconds: num
       error: error instanceof Error ? error.message : String(error),
     };
   } finally {
+    appendVideoPreprocessLog(`[cleanup] temp="${tempRoot}"`);
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 }
@@ -1211,6 +1334,15 @@ ipcMain.handle('save-video-frame', async (_event, { filename, jpeg_base64, sourc
 
 ipcMain.handle('preprocess-video-attachment', async (_event, { videoPath, durationSeconds }: { videoPath: string; durationSeconds: number }) => {
   return preprocessVideoWithFfmpeg(videoPath, durationSeconds);
+});
+
+ipcMain.handle('inspect-video-attachment', async (_event, { videoPath }: { videoPath: string }) => {
+  return inspectVideoWithFfmpeg(videoPath);
+});
+
+ipcMain.handle('append-renderer-debug-log', async (_event, { scope, payload }: { scope: string; payload: unknown }) => {
+  appendRendererDebugLog(scope, payload);
+  return { success: true };
 });
 
 ipcMain.handle('read-animation', async (_event, { filename }: { filename: string }) => {

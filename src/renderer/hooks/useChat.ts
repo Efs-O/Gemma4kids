@@ -13,6 +13,7 @@ import {
 import { auditHtml } from '../htmlAudit';
 import { extractVideoFrameForTool } from '../services/MediaAttachmentService';
 import { isGemma426b, isGemma431b } from '../utils/pickCodingModel';
+import { SIMPLE_VIDEO_UNDERSTANDING_CONTEXT, VIDEO_EXPORT_TOOL_CONTEXT } from '../videoPromptNotes';
 const INLINE_TOOL_QUOTE = '<|"|>';
 
 const SIMPLE_MOTION_KEYWORDS = [
@@ -87,7 +88,13 @@ function parseToolArgs(raw: string): ToolArgs {
 function getLatestUserText(history: ChatMessage[]): string {
   for (let i = history.length - 1; i >= 0; i--) {
     const msg = history[i];
-    if (msg.role === 'user' && typeof msg.content === 'string') return msg.content;
+    if (
+      msg.role === 'user' &&
+      typeof msg.content === 'string' &&
+      !msg.content.startsWith('[Context:')
+    ) {
+      return msg.content;
+    }
   }
   return '';
 }
@@ -99,6 +106,76 @@ function isEditIntent(text: string): boolean {
     'fix', 'bug', 'broken', 'check', 'review', 'debug', 'read', 'update',
     'change', 'edit', 'continue', 'improve', 'make it', 'add more',
     'faster', 'slower', 'color', 'bigger', 'smaller', 'wrong',
+  ].some((term) => lower.includes(term));
+}
+
+function isCodeCreationIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return [
+    'animation',
+    'animate',
+    'game',
+    'html',
+    'code',
+    'canvas',
+    'css',
+    'javascript',
+    'js',
+    'web page',
+    'webpage',
+    'editor',
+    'open in browser',
+  ].some((term) => lower.includes(term));
+}
+
+function isVideoFrameExportIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return [
+    'save frame',
+    'save frames',
+    'save some frames',
+    'save a few frames',
+    'export frame',
+    'export frames',
+    'grab frame',
+    'grab frames',
+    'pick frame',
+    'pick frames',
+    'capture frame',
+    'capture frames',
+    'video frame',
+    'video frames',
+    'still frame',
+    'still frames',
+    'snapshot',
+    'snapshots',
+  ].some((term) => lower.includes(term));
+}
+
+function isVideoUnderstandingIntent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return [
+    'what is happening',
+    "what's happening",
+    'what happens',
+    'what is this video about',
+    "what's this video about",
+    'what this video is about',
+    'what is in this video',
+    "what's in this video",
+    'what does this video show',
+    'describe this video',
+    'describe the video',
+    'summarize this video',
+    'summarise this video',
+    'about this video',
+    'tell me about this video',
+    'what do you see',
+    'who is in the video',
+    'what color',
+    'what colour',
+    'is it',
+    'are they',
   ].some((term) => lower.includes(term));
 }
 
@@ -175,7 +252,9 @@ function parseInlineExecuteTool(text: string): ToolCall[] | null {
   }];
 }
 
-export type SendMessageInput = string | { text: string; images?: string[]; videos?: string[]; hasAttachment?: boolean };
+export type SendMessageInput =
+  | string
+  | { text: string; images?: string[]; videos?: string[]; hasAttachment?: boolean; contextNote?: string };
 
 /** Avoid huge base64 in React state; full multimodal payloads live only in {@link useChat}'s historyRef. */
 function stripHeavyMultimodalForUi(messages: ChatMessage[]): ChatMessage[] {
@@ -193,6 +272,7 @@ function normalizeMessageInput(input: SendMessageInput): {
   images?: string[];
   videos?: string[];
   hasAttachment: boolean;
+  contextNote?: string;
 } {
   if (typeof input === 'string') return { text: input, hasAttachment: false };
   return {
@@ -200,6 +280,7 @@ function normalizeMessageInput(input: SendMessageInput): {
     images: input.images?.filter((image) => image.trim().length > 0),
     videos: input.videos?.filter((v) => v.trim().length > 0),
     hasAttachment: input.hasAttachment === true,
+    contextNote: input.contextNote?.trim() || undefined,
   };
 }
 
@@ -509,7 +590,7 @@ export function useChat(
   }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
 
   const sendMessage = useCallback((input: SendMessageInput) => {
-    const { text, images, videos, hasAttachment } = normalizeMessageInput(input);
+    const { text, images, videos, hasAttachment, contextNote } = normalizeMessageInput(input);
     // Layer 1: instant keyword block — no model call, no streaming.
     if (modelTier === 'simple' && !hasAttachment && !images?.length && !videos?.length && isSimpleMotionKeyword(text)) {
       const userMsg: ChatMessage = { role: 'user', content: text, images };
@@ -532,7 +613,35 @@ export function useChat(
     if (videoAttachmentFileRef?.current) {
       lastVideoFileRef.current = videoAttachmentFileRef.current;
     }
-    const updated = [...historyRef.current, userMsg];
+    const contextMsgs: ChatMessage[] = [];
+    if (contextNote) {
+      contextMsgs.push({ role: 'user', content: `[Context: ${contextNote}]` });
+    }
+    if (
+      videos?.length &&
+      isVideoFrameExportIntent(text) &&
+      !isCodeCreationIntent(text) &&
+      !isEditIntent(text)
+    ) {
+      contextMsgs.push({
+        role: 'user',
+        content: `[Context: ${VIDEO_EXPORT_TOOL_CONTEXT}]`,
+      });
+    }
+    if (
+      modelTier === 'simple' &&
+      videos?.length &&
+      isVideoUnderstandingIntent(text) &&
+      !isVideoFrameExportIntent(text) &&
+      !isCodeCreationIntent(text) &&
+      !isEditIntent(text)
+    ) {
+      contextMsgs.push({
+        role: 'user',
+        content: `[Context: ${SIMPLE_VIDEO_UNDERSTANDING_CONTEXT}]`,
+      });
+    }
+    const updated = [...historyRef.current, userMsg, ...contextMsgs];
     historyRef.current = updated;
     setMessages(stripHeavyMultimodalForUi(updated));
     runLoop(updated, token);

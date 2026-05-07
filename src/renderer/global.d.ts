@@ -47,6 +47,13 @@ declare global {
     electronAPI: {
       saveAnimation(filename: string, html_content: string, source?: 'gemma' | 'kid'): Promise<{ success: boolean; filename: string; path: string; error?: string }>;
       saveVideoFrame(filename: string, jpeg_base64: string, source?: 'gemma' | 'kid'): Promise<{ success: boolean; filename: string; path: string; error?: string }>;
+      inspectVideoAttachment(videoPath: string): Promise<{
+        success: boolean;
+        durationSeconds?: number;
+        posterDataUrl?: string | null;
+        ffmpegPath?: string;
+        error?: string;
+      }>;
       preprocessVideoAttachment(videoPath: string, durationSeconds: number): Promise<{
         success: boolean;
         frames: Array<{ base64: string; timeSeconds: number }>;
@@ -55,6 +62,7 @@ declare global {
         warning?: string;
         error?: string;
       }>;
+      appendRendererDebugLog(scope: string, payload: unknown): Promise<{ success: boolean }>;
       readAnimation(filename: string): Promise<{ success: boolean; content: string; error?: string }>;
       listAnimations(): Promise<{ success: boolean; files: string[]; error?: string }>;
       deleteAnimation(filename: string): Promise<{ success: boolean; error?: string }>;

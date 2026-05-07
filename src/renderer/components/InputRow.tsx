@@ -10,8 +10,9 @@ import {
   prepareImageAttachment,
   prepareVideoAttachment,
   prepareVideoMessagePayload,
+  readFileAsBase64,
 } from '../services/MediaAttachmentService';
-import { transcribe, transcribeAudioBlob } from '../services/OllamaService';
+import { transcribeAudioBlob } from '../services/OllamaService';
 import type { SendMessageInput } from '../hooks/useChat';
 
 const ACCEPTED_IMAGE_EXTENSIONS = '.png,.jpg,.jpeg,.webp,.gif,.bmp,.heic,.heif';
@@ -21,6 +22,12 @@ const ACCEPTED_FILE_EXTENSIONS = `${ACCEPTED_IMAGE_EXTENSIONS},${ACCEPTED_AUDIO_
 const ACCEPTED_IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
 const ACCEPTED_AUDIO_MIME_TYPES = ['audio/wav', 'audio/wave', 'audio/x-wav', 'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/ogg', 'audio/webm'];
 const ACCEPTED_VIDEO_MIME_TYPES = ['video/mp4', 'video/x-m4v', 'video/quicktime', 'video/webm', 'video/ogg'];
+
+function logRendererVideoPrep(scope: string, payload: unknown): void {
+  void window.electronAPI.appendRendererDebugLog(scope, payload).catch(() => {
+    // Logging should never block the UI path.
+  });
+}
 
 interface Props {
   status: 'idle' | 'streaming' | 'error';
@@ -132,14 +139,17 @@ export function InputRow({
   useEffect(() => {
     const previousStatus = previousStatusRef.current;
     if (awaitingSendResult && previousStatus === 'streaming' && status === 'idle') {
-      releaseAttachmentResources(attachment);
-      setAttachment(null);
-      setPreviewFailures([]);
+      const shouldPersistAttachment = attachment?.kind === 'video';
+      if (!shouldPersistAttachment) {
+        releaseAttachmentResources(attachment);
+        setAttachment(null);
+        setPreviewFailures([]);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
       setAttachmentError('');
       setAwaitingSendResult(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
     if (awaitingSendResult && previousStatus === 'streaming' && status === 'error') setAwaitingSendResult(false);
     previousStatusRef.current = status;
@@ -178,7 +188,9 @@ export function InputRow({
   }
 
   async function handleVideoSelection(file: File) {
+    logRendererVideoPrep('handleVideoSelection:start', { fileName: file.name, type: file.type, size: file.size });
     const prepared = await prepareVideoAttachment(file);
+    logRendererVideoPrep('handleVideoSelection:ready', { fileName: file.name, durationSeconds: prepared.durationSeconds });
     replaceAttachment({ kind: 'video', item: prepared });
   }
 
@@ -218,6 +230,12 @@ export function InputRow({
 
     setPreparing(true);
     setAttachmentError('');
+    logRendererVideoPrep('fileChange:start', {
+      totalFiles: files.length,
+      imageCount: imageFiles.length,
+      audioCount: audioFiles.length,
+      videoCount: videoFiles.length,
+    });
     try {
       if (imageFiles.length > 0) {
         await handleImageSelection(imageFiles);
@@ -227,8 +245,10 @@ export function InputRow({
         await handleVideoSelection(videoFiles[0]);
       }
     } catch (error) {
+      logRendererVideoPrep('fileChange:error', error instanceof Error ? { message: error.message, stack: error.stack ?? null } : String(error));
       setAttachmentError(error instanceof Error ? error.message : 'That file could not be prepared here.');
     } finally {
+      logRendererVideoPrep('fileChange:done', {});
       setPreparing(false);
     }
   }
@@ -267,31 +287,34 @@ export function InputRow({
     if (!supportsVisualAttachments) {
       throw new Error('Video needs the Ollama runtime.');
     }
+    logRendererVideoPrep('buildPayload:video:start', {
+      fileName: attachment.item.fileName,
+      durationSeconds: attachment.item.durationSeconds,
+      messageText,
+    });
     const preparedVideo = await prepareVideoMessagePayload(
       attachment.item.file,
       attachment.item.durationSeconds,
     );
-    if (preparedVideo.warning) {
-      setAttachmentError("I couldn't hear the video words, so Gemma will use the pictures only.");
-    }
-    let transcriptText: string | null = null;
-    try {
-      if (preparedVideo.audioWavBase64) {
-        transcriptText = await transcribe(
-          preparedVideo.audioWavBase64,
-          activeTranscribeModel,
-          0,
-          languageHint,
-        );
-      }
-    } catch {
-      setAttachmentError("I couldn't hear the video words, so Gemma will use the pictures only.");
+    const videoBase64 = await readFileAsBase64(
+      attachment.item.file,
+      'That video file could not be attached here.',
+    );
+    logRendererVideoPrep('buildPayload:video:frames-ready', {
+      frameCount: preparedVideo.frames.length,
+      hasAudio: Boolean(preparedVideo.audioWavBase64),
+      warning: preparedVideo.warning ?? null,
+    });
+    if (preparedVideo.warning || preparedVideo.audioWavBase64) {
+      setAttachmentError('Gemma will use the sampled video pictures first. Audio words are skipped for now.');
     }
 
     return {
-      text: buildVideoPrompt(messageText, transcriptText),
+      text: buildVideoPrompt(messageText, null),
       images: preparedVideo.frames,
+      videos: [videoBase64],
       hasAttachment: true,
+      contextNote: 'The original short video file is attached for tool use. If the child asks to save or export frames, use save_video_frame and do not ask to upload the video again.',
     };
   }
 
@@ -302,11 +325,22 @@ export function InputRow({
 
     setPreparing(true);
     setAttachmentError('');
+    logRendererVideoPrep('submit:start', {
+      hasAttachment: attachment !== null,
+      attachmentKind: attachment?.kind ?? null,
+      textLength: messageText.trim().length,
+    });
     try {
       const payload = await buildAttachmentPayload(messageText);
       if (!payload) {
+        logRendererVideoPrep('submit:no-payload', {});
         return;
       }
+      logRendererVideoPrep('submit:onSend', {
+        hasImages: Array.isArray(payload.images) ? payload.images.length : 0,
+        hasVideos: Array.isArray(payload.videos) ? payload.videos.length : 0,
+        hasAttachment: typeof payload === 'string' ? false : payload.hasAttachment === true,
+      });
       onSend(
         payload.images?.length || payload.videos?.length || payload.hasAttachment ? payload : payload.text,
       );
@@ -315,8 +349,10 @@ export function InputRow({
         setAwaitingSendResult(true);
       }
     } catch (error) {
+      logRendererVideoPrep('submit:error', error instanceof Error ? { message: error.message, stack: error.stack ?? null } : String(error));
       setAttachmentError(error instanceof Error ? error.message : 'That file could not be sent yet.');
     } finally {
+      logRendererVideoPrep('submit:done', {});
       setPreparing(false);
     }
   }

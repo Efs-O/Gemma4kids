@@ -4,6 +4,7 @@ import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
 import type { ChatMessage, ToolDefinition } from '../llm/types';
 
 const OLLAMA_BASE = 'http://localhost:11434';
+const OLLAMA_TRANSCRIBE_TIMEOUT_MS = 25000;
 
 export type RuntimeKind = 'ollama' | 'llama_cpp';
 
@@ -235,23 +236,32 @@ export async function transcribe(
   keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<string> {
-  const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      messages: [{
-        role: 'user',
-        // Audio must come before text prompt per Ollama workaround
-        images: [audioBase64],
-        content: buildTranscribePrompt(languageHint),
-      }],
-      think: OLLAMA_TRANSCRIBE_PROFILE.think,
-      keep_alive: keepAlive,
-      stream: false,
-      options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${OLLAMA_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [{
+          role: 'user',
+          // Audio must come before text prompt per Ollama workaround
+          images: [audioBase64],
+          content: buildTranscribePrompt(languageHint),
+        }],
+        think: OLLAMA_TRANSCRIBE_PROFILE.think,
+        keep_alive: keepAlive,
+        stream: false,
+        options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
+      }),
+      signal: AbortSignal.timeout(OLLAMA_TRANSCRIBE_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      throw new Error('Transcription took too long. Try again, or keep going without audio words.');
+    }
+    throw error;
+  }
 
   if (!res.ok) throw new Error(`Transcribe HTTP ${res.status}`);
 

@@ -186,9 +186,15 @@ export function AttachmentPreview({
 
   return (
     <div className="input-attachment-preview">
-      <img className="input-attachment-thumb" src={attachment.item.posterDataUrl} alt={attachment.item.fileName} />
+      {attachment.item.posterDataUrl ? (
+        <img className="input-attachment-thumb" src={attachment.item.posterDataUrl} alt={attachment.item.fileName} />
+      ) : (
+        <div className="input-attachment-fallback" aria-hidden="true">
+          <FilmIcon />
+        </div>
+      )}
       <div className="input-attachment-meta">
-        <div className="input-attachment-label">Video ready — full clip sent to Gemma</div>
+        <div className="input-attachment-label">Video ready</div>
         <div className="input-attachment-name" title={attachment.item.fileName}>{attachment.item.fileName}</div>
         <div className="input-attachment-detail">
           {formatDuration(attachment.item.durationSeconds)} · up to {VIDEO_MAX_SECONDS}s · say what you want in the box · save_video_frame can export JPEGs

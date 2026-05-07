@@ -114,6 +114,7 @@ export function ChatPanel({
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const effectiveShowThinking = false;
   const userScrolledUpRef = useRef(false);
   /** True only while we assign scrollTop — ignore synthetic scroll events for stick-to-bottom heuristics. */
   const programmaticScrollRef = useRef(false);
@@ -191,12 +192,12 @@ export function ChatPanel({
       m.role === 'assistant' &&
       (
         (m.content != null && m.content !== '') ||
-        (!m.tool_calls && showThinking && !!m.thinking)
+        (!m.tool_calls && effectiveShowThinking && !!m.thinking)
       )
     ),
   );
 
-  const hasStreamingMessage = !!streamingText || (showThinking && !!streamingThinking);
+  const hasStreamingMessage = !!streamingText || (effectiveShowThinking && !!streamingThinking);
   const lastIsAssistant = visible.length > 0 && visible[visible.length - 1].role === 'assistant';
   // Show starters when no animation exists yet (no code generated), regardless of message count.
   const showStarters = !hasCode && !hasStreamingMessage && status === 'idle';
@@ -242,16 +243,16 @@ export function ChatPanel({
             role={msg.role as string}
             content={msg.content ?? ''}
             thinking={msg.thinking ?? ''}
-            showThinking={showThinking}
+            showThinking={effectiveShowThinking}
             tts={tts}
           />
         ))}
-        {(streamingText || (showThinking && streamingThinking)) && (
+        {(streamingText || (effectiveShowThinking && streamingThinking)) && (
           <Message
             role="assistant"
             content={streamingText}
             thinking={streamingThinking}
-            showThinking={showThinking}
+            showThinking={effectiveShowThinking}
             streaming
             tts={tts}
           />
