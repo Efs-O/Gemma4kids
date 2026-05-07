@@ -25,3 +25,6 @@ assets/icon.icns
 **/tts-test-output/
 tmp_*.json
 benchmark/results-simple/
+.tmp-electron-probe/
+.tmp-video-extract.html
+0-02-05-37b5c45bbde8615fd5bfaa71f9987b2beaf9983b7affb9e885cd3fa00ed415ed_297c31267a40d802.mp4
