@@ -4,7 +4,6 @@ import type {
   PreparedImageAttachment,
   PreparedVideoAttachment,
 } from '../services/MediaAttachmentService';
-import { VIDEO_MAX_SECONDS } from '../services/MediaAttachmentService';
 
 export interface ImageAttachmentListState {
   kind: 'images';
@@ -197,7 +196,7 @@ export function AttachmentPreview({
         <div className="input-attachment-label">Video ready</div>
         <div className="input-attachment-name" title={attachment.item.fileName}>{attachment.item.fileName}</div>
         <div className="input-attachment-detail">
-          {formatDuration(attachment.item.durationSeconds)} · up to {VIDEO_MAX_SECONDS}s · say what you want in the box · save_video_frame can export JPEGs
+          Ask Gemma what is happening in the video
         </div>
       </div>
       <div className="input-attachment-video-icon" aria-hidden="true">

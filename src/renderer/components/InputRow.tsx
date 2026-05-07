@@ -80,9 +80,8 @@ function buildVideoPrompt(text: string, transcript: string | null): string {
   if (trimmed) {
     parts.push(trimmed);
   } else {
-    parts.push('Please look at these sampled pictures from my short video and help me.');
+    parts.push('Please help me with my short video.');
   }
-  parts.push('The attached pictures are sampled frames from one short video, in time order.');
   if (transcript) {
     parts.push(`Spoken audio transcript:\n${transcript}`);
   }
