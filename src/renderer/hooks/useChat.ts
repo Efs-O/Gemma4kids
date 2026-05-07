@@ -159,7 +159,6 @@ export function useChat(
   const [ctxUsedPct, setCtxUsedPct] = useState(0);
 
   const historyRef = useRef<ChatMessage[]>([]);
-  const lastVideoFileRef = useRef<File | null>(null);
   const cancelRef = useRef<CancellationToken | null>(null);
   const clearIdRef = useRef(0);
 
@@ -324,7 +323,7 @@ export function useChat(
             setLastAudit,
             setLatestCode,
             setLastSaved,
-            getAttachedVideoFile: () => videoAttachmentFileRef?.current ?? lastVideoFileRef.current ?? null,
+            getAttachedVideoFile: () => videoAttachmentFileRef?.current ?? null,
           });
 
           const toolMsg: ChatMessage = {
@@ -410,9 +409,6 @@ export function useChat(
     setLatestCode(null);
 
     const userMsg: ChatMessage = { role: 'user', content: text, images, videos };
-    if (videoAttachmentFileRef?.current) {
-      lastVideoFileRef.current = videoAttachmentFileRef.current;
-    }
     const contextMessages: ChatMessage[] = [];
     if (contextNote) {
       contextMessages.push({ role: 'user', content: `[Context: ${contextNote}]` });
@@ -462,7 +458,6 @@ export function useChat(
     ++clearIdRef.current;
     cancelRef.current?.cancel();
     historyRef.current = [];
-    lastVideoFileRef.current = null;
     setMessages([]);
     setStreamingText('');
     setStreamingThinking('');
