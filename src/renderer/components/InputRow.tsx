@@ -12,7 +12,8 @@ import {
   prepareVideoMessagePayload,
   readFileAsBase64,
 } from '../services/MediaAttachmentService';
-import { transcribeAudioBlob } from '../services/OllamaService';
+import type { LLMRuntimeAdapter } from '../services/OllamaService';
+import { transcribeAudioBlobWithRuntime } from '../services/OllamaService';
 import type { SendMessageInput } from '../hooks/useChat';
 
 const ACCEPTED_IMAGE_EXTENSIONS = '.png,.jpg,.jpeg,.webp,.gif,.bmp,.heic,.heif';
@@ -37,6 +38,7 @@ interface Props {
   greekTranscribeModel: string | null;
   transcribeModel: string;
   codingModel: string;
+  runtimeAdapter: LLMRuntimeAdapter;
   ctxUsedPct?: number;
   onClearContext?: () => void;
   supportsVisualAttachments: boolean;
@@ -96,6 +98,7 @@ export function InputRow({
   greekTranscribeModel,
   transcribeModel,
   codingModel,
+  runtimeAdapter,
   ctxUsedPct = 0,
   onClearContext,
   supportsVisualAttachments,
@@ -172,8 +175,8 @@ export function InputRow({
     }
   }
 
-  function canSendCurrentInput(): boolean {
-    return text.trim().length > 0 || attachment !== null;
+  function canSendCurrentInput(messageText: string = text): boolean {
+    return messageText.trim().length > 0 || attachment !== null;
   }
 
   async function handleImageSelection(files: File[]) {
@@ -276,7 +279,13 @@ export function InputRow({
     }
 
     if (attachment.kind === 'audio') {
-      const transcript = await transcribeAudioBlob(attachment.item.file, activeTranscribeModel, 0, languageHint);
+      const transcript = await transcribeAudioBlobWithRuntime(
+        runtimeAdapter,
+        attachment.item.file,
+        activeTranscribeModel,
+        0,
+        languageHint,
+      );
       return {
         text: buildAudioPrompt(messageText, transcript.text),
         hasAttachment: true,
@@ -318,7 +327,7 @@ export function InputRow({
   }
 
   async function submitCurrentInput(messageText: string) {
-    if (!canSendCurrentInput() || status === 'streaming' || preparing) {
+    if (!canSendCurrentInput(messageText) || status === 'streaming' || preparing) {
       return;
     }
 
@@ -447,6 +456,7 @@ export function InputRow({
             greekTranscribeModel={greekTranscribeModel}
             transcribeModel={transcribeModel}
             codingModel={codingModel}
+            runtimeAdapter={runtimeAdapter}
             onTranscription={(spokenText) => {
               void submitCurrentInput(spokenText);
             }}

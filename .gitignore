@@ -19,6 +19,10 @@ assets/icon.icns
 *.md
 !README.md
 !SETUP.md
+!voices/*.VOICE_CARD.md
+
+# Voice model backups — local only, never commit
+*.bak
 
 # Local tooling / artifacts — never commit
 **/video-frame-exports/

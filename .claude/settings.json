@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(dir \"c:\\\\Users\\\\efso office\\\\Desktop\" /b)",
+      "Bash(python -c ' *)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {

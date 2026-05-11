@@ -5,6 +5,7 @@ import type { ChatMessage } from '../llm/types';
 import { createTTSService } from '../services/TTSService';
 import type { ModelTier } from '../utils/pickCodingModel';
 import type { SendMessageInput } from '../hooks/useChat';
+import type { LLMRuntimeAdapter } from '../services/OllamaService';
 
 const ALL_STARTERS: { label: string; text: string }[] = [
   { label: '🏀 Make a bouncing ball animation', text: 'Make a bouncing ball animation' },
@@ -83,6 +84,7 @@ interface Props {
   greekTranscribeModel: string | null;
   transcribeModel: string;
   codingModel: string;
+  runtimeAdapter: LLMRuntimeAdapter;
   showThinking: boolean;
   ctxUsedPct?: number;
   onClearContext?: () => void;
@@ -105,6 +107,7 @@ export function ChatPanel({
   greekTranscribeModel,
   transcribeModel,
   codingModel,
+  runtimeAdapter,
   showThinking,
   ctxUsedPct,
   onClearContext,
@@ -288,6 +291,7 @@ export function ChatPanel({
           greekTranscribeModel={greekTranscribeModel}
           transcribeModel={transcribeModel}
           codingModel={codingModel}
+          runtimeAdapter={runtimeAdapter}
           ctxUsedPct={ctxUsedPct}
           onClearContext={onClearContext}
           supportsVisualAttachments={supportsVisualAttachments}

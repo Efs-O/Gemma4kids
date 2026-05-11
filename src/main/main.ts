@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { ensureAnimationsDir, registerAnimationIpcHandlers } from './animationStore';
 import { cleanupLlamaRuntimeOnQuit, registerLlamaRuntimeIpcHandlers } from './llamaRuntime';
+import { registerLlamaSttIpcHandlers } from './llamaSttRuntime';
 
 let isQuittingAfterCleanup = false;
 const VIDEO_PREPROCESS_LOG = 'video-preprocess.log';
@@ -595,6 +596,7 @@ ipcMain.handle('tts-list-voices', async () => {
 
 registerAnimationIpcHandlers(ipcMain);
 registerLlamaRuntimeIpcHandlers(ipcMain);
+registerLlamaSttIpcHandlers(ipcMain);
 ipcMain.handle('preprocess-video-attachment', async (_event, { videoPath, durationSeconds }: { videoPath: string; durationSeconds: number }) => {
   return preprocessVideoWithFfmpeg(videoPath, durationSeconds);
 });

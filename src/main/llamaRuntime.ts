@@ -1,4 +1,5 @@
 import { app, BrowserWindow, type IpcMain } from 'electron';
+import { stopManagedSttServer } from './llamaSttRuntime';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -45,10 +46,67 @@ let managedLlamaServer: ManagedLlamaServer | null = null;
 let managedLlamaStartup: { configKey: string; promise: Promise<LlamaCppHealthResult> } | null = null;
 let ollamaCleanupState: OllamaCleanupState = { runtime: 'ollama', models: [] };
 
+function isMmprojPath(filePath: string): boolean {
+  return path.basename(filePath).toLowerCase().includes('mmproj');
+}
+
+function extractGemmaFamilyToken(filePath: string): string | null {
+  const lower = filePath.toLowerCase();
+  if (lower.includes('e2b')) return 'e2b';
+  if (lower.includes('e4b')) return 'e4b';
+  if (lower.includes('26b')) return '26b';
+  if (lower.includes('31b')) return '31b';
+  return null;
+}
+
+function resolveMmprojSearchDirs(primaryModelPath: string, extraModelPaths: string[]): Array<{ dir: string; family: string | null }> {
+  const orderedPaths = [primaryModelPath, ...extraModelPaths];
+  const seenDirs = new Set<string>();
+  const dirs: Array<{ dir: string; family: string | null }> = [];
+
+  for (const rawPath of orderedPaths) {
+    const trimmed = rawPath.trim();
+    if (!trimmed || !fs.existsSync(trimmed)) continue;
+
+    try {
+      const stat = fs.statSync(trimmed);
+      if (stat.isFile() && isMmprojPath(trimmed)) continue;
+      const dir = stat.isDirectory() ? trimmed : path.dirname(trimmed);
+      if (!seenDirs.has(dir)) {
+        seenDirs.add(dir);
+        dirs.push({ dir, family: extractGemmaFamilyToken(trimmed) ?? extractGemmaFamilyToken(dir) });
+      }
+    } catch {
+      // Ignore invalid search candidates and continue with the rest.
+    }
+  }
+
+  return dirs;
+}
+
+function findMmprojForConfig(modelPath: string, extraModelPaths: string[]): string | null {
+  const targetFamily = extractGemmaFamilyToken(modelPath);
+  for (const { dir, family } of resolveMmprojSearchDirs(modelPath, extraModelPaths)) {
+    if (targetFamily && family && family !== targetFamily) continue;
+    try {
+      const files = fs.readdirSync(dir);
+      const found = files.find(
+        (file) => file.toLowerCase().includes('mmproj') && file.toLowerCase().endsWith('.gguf'),
+      );
+      if (found) return path.join(dir, found);
+    } catch {
+      // Ignore unreadable directories and continue searching other configured paths.
+    }
+  }
+
+  return null;
+}
+
 function runtimeConfigKey(config: LlamaCppConfig): string {
   return JSON.stringify({
     serverPath: config.serverPath.trim(),
     modelPath: config.modelPath.trim(),
+    mmprojSearchPaths: config.mmprojSearchPaths.map((value) => value.trim()),
     port: config.port,
     gpuLayers: config.gpuLayers,
     numCtx: config.numCtx,
@@ -132,6 +190,9 @@ function validateLlamaConfig(config: LlamaCppConfig): LlamaCppHealthResult | nul
   if (!modelPath) {
     return buildHealthResult(false, 'model_missing', 'Add your GGUF model path in Setup first.', 'llama.cpp model path is empty.');
   }
+  if (isMmprojPath(modelPath)) {
+    return buildHealthResult(false, 'model_missing', 'That path points to an mmproj file. Put the actual Gemma model .gguf in this tab, not the projector file.', `Model path points to mmproj instead of a text model: ${modelPath}`);
+  }
   if (!Number.isInteger(config.port) || config.port < 1024 || config.port > 65535) {
     return buildHealthResult(false, 'invalid_port', 'Pick a port between 1024 and 65535.', `Invalid llama.cpp port: ${String(config.port)}`);
   }
@@ -149,6 +210,16 @@ function validateLlamaConfig(config: LlamaCppConfig): LlamaCppHealthResult | nul
   }
   if (!fs.existsSync(modelPath)) {
     return buildHealthResult(false, 'model_missing', 'I could not find that GGUF model file.', `Model path does not exist: ${modelPath}`);
+  }
+  const modelStat = fs.statSync(modelPath);
+  if (modelStat.isDirectory()) {
+    return buildHealthResult(false, 'model_missing', 'That path is a folder, not a GGUF file. Paste the full path including the filename (e.g. …\\model.gguf).', `Model path is a directory: ${modelPath}`);
+  }
+  if (!modelStat.isFile()) {
+    return buildHealthResult(false, 'model_missing', 'That path does not point to a file.', `Model path is not a regular file: ${modelPath}`);
+  }
+  if (path.extname(modelPath).toLowerCase() !== '.gguf') {
+    return buildHealthResult(false, 'model_missing', 'That file does not look like a GGUF model — the path should end in .gguf.', `Model path does not have .gguf extension: ${modelPath}`);
   }
   return null;
 }
@@ -290,7 +361,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     const startupTimeoutMs = getLlamaStartupTimeoutMs(config.modelPath);
     if (managedLlamaServer && managedLlamaServer.configKey === configKey) {
       if (managedLlamaServer.process.exitCode === null && await canReachLlamaServer(config.port, 1500)) {
-        return buildHealthResult(true, 'ready', 'llama.cpp is ready.');
+        return { ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'), mmprojPath: findMmprojForConfig(config.modelPath, config.mmprojSearchPaths) ?? undefined };
       }
       await stopManagedLlamaServer();
     } else if (managedLlamaServer) {
@@ -313,10 +384,12 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     const ctxSize = config.numCtx;
     const cacheTypeK = config.cacheTypeK.trim();
     const cacheTypeV = config.cacheTypeV.trim();
+    const detectedMmproj = findMmprojForConfig(config.modelPath, config.mmprojSearchPaths);
     const spawnArgs = [
       ...commandInfo.args,
       '-m',
       config.modelPath,
+      ...(detectedMmproj ? ['--mmproj', detectedMmproj] : []),
       '--host',
       '127.0.0.1',
       '--port',
@@ -407,8 +480,8 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       }
 
       if (await canReachLlamaServer(config.port, 1500)) {
-        appendLlamaRuntimeLog(logPath, '[ready] /v1/models responded successfully');
-        return buildHealthResult(true, 'ready', 'llama.cpp is ready.');
+        appendLlamaRuntimeLog(logPath, `[ready] /v1/models responded successfully mmproj=${detectedMmproj ?? 'none'}`);
+        return { ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'), mmprojPath: detectedMmproj ?? undefined };
       }
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -684,6 +757,15 @@ async function streamLlamaChat(
 
 export function registerLlamaRuntimeIpcHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('set-ollama-cleanup-targets', async (_event, payload: OllamaCleanupState) => {
+    const previous = ollamaCleanupState;
+    if (previous.runtime !== payload.runtime) {
+      if (payload.runtime === 'ollama') {
+        await Promise.all([stopManagedLlamaServer(), stopManagedSttServer()]);
+      } else {
+        await unloadOllamaModels(previous.models);
+      }
+    }
+
     ollamaCleanupState = {
       runtime: payload.runtime,
       models: [...new Set(payload.models.map((model) => model.trim()).filter(Boolean))],
@@ -719,5 +801,5 @@ export async function cleanupLlamaRuntimeOnQuit(): Promise<void> {
     await unloadOllamaModels(ollamaCleanupState.models);
     return;
   }
-  await stopManagedLlamaServer();
+  await Promise.all([stopManagedLlamaServer(), stopManagedSttServer()]);
 }

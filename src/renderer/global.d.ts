@@ -4,6 +4,7 @@ declare global {
   interface LlamaCppConfig {
     serverPath: string;
     modelPath: string;
+    mmprojSearchPaths: string[];
     port: number;
     gpuLayers: number;
     numCtx: number;
@@ -13,12 +14,21 @@ declare global {
     reasoningEnabled: boolean;
   }
 
+  interface LlamaCppSttConfig {
+    serverPath: string;
+    sttModelPath: string;
+    mmprojSearchPaths: string[];
+    sttPort: number;
+    gpuLayers: number;
+  }
+
   interface LlamaCppHealthResult {
     ok: boolean;
     state?: string;
     error?: string;
     message?: string;
     details?: string[];
+    mmprojPath?: string;
   }
 
   interface LlamaCppModelInfo {
@@ -78,6 +88,8 @@ declare global {
         request: Record<string, unknown>,
       ): Promise<{ success: boolean; error?: string }>;
       llamaCppAbortStream(requestId: string): Promise<{ success: boolean }>;
+      llamaCppSttHealthCheck(sttConfig: LlamaCppSttConfig): Promise<LlamaCppHealthResult>;
+      llamaCppTranscribe(sttConfig: LlamaCppSttConfig, audioBase64: string, languageHint?: string): Promise<{ success: boolean; text?: string; error?: string }>;
       onLlamaCppStreamEvent(listener: (event: LlamaCppStreamEvent) => void): () => void;
     };
   }

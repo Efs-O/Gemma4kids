@@ -11,7 +11,7 @@ import { AppHeader } from './components/AppHeader';
 import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
 import type { LlamaCppRuntimeConfig, RuntimeKind } from './services/OllamaService';
-import { DEFAULT_LLAMA_CACHE_TYPE, getConfiguredLlamaPathForModel, LLAMA_CACHE_TYPE_K_KEY, LLAMA_CACHE_TYPE_V_KEY, LLAMA_GPU_LAYERS_KEY, LLAMA_MODEL_PRESETS, LLAMA_NUM_CTX_KEY, LLAMA_NUM_PREDICT_KEY, LLAMA_PORT_KEY, LLAMA_SERVER_PATH_KEY, persistLlamaModelPaths, readLlamaCppSetupConfig, readSelectedRuntime, RUNTIME_SELECTED_KEY, type LlamaCppSetupConfig, type LlamaModelPresetId } from './config/llamaSetup';
+import { DEFAULT_LLAMA_CACHE_TYPE, getConfiguredLlamaPathForModel, LLAMA_CACHE_TYPE_K_KEY, LLAMA_CACHE_TYPE_V_KEY, LLAMA_GPU_LAYERS_KEY, LLAMA_MODEL_PRESETS, LLAMA_NUM_CTX_KEY, LLAMA_NUM_PREDICT_KEY, LLAMA_PORT_KEY, LLAMA_SERVER_PATH_KEY, LLAMA_STT_PORT_KEY, persistLlamaModelPaths, readLlamaCppSetupConfig, readSelectedRuntime, RUNTIME_SELECTED_KEY, type LlamaCppSetupConfig, type LlamaModelPresetId } from './config/llamaSetup';
 import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, pickCodingModel, pickGreekTranscribeModel, pickTranscribeModel, sortGemma4CodingModelsSmallestFirst, getModelTier } from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
 
@@ -19,6 +19,10 @@ function titleToFilename(html: string, fallback: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (!m) return fallback;
   return m[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || fallback;
+}
+
+function pointsToMmproj(filePath: string): boolean {
+  return /mmproj/i.test(filePath.split(/[\\/]/).pop() ?? '');
 }
 
 export default function App() {
@@ -34,24 +38,35 @@ export default function App() {
 
   const llamaCodingModels = useMemo(() => sortGemma4CodingModelsSmallestFirst(LLAMA_MODEL_PRESETS.map((preset) => preset.modelTag)), []);
   const activeLlamaModel = useMemo(() => (userModel && llamaCodingModels.includes(userModel)) ? userModel : pickCodingModel(llamaCodingModels), [llamaCodingModels, userModel]);
+  const llamaMmprojSearchPaths = useMemo(
+    () => LLAMA_MODEL_PRESETS.map((preset) => llamaSetup.modelPaths[preset.id]),
+    [llamaSetup.modelPaths],
+  );
   const activeLlamaRuntimeConfig = useMemo<LlamaCppRuntimeConfig>(() => ({
     serverPath: llamaSetup.serverPath,
     modelPath: getConfiguredLlamaPathForModel(activeLlamaModel, llamaSetup.modelPaths),
+    mmprojSearchPaths: llamaMmprojSearchPaths,
     port: llamaSetup.port,
+    sttModelPath: llamaSetup.modelPaths.e4b.trim() || llamaSetup.modelPaths.e2b.trim(),
+    sttPort: llamaSetup.sttPort,
     gpuLayers: llamaSetup.gpuLayers,
     numCtx: llamaSetup.numCtx,
     numPredict: llamaSetup.numPredict,
     cacheTypeK: llamaSetup.cacheTypeK.trim() || DEFAULT_LLAMA_CACHE_TYPE,
     cacheTypeV: llamaSetup.cacheTypeV.trim() || DEFAULT_LLAMA_CACHE_TYPE,
     reasoningEnabled: chatThinkEnabled,
-  }), [activeLlamaModel, chatThinkEnabled, llamaSetup]);
+  }), [activeLlamaModel, chatThinkEnabled, llamaMmprojSearchPaths, llamaSetup]);
 
-  const { runtime: runtimeInUse, adapter: runtimeAdapter, status: runtimeStatus, models, errorMsg: runtimeErrorMsg, recheck } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
+  const { runtime: runtimeInUse, adapter: runtimeAdapter, status: runtimeStatus, models, errorMsg: runtimeErrorMsg, llamaMmprojPath, recheck } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
 
   const autoOllamaModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const greekTranscribeModel = useMemo(() => pickGreekTranscribeModel(models), [models]);
-  const voiceInputAvailable = useMemo(() => runtimeInUse === 'ollama' && (models.some(isGemma4EdgeE4b) || models.some(isGemma4EdgeE2b)), [models, runtimeInUse]);
+  const voiceInputAvailable = useMemo(() => {
+    if (runtimeInUse === 'llama_cpp') return activeLlamaRuntimeConfig.sttModelPath.trim() !== '';
+    return models.some(isGemma4EdgeE4b) || models.some(isGemma4EdgeE2b);
+  }, [activeLlamaRuntimeConfig.sttModelPath, models, runtimeInUse]);
+
   const supportsVisualAttachments = runtimeAdapter.capabilities.supportsMultimodal;
   const availableCodingModels = useMemo(() => (
     runtimeInUse === 'llama_cpp'
@@ -71,6 +86,24 @@ export default function App() {
     return [...new Set(collected.map((model) => model.trim()).filter(Boolean))];
   }, [codingModel, greekTranscribeModel, transcribeModel]);
   const modelTier = useMemo(() => getModelTier(codingModel), [codingModel]);
+  const misconfiguredMmprojTabs = useMemo(
+    () => LLAMA_MODEL_PRESETS
+      .filter((preset) => pointsToMmproj(llamaSetup.modelPaths[preset.id]))
+      .map((preset) => preset.label),
+    [llamaSetup.modelPaths],
+  );
+  const llamaMmprojWarning = useMemo(() => {
+    if (runtimeInUse !== 'llama_cpp') return '';
+    if (misconfiguredMmprojTabs.length > 0) {
+      const labelText = misconfiguredMmprojTabs.join(', ');
+      return `${labelText} ${misconfiguredMmprojTabs.length === 1 ? 'is' : 'are'} pointing to an mmproj file instead of a model .gguf. Fix ${misconfiguredMmprojTabs.length === 1 ? 'that tab' : 'those tabs'} first.`;
+    }
+    if (runtimeStatus !== 'ready' || llamaMmprojPath) return '';
+    if (activeLlamaRuntimeConfig.sttModelPath.trim()) {
+      return 'No mmproj file found next to your model — voice is unavailable. Put the mmproj .gguf in the same folder as your model file.';
+    }
+    return '';
+  }, [activeLlamaRuntimeConfig.sttModelPath, llamaMmprojPath, misconfiguredMmprojTabs, runtimeInUse, runtimeStatus]);
 
   const customRuntimeLimits = useMemo(
     () => runtimeInUse === 'llama_cpp' ? { numCtx: llamaSetup.numCtx, numPredict: llamaSetup.numPredict } : undefined,
@@ -184,6 +217,7 @@ export default function App() {
       localStorage.setItem(LLAMA_SERVER_PATH_KEY, next.serverPath);
       persistLlamaModelPaths(next.modelPaths);
       localStorage.setItem(LLAMA_PORT_KEY, String(next.port));
+      localStorage.setItem(LLAMA_STT_PORT_KEY, String(next.sttPort));
       localStorage.setItem(LLAMA_GPU_LAYERS_KEY, String(next.gpuLayers));
       localStorage.setItem(LLAMA_NUM_CTX_KEY, String(next.numCtx));
       localStorage.setItem(LLAMA_NUM_PREDICT_KEY, String(next.numPredict));
@@ -257,7 +291,7 @@ export default function App() {
     setUiError('');
   }, [clearContext]);
 
-  if (showSetupAssistant) return <SetupAssistant selectedRuntime={selectedRuntime} llamaSetup={llamaSetup} runtimeStatus={runtimeStatus} runtimeError={runtimeErrorMsg} onRuntimeChange={handleRuntimeSelection} onLlamaSetupChange={handleLlamaSetupChange} onLlamaModelPathChange={handleLlamaModelPathChange} onClose={closeSetupAssistant} />;
+  if (showSetupAssistant) return <SetupAssistant selectedRuntime={selectedRuntime} llamaSetup={llamaSetup} runtimeStatus={runtimeStatus} runtimeError={runtimeErrorMsg} mmprojWarning={llamaMmprojWarning} onRuntimeChange={handleRuntimeSelection} onLlamaSetupChange={handleLlamaSetupChange} onLlamaModelPathChange={handleLlamaModelPathChange} onClose={closeSetupAssistant} />;
 
   if (runtimeStatus === 'checking') return <StartupChecking selectedRuntime={selectedRuntime} />;
   if (runtimeStatus === 'offline') {
@@ -312,6 +346,7 @@ export default function App() {
               greekTranscribeModel={greekTranscribeModel}
               transcribeModel={transcribeModel}
               codingModel={codingModel}
+              runtimeAdapter={runtimeAdapter}
               showThinking={showThinking}
               ctxUsedPct={ctxUsedPct}
               onClearContext={handleClearContext}

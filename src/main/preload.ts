@@ -33,6 +33,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('llama-cpp-start-stream', { requestId, config, request }),
   llamaCppAbortStream: (requestId: string) =>
     ipcRenderer.invoke('llama-cpp-abort-stream', { requestId }),
+  llamaCppSttHealthCheck: (sttConfig: LlamaCppSttConfig) =>
+    ipcRenderer.invoke('llama-cpp-stt-health-check', sttConfig),
+  llamaCppTranscribe: (sttConfig: LlamaCppSttConfig, audioBase64: string, languageHint?: string) =>
+    ipcRenderer.invoke('llama-cpp-transcribe', { sttConfig, audioBase64, languageHint }),
   onLlamaCppStreamEvent: (listener: (event: LlamaCppStreamEvent) => void) => {
     const wrapped = (_event: unknown, payload: LlamaCppStreamEvent) => listener(payload);
     ipcRenderer.on('llama-cpp-stream-event', wrapped);

@@ -16,6 +16,7 @@ interface Props {
   llamaSetup: LlamaCppSetupConfig;
   runtimeStatus: 'checking' | 'offline' | 'ready';
   runtimeError: string;
+  mmprojWarning?: string;
   onRuntimeChange: (runtime: RuntimeKind) => void;
   onLlamaSetupChange: (patch: Partial<LlamaCppSetupConfig>) => void;
   onLlamaModelPathChange: (id: LlamaModelPresetId, modelPath: string) => void;
@@ -27,6 +28,7 @@ export function SetupAssistant({
   llamaSetup,
   runtimeStatus,
   runtimeError,
+  mmprojWarning,
   onRuntimeChange,
   onLlamaSetupChange,
   onLlamaModelPathChange,
@@ -71,6 +73,12 @@ export function SetupAssistant({
           {runtimeStatus === 'ready' && `${selectedRuntime === 'ollama' ? 'Ollama' : 'llama.cpp'} is ready.`}
           {runtimeStatus === 'offline' && runtimeError}
         </div>
+
+        {mmprojWarning && (
+          <div className="setup-status" style={{ color: '#e6a817' }}>
+            ⚠️ {mmprojWarning}
+          </div>
+        )}
 
         {selectedRuntime === 'llama_cpp' && (
           <div className="setup-form">
@@ -129,6 +137,16 @@ export function SetupAssistant({
                   type="number"
                   value={llamaSetup.port}
                   onChange={(event) => onLlamaSetupChange({ port: Number.parseInt(event.target.value, 10) || 8080 })}
+                  min={1024}
+                  max={65535}
+                />
+              </label>
+              <label className="setup-field">
+                <span>STT Port</span>
+                <input
+                  type="number"
+                  value={llamaSetup.sttPort}
+                  onChange={(event) => onLlamaSetupChange({ sttPort: Number.parseInt(event.target.value, 10) || 8081 })}
                   min={1024}
                   max={65535}
                 />

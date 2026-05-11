@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { TTSService } from '../services/TTSService';
 
+const CODE_READY_MESSAGE = 'Your code is ready in the editor! Press the green Open in Browser button when it lights up to see your creation.';
+
 interface Props {
   role: string;
   content: string;
@@ -19,17 +21,23 @@ function hasStartedCodeStream(text: string): boolean {
 function getSpeakableText(text: string): string {
   return text
     .replace(/\*Your animation code is in the editor\.\*/gi, '')
-    .replace(/\*Your code is ready in the editor! Press the green Open in Browser button when it lights up to see your creation\.\*/gi, '')
+    .replace(new RegExp(`\\*${CODE_READY_MESSAGE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\*`, 'gi'), '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
 function hideHtmlOutput(text: string): string {
-  let next = text.replace(/```(?:html)?\n[\s\S]*?(?:```|$)/gi, '\n\n*Your code is ready in the editor! Press the green Open in Browser button when it lights up to see your creation.*\n\n');
-  next = next.replace(/<!DOCTYPE html[\s\S]*$/i, '\n\n*Your code is ready in the editor! Press the green Open in Browser button when it lights up to see your creation.*\n');
-  next = next.replace(/<html\b[\s\S]*$/i, '\n\n*Your code is ready in the editor! Press the green Open in Browser button when it lights up to see your creation.*\n');
+  const replacement = `\n\n*${CODE_READY_MESSAGE}*\n\n`;
+  let next = text.replace(/```(?:html)?\n[\s\S]*?(?:```|$)/gi, replacement);
+  next = next.replace(/<!DOCTYPE html[\s\S]*$/i, replacement);
+  next = next.replace(/<html\b[\s\S]*$/i, replacement);
   next = next.replace(/\n{3,}/g, '\n\n');
   return next.trim();
+}
+
+function flattenText(node: React.ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  return React.Children.toArray(node).map(flattenText).join('');
 }
 
 export function Message({ role, content, thinking = '', showThinking = false, streaming, tts }: Props) {
@@ -72,7 +80,20 @@ export function Message({ role, content, thinking = '', showThinking = false, st
       )}
       {display && (
         <div className="message-content">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{display}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              em: ({ children }) => {
+                const text = flattenText(children).trim();
+                if (text === CODE_READY_MESSAGE) {
+                  return <em className="message-code-ready">{children}</em>;
+                }
+                return <em>{children}</em>;
+              },
+            }}
+          >
+            {display}
+          </ReactMarkdown>
         </div>
       )}
       {showSpeakButton && (

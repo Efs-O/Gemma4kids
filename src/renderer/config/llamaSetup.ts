@@ -60,6 +60,7 @@ export interface LlamaCppSetupConfig {
   serverPath: string;
   modelPaths: LlamaModelPaths;
   port: number;
+  sttPort: number;
   gpuLayers: number;
   numCtx: number;
   numPredict: number;
@@ -75,6 +76,8 @@ export const LLAMA_MODEL_PATH_KEYS: Record<LlamaModelPresetId, string> = {
 };
 export const LLAMA_NUM_CTX_KEY = 'runtime.llama_cpp.numCtx';
 export const LLAMA_NUM_PREDICT_KEY = 'runtime.llama_cpp.numPredict';
+export const LLAMA_STT_PORT_KEY = 'runtime.llama_cpp.sttPort';
+export const LLAMA_DEFAULT_STT_PORT = 8081;
 
 export function normalizeHubRoot(root: string): string {
   return root.trim().replace(/[\\/]+$/, '');
@@ -158,6 +161,7 @@ export function readLlamaCppSetupConfig(): LlamaCppSetupConfig {
     serverPath: localStorage.getItem(LLAMA_SERVER_PATH_KEY) ?? '',
     modelPaths,
     port: readStoredNumber(LLAMA_PORT_KEY, 8080),
+    sttPort: readStoredNumber(LLAMA_STT_PORT_KEY, LLAMA_DEFAULT_STT_PORT),
     gpuLayers: readStoredNumber(LLAMA_GPU_LAYERS_KEY, -1),
     numCtx: readStoredNumber(LLAMA_NUM_CTX_KEY, OLLAMA_CHAT_WORKSTATION_CTX),
     numPredict: readStoredNumber(LLAMA_NUM_PREDICT_KEY, OLLAMA_CHAT_WORKSTATION_PREDICT),

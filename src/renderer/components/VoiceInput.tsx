@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { audioBlobToWav16k, transcribe } from '../services/OllamaService';
+import type { LLMRuntimeAdapter } from '../services/OllamaService';
+import { audioBlobToWav16k } from '../services/OllamaService';
 
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
 
@@ -18,11 +19,13 @@ interface Props {
   greekTranscribeModel: string | null;
   transcribeModel: string;
   codingModel: string;
+  runtimeAdapter: LLMRuntimeAdapter;
   onTranscription: (text: string) => void;
   disabled?: boolean;
+  disabledReason?: string;
 }
 
-export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, onTranscription, disabled }: Props) {
+export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, runtimeAdapter, onTranscription, disabled, disabledReason }: Props) {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const activeStreamRef = useRef<MediaStream | null>(null);
@@ -62,31 +65,42 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceStateSafe('transcribing');
     try {
-      const languageHint = navigator.languages?.[0] ?? navigator.language;
+      // navigator.languages[0] is the OS display language, not the spoken language.
+      // Use it only to pick the Greek-optimised model; never pass it as a spoken-language
+      // hint to the STT prompt — that caused E4B to translate English speech into German
+      // when the OS was set to de-DE.
+      const osLocale = (navigator.languages?.[0] ?? navigator.language).toLowerCase();
       const encoded = await audioBlobToWav16k(blob);
       // Revisit this override if future Gemma/Ollama releases improve Greek ASR
       // on E4B. Current local tests on both synthetic and real Greek audio show
       // E2B stays in Greek script more reliably, while E4B often drifts into
       // mixed or non-Greek scripts.
       const activeTranscribeModel =
-        languageHint.toLowerCase().startsWith('el') && greekTranscribeModel
+        osLocale.startsWith('el') && greekTranscribeModel
           ? greekTranscribeModel
           : transcribeModel;
       const keepAlive = activeTranscribeModel === codingModel
         ? estimateWarmKeepAlive(encoded.durationSeconds)
         : 0;
+      // Pass no languageHint → E4B uses the auto-detect generic prompt.
+      // Only exception: Greek OS locale uses the Greek model which already handles el-GR well.
+      const languageHintForSTT = osLocale.startsWith('el') ? osLocale : undefined;
       console.info('[voice:transcribe:selected-model]', {
         attempt,
-        languageHint,
+        osLocale,
+        languageHintForSTT,
         activeTranscribeModel,
         codingModel,
         keepAlive,
         durationSeconds: Number(encoded.durationSeconds.toFixed(2)),
       });
-      const text = await transcribe(encoded.audioBase64, activeTranscribeModel, keepAlive, languageHint);
+      if (!runtimeAdapter.transcribe) {
+        throw new Error('Voice input is not available for the selected runtime.');
+      }
+      const text = await runtimeAdapter.transcribe(encoded.audioBase64, activeTranscribeModel, keepAlive, languageHintForSTT);
       console.info('[voice:transcribe:deliver]', {
         attempt,
-        languageHint,
+        languageHintForSTT,
         activeTranscribeModel,
         textPreview: previewText(text),
       });
@@ -119,7 +133,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         }, 3000);
       }
     }
-  }, [clearTimer, codingModel, greekTranscribeModel, onTranscription, setVoiceStateSafe, transcribeModel]);
+  }, [clearTimer, codingModel, greekTranscribeModel, onTranscription, runtimeAdapter, setVoiceStateSafe, transcribeModel]);
 
   const startRecording = useCallback(async () => {
     try {
@@ -191,7 +205,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
     return (
       <button
         className="btn-mic btn-mic-disabled"
-        title="Install gemma4:e4b or gemma4:e2b to use voice input"
+        title={disabledReason ?? 'Voice unavailable: install gemma4:e4b or gemma4:e2b in Ollama, or place the mmproj .gguf next to your model when using llama.cpp'}
         disabled
       >
         🎤

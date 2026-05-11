@@ -8,11 +8,13 @@ No Internet. No subscription. No telemetry. Just a kid, local models, and a codi
 
 ## What it does
 
-A child **types or speaks** a prompt (“make fireworks explode”). **Gemma 4** streams a reply, can **call tools** (save/read/list animations, open in the browser), and full **HTML** lands in the **CodeMirror** editor so they see and edit code. Kids **save**, **reload projects** from the sidebar, **delete** unwanted files, and **open animations in the default browser** (never inside Electron—untrusted HTML stays in the system browser).
+Gemma4kids is a **general learning companion for kids**, not only a coding teacher. A child can ask anything: "what do I do in an earthquake?", "tell me a joke in Greek", "explain fractions", "make up a story about a dragon" — Gemma answers in plain, age-appropriate language in the child's own language. When the child wants to **make something**, Gemma shifts into coding mode: a prompt ("make fireworks explode") produces a complete HTML animation that streams live into the **CodeMirror** editor so they see and edit the code. Kids **save**, **reload projects** from the sidebar, and **open animations in the default browser**.
 
-Optional **“Read”** uses **local Piper speech** when configured (binary + voice ONNX under the app)—no cloud.
+A child can also **attach an image or short video** — Gemma sees it, answers questions about it, and can turn a drawing into a live animation. Optional **"Read"** uses **local Piper speech** when configured — no cloud.
 
-Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026)—e.g. **Future of Education** and **Ollama** special tracks.
+She does not just teach children what to think. She teaches them how to think.
+
+Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026) — targeting the **Future of Education**, **Ollama**, and **llama.cpp** special tracks.
 
 ---
 
@@ -20,29 +22,48 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026)—e.g. **Futu
 
 | Area | Behavior |
 |---|---|
-| **Models** | Header **Coding model** lists pulled Gemma 4 variants; auto-selects best available: **31B** (`gemma4:31b`) → **26B** (`gemma4:26b`) → **edge** (`gemma4:e4b`) → **e2b**. Pick what fits your VRAM. |
-| **Voice→text** | **Mic**: WAV → **`gemma4:e4b`** transcription via Ollama (`keep_alive: 0`). Disabled if **e4b** is not pulled. |
-| **Chat** | Markdown answers; optional **Thoughts** (**Think On/Off** + **Show Thoughts**) reflect native thinking from the coding model where supported; **starter prompts** + **quick chips** after replies. Cancel / retry during errors. |
-| **Tools** | Native tool calls **`save_animation`**, **`read_animation`**, **`list_animations`**, **`open_in_browser`**; HTML is audited/fixed lightly before persistence. |
-| **Editor & projects** | Resizable sidebar (**saved animations**) + **chat** widths; **`Documents/KidAnimations/`** `.html` files with collision **`-2`**, **`-3`**, … if names clash. Kids can paste or type their own HTML into the editor, save it, then ask Gemma to explain or improve it. Clicking a sidebar project loads it and automatically tells Gemma which file is active so it can review it on request. |
-| **Code Runner** | Sidebar mini-game while **Gemma streams**, active when coding model is **`gemma4:26b`** or **`gemma4:31b`**. |
-| **TTS (“Read”)** | **Piper** in **main**: optional local read-aloud on assistant bubbles if **`piper`** binary + **`voices`** are present—see **[SETUP.md](SETUP.md)**. |
+| **Runtime** | Choose **Ollama** (easy, guided) or **llama.cpp** (advanced, GGUF paths + GPU layers) at the startup screen. Gemma4kids auto-starts the local server for both. Switch runtimes any time without restarting. |
+| **Models** | Header dropdown lists all pulled Gemma 4 variants, sorted smallest→largest. **Auto-selects the lightest available** at startup (E2B → E4B → 26B → 31B) so the app is immediately usable; upgrade via the dropdown any time. **E2B and E4B** use simplified prompts and an intent classifier (simple tier). **26B and 31B** use the full CREATE/EDIT prompt suite (full tier). |
+| **Context window** | Edge models (E2B/E4B): 65 k token context. Workstation models (26B/31B): 122 k token context. A **color-coded context meter** in the chat panel shows remaining capacity (green → orange → red). Click it at any time to clear the conversation and start fresh. |
+| **Voice→text** | Mic button → WAV → STT model via Ollama (`keep_alive: 0`) or a **dedicated llama.cpp STT server** (port 8081, separate from the coding model). E4B handles English and German; **E2B is preferred for Greek** audio (better ASR stability). Disabled when no STT model is configured. |
+| **Vision & video** | Paperclip button attaches an **image** or a short **video clip** (≤ 30 s). Images go to the model directly. Videos are preprocessed by **ffmpeg**: 3–6 frames sampled at up to 640 px, plus an optional audio WAV extract — all sent as a multimodal payload. Gemma can describe the content, answer questions, or turn a drawing into a live animation. |
+| **Video frame tool** | When a video is attached, Gemma can call **`save_video_frame`** to capture JPEG stills at specified timestamps and save them to `Documents/KidAnimations/video-frames/`. |
+| **Smart routing** | An intent classifier runs on every turn and decides: **art** (full agentic HTML loop with tools), **motion** (simpler animation via SIMPLE prompt), or **chat** (plain conversation, no tools). On simple-tier models, a `__TOOBIG__` signal escalates complex requests to the big model automatically. |
+| **Edit detection** | When a project is loaded from the sidebar, Gemma automatically knows which file is active. Edit-intent keywords ("fix", "change", "improve", "bigger", "color"…) switch the system prompt to **EDIT mode**, which preserves existing code and only applies the requested change — no full rewrites. |
+| **General learning** | Gemma answers any question a child asks — stories, jokes, riddles, quizzes, science, maths, safety ("what do I do in an earthquake?"), history, or anything else — in plain, age-appropriate language, in the child's own tongue. The intent classifier routes these to a dedicated conversational mode with no code tools exposed, so responses are fast and child-friendly. Coding is one capability among many, not the only one. |
+| **Chat** | Markdown answers. Optional **Thoughts** (**Think On/Off** + **Show Thoughts**) expose the model's reasoning chain. **12 starter prompt cards** (3 shown at random, reshuffled after each reply) — edge models get a separate kid-friendly card pool. **12 suggestion chips** after each reply (3 shown at random), always including a "Make something new" escape. |
+| **Tools** | Native tool calls: **`save_animation`**, **`read_animation`**, **`list_animations`**, **`open_in_browser`**, **`save_video_frame`**. HTML is audited/fixed before persistence. |
+| **Editor & projects** | Resizable sidebar (**saved animations**) + chat widths. Files save to **`Documents/KidAnimations/`** with `-2`, `-3`… suffixes on name collisions. An **unsaved-changes dot** turns red when the editor has been modified and green on successful save. A **"Gemma's version"** button reverts manual edits back to the last AI-generated code. |
+| **Code Runner** | Side-scroller mini-game plays while Gemma streams (26B/31B only). Press **Space** to jump and dodge bugs. High score persists in localStorage. |
+| **TTS ("Read")** | **Piper** in main process: read-aloud speaker button on every assistant message when `piper` binary + voice ONNX bundles are installed. Detects language (EN/DE/EL) and routes to the matching voice — no cloud. See **[SETUP.md](SETUP.md)**. |
+| **Multilingual** | All system prompts instruct Gemma to reply in the child's own language. Language is detected automatically from the text (Greek Unicode ranges, German diacritics, English default). Motion keywords in Greek (κινούμενο, κίνηση, πέφτει…) and German (animiert, bewegt, fallen…) are recognised by the router. |
 
 ---
 
 ## Quick start
 
-### 1. Install Ollama
+### 1. Choose your runtime
 
-Download from [ollama.com](https://ollama.com) and keep it running. Pull what you plan to use:
+**Option A — Ollama (recommended)**
+
+Download from [ollama.com](https://ollama.com) and keep it running. Pull what fits your hardware:
 
 ```bash
-ollama pull gemma4:31b   # highest quality — 64 k context, ~20 GB (24 GB VRAM)
-ollama pull gemma4:26b   # excellent quality — ~17 GB (20 GB VRAM)
-ollama pull gemma4:e4b   # edge: STT + full chat/tools on smaller GPUs (~6 GB)
+ollama pull gemma4:e2b   # lightest — older GPUs, ~3 GB VRAM (default at startup)
+ollama pull gemma4:e4b   # edge — STT + full chat/tools, ~6 GB VRAM
+ollama pull gemma4:26b   # workstation — excellent quality, ~17 GB VRAM
+ollama pull gemma4:31b   # workstation — highest quality, 64 k context, ~20 GB VRAM
 ```
 
-> **RAM:** 8 GB allows edge-only use; **20 GB+ VRAM** runs 26b smoothly; **24 GB+ VRAM** for 31b. GPUs help a lot.
+> The app auto-selects the **lightest model you have pulled**. You can switch to a larger one in the header dropdown at any time.
+>
+> **RAM guide:** 8 GB → E2B/E4B only · 20 GB+ VRAM → 26B smooth · 24 GB+ VRAM → 31B
+
+**Option B — llama.cpp (advanced)**
+
+Download a [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) and point Gemma4kids at your GGUF model files via the setup screen. Gemma4kids spawns and manages `llama-server` automatically — one instance for the coding model, a separate one for STT. No Ollama installation needed. Vision and video features require an `mmproj` companion file alongside your GGUF; Gemma4kids searches for it automatically. Advanced options include GPU layer count, context size, max tokens, and K/V cache quantization (f16, bf16, q8_0, q5_1, q5_0, q4_1, q4_0, iq4_nl).
+
+**Video features (both runtimes):** frame extraction and audio capture require **ffmpeg** on your PATH.
 
 ### 2. Install Gemma4kids
 
@@ -73,10 +94,12 @@ GitHub Actions notes:
 
 ### 3. Launch and create
 
-1. Open Gemma4kids (Ollama must be up).
+1. Open Gemma4kids. The startup screen asks you to pick **Ollama** or **llama.cpp**.
 2. Choose **Coding model**, **Think** / **Show Thoughts** as you like.
-3. Use the mic (if **e4b** is pulled) or type—then **Save** and **Open in Browser**.
-4. **Read** aloud only appears when Piper voices are wired—see **[SETUP.md](SETUP.md)**.
+3. Type a prompt or press the **mic** button to speak (STT model required).
+4. Use the **paperclip** to attach an image or video before sending.
+5. **Save** → **Open in Browser** to see the animation full-screen.
+6. **Read** aloud only appears when Piper voices are installed — see **[SETUP.md](SETUP.md)**.
 
 Developer clone and scripts: **[SETUP.md](SETUP.md)** · **Architecture** below.
 
@@ -87,22 +110,36 @@ Developer clone and scripts: **[SETUP.md](SETUP.md)** · **Architecture** below.
 ```
 Electron shell
 ├── Main process
-│   ├── IPC: animations (save / read / list / delete / open in OS browser)
+│   ├── animationStore.ts — IPC: save / read / list / delete / open in OS browser
+│   ├── llamaRuntime.ts — spawns / manages llama-server (coding model)
+│   ├── llamaSttRuntime.ts — separate llama-server instance for STT (port 8081)
+│   ├── IPC: preprocess-video-attachment, inspect-video-attachment (ffmpeg)
 │   └── Optional Piper TTS: piper/{piper.exe} + voices/*.onnx (+ .json)
 └── Renderer (React + TypeScript + CodeMirror)
-    ├── ChatPanel — Ollama native chat + streaming + tools + retries
-    ├── VoiceInput — MediaRecorder WAV → gemma4:e4b transcription
-    ├── EditorPanel — edits HTML streamed from the model / tools
-    ├── ProjectList — load + delete KidAnimations *.html
-    ├── CodeRunner — mini-runner while streaming (gemma4:26b coding model only)
-    ├── htmlAudit.ts — lightweight repair before accepting saved HTML
-    └── Ollama only at http://127.0.0.1:11434 — CSP enforced in index.html
+    ├── App.tsx — runtime selector, model selector, think toggles, resizable panes
+    ├── SetupAssistant.tsx — startup: Ollama vs llama.cpp runtime cards
+    ├── ChatPanel — streaming chat, starter cards, suggestion chips, context meter
+    ├── chatRouting.ts — intent classifier: art / motion / chat → right system prompt
+    │   └── 5 system prompts: CREATE · EDIT · SIMPLE · KID_CHAT · INTENT_CLASSIFIER
+    ├── chatTools.ts — tool dispatch, HTML audit integration
+    ├── VoiceInput — MediaRecorder WAV → STT (Ollama or llama.cpp); Greek → E2B
+    ├── MediaAttachmentService — frame extraction + audio WAV from video (ffmpeg)
+    ├── AttachmentPreview — thumbnail strip for image / video before send
+    ├── InputRow — textarea + mic button + paperclip attach
+    ├── EditorPanel — CodeMirror 6, audit badge, unsaved-changes dot, "Gemma's version" revert
+    ├── ProjectList — sidebar: load / delete KidAnimations/*.html; injects active file context
+    ├── CodeRunner — side-scroller game during streaming (26B/31B only); Space to jump
+    ├── htmlAudit.ts — Acorn-based JS/HTML repair; badge shows fix count
+    └── pickCodingModel.ts — E2B→E4B→26B→31B auto-select; getModelTier(); pickGreekTranscribeModel()
 ```
 
 **Typical pipelines**
 
-- Speech: Mic → WAV → **e4b** → text prompt → coding model (**e4b** or **26b** selected in header).
-- Coding: **`streamOllamaNativeChat`** Jinja templating + `tools[]` + thinking payload as configured.
+- Speech: Mic → WAV → STT model (E4B for EN/DE, E2B for Greek) → text → coding model.
+- Vision: Paperclip → image → base64 → multimodal payload → coding model.
+- Video: Paperclip → ffmpeg → 3–6 frames + audio WAV → base64 → multimodal payload. Model may call `save_video_frame` to capture stills.
+- Coding: Intent classifier → CREATE or EDIT system prompt → `streamOllamaNativeChat` / llama.cpp stream → tool loop → htmlAudit → editor.
+- Chat: Intent classifier → KID_CHAT / SIMPLE prompt → plain text reply, no tools.
 
 ---
 
@@ -120,7 +157,7 @@ A child who asks for fireworks and gets a blank screen quits the app. Before shi
 
 **Primary fix — prompt engineering.** We added three targeted constraints to the system prompt (dot notation for `window` properties, literal time values for animation duration, nth-child counting rules). We then reran all three failing prompts with `think: true` and **no post-processing applied**. All three outputs worked correctly in the browser.
 
-**Secondary fix — deterministic audit layer** (`htmlAudit.ts`). Every HTML file passes through a lightweight repair pass before it reaches the child — tag typo correction, `forwards → infinite`, kebab-case `.style` properties → camelCase, undefined CSS variables injected, `window-prop` dot fix, and an Acorn JS parse gate. This runs in under 1 ms with no network calls. When the audit applies a fix, the editor shows a small **"✓ code checked · N fixes applied"** badge so we can observe it during development.
+**Secondary fix — deterministic audit layer** (`htmlAudit.ts`). Every HTML file passes through a lightweight repair pass before it reaches the child — tag typo correction, `forwards → infinite`, kebab-case `.style` properties → camelCase, undefined CSS variables injected, `window-prop` dot fix, and an Acorn JS parse gate. This runs in under 1 ms with no network calls. When the audit applies a fix, the editor shows a small **"✓ code checked · N fixes applied"** badge.
 
 The audit is a safety net, not a crutch. The improved prompt handles the common cases; the audit catches anything that slips through on unusual prompts or edge runs.
 
@@ -130,10 +167,12 @@ All benchmark scripts and results live under [`scripts/`](scripts/) and [`gemma_
 
 ## Why Gemma 4
 
-- **gemma4:e4b** — multimodal audio in; good for STT **and**, when selected as coding model, the full offline agent loop without a second heavyweight model.
-- **gemma4:26b** — strong HTML + MoE tooling for kids’ animations; unload **e4b** with `keep_alive: 0` after STT so VRAM frees for large weights.
-- **gemma4:31b** — highest quality coding model in the family; runs at **64 k context** (vs 98 k for 26b) to fit within 24 GB VRAM without sacrificing meaningful context for kids’ animations.
-- **Ollama** — local OpenAI-compat + native **`/api/chat`** for tool calling aligned with competition requirements.
+- **gemma4:e2b** — lightest model in the family; runs on older or low-VRAM GPUs; default at startup. Used as the preferred STT model for Greek audio.
+- **gemma4:e4b** — natively multimodal (audio-in); serves as the STT engine for English and German, and can also run the full agent loop on its own on smaller GPUs.
+- **gemma4:26b** — text-only workstation model, 98 k context. **Gains full voice I/O** through the pipeline: E4B/E2B transcribes speech → text → 26B, and Piper TTS speaks 26B's replies back to the child. `keep_alive: 0` on the STT call forces immediate VRAM unload so 26B can load cleanly.
+- **gemma4:31b** — text-only, highest quality, 64 k context. Same voice pipeline as 26B — STT handles input, Piper handles output — giving it capabilities it does not natively possess.
+- **Ollama** — local native `/api/chat` for tool calling and thinking; painless model pulls; aligned with competition requirements.
+- **llama.cpp** — GGUF inference with no daemon required. Gemma4kids spawns its own `llama-server` processes — one for the coding model, one for STT — giving full offline operation on hardware where Ollama is unavailable or undesirable.
 
 ---
 
@@ -149,7 +188,54 @@ npm run build        # bundle main/preload/renderer
 npm run dist:win     # example: Windows installer
 ```
 
-**Stack:** Electron · React 18 · TypeScript · CodeMirror 6 · esbuild · Ollama (localhost only).
+**Stack:** Electron · React 18 · TypeScript · CodeMirror 6 · esbuild · Ollama or llama.cpp (localhost only) · ffmpeg (optional, for video features).
+
+---
+
+## Greek TTS — JOY voice
+
+Greek read-aloud is powered by **JOY** (`el_GR-joy-medium`), the first open-source Greek Piper TTS voice trained entirely on native human speech.
+
+Full voice documentation: [`voices/el_GR-joy-medium.VOICE_CARD.md`](voices/el_GR-joy-medium.VOICE_CARD.md) · License: [`voices/el_GR-joy-medium.LICENSE.txt`](voices/el_GR-joy-medium.LICENSE.txt)
+
+### Why it matters
+
+All previous community Greek TTS voices were trained on synthetic or low-quality data, producing robotic, mispronounced output unsuitable for children or educational use. JOY fills that gap.
+
+### What it is
+
+| Field | Value |
+|---|---|
+| **Voice name** | JOY (Χαρά — "Joy" in Greek) |
+| **Language** | Greek · el_GR |
+| **Architecture** | Piper VITS — same engine as EN and DE voices |
+| **Sample rate** | 22 050 Hz, 16-bit mono |
+| **Speaker** | Chara Kaltsou — native Greek speaker, BA Aristotle University of Thessaloniki (AUTH), MA Hellenic Open University (HOU) |
+| **Dataset** | ~3 000 human utterances recorded in a controlled environment — zero synthetic data |
+| **Domain** | Children's vocabulary, storytelling, school language, numbers, Greek cultural references |
+| **Training** | piper-train official toolkit · VITS · 20 epochs · batch 32 |
+| **Source project** | [Gemma4GR](https://github.com/Efs-O/Gemma4GR) |
+| **License** | [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) |
+
+### Measured reliability
+
+In the Gemma4GR evaluation suite (100 Greek answer WAVs synthesised across 4 model variants), **JOY produced 100/100 WAVs without a single synthesis failure**. No audio quality issues were observed across any run.
+
+### Community impact
+
+JOY was created as part of the [Gemma4GR](https://github.com/Efs-O/Gemma4GR) sister project and is contributed to the open-source community. The voice serves two roles:
+
+1. **Runtime TTS in Gemma4kids** — Gemma writes a Greek reply → JOY speaks it to the child, offline, no cloud.
+2. **STT training fuel in Gemma4GR** — JOY synthesised 2 488 Greek Q&A audio pairs used to train Gemma's audio LoRA for listen-and-answer capability in Greek.
+
+### Attribution (required by CC BY-NC 4.0)
+
+```
+JOY Greek voice (el_GR-joy-medium)
+Gemma4GR project — https://github.com/Efs-O/Gemma4GR
+Speaker: Chara Kaltsou, BA AUTH, MA HOU
+License: CC BY-NC 4.0 — https://creativecommons.org/licenses/by-nc/4.0/
+```
 
 ---
 
@@ -163,11 +249,14 @@ Verbatim **[Kaggle foundational rules](docs/competition/kaggle-foundational-rule
 
 Thank you to the teams behind the tools Gemma4kids depends on:
 
-- **[Google Gemma](https://ai.google.dev/gemma)** — Gemma 4 model family (edge and workstation weights) run locally via Ollama.
-- **[Ollama](https://ollama.com)** — local inference, OpenAI-compatible chat, and painless model pulls.
-- **[Piper](https://github.com/rhasspy/piper)** (Rhasspy) — optional neural text-to-speech in the Electron main process when `piper` and voice ONNX bundles are installed.
-- **[Acorn](https://github.com/acornjs/acorn)** — small JavaScript parser used in **`htmlAudit.ts`** to parse `<script>` bodies and catch broken inline JS in model output before save.
-- **Open-source stack shipped in this app**: [Electron](https://www.electronjs.org/) (bundles Chromium for the desktop shell), [React](https://react.dev/), [CodeMirror](https://codemirror.net/) (`@codemirror/lang-html`, `@codemirror/theme-one-dark`), [esbuild](https://esbuild.github.io/), [TypeScript](https://www.typescriptlang.org/), [react-markdown](https://github.com/remarkjs/react-markdown) with [remark-gfm](https://github.com/remarkjs/remark-gfm), [electron-builder](https://www.electron.build/). Exact versions are in **`package-lock.json`**.
+- **[Google Gemma](https://ai.google.dev/gemma)** — Gemma 4 model family (E2B, E4B, 26B, 31B) run locally via Ollama or llama.cpp.
+- **[Ollama](https://ollama.com)** — local inference, native `/api/chat` for tool calling and thinking, painless model pulls.
+- **[llama.cpp](https://github.com/ggml-org/llama.cpp)** (ggml-org) — GGUF inference engine powering the alternative runtime; Gemma4kids manages `llama-server` directly for both coding and STT workloads.
+- **[ffmpeg](https://ffmpeg.org/)** — video frame extraction and audio capture for the multimodal attachment pipeline.
+- **[Piper](https://github.com/rhasspy/piper)** (Rhasspy) — optional neural TTS in the Electron main process.
+- **JOY Greek voice** (`el_GR-joy-medium`) — first high-quality open-source Greek Piper TTS voice, trained on ~3 000 human recordings by native speaker Chara Kaltsou (BA AUTH, MA HOU). Created for the [Gemma4GR](https://github.com/Efs-O/Gemma4GR) project. License: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+- **[Acorn](https://github.com/acornjs/acorn)** — small JavaScript parser used in `htmlAudit.ts` to catch broken inline JS in model output before save.
+- **Open-source stack shipped in this app**: [Electron](https://www.electronjs.org/), [React](https://react.dev/), [CodeMirror](https://codemirror.net/) (`@codemirror/lang-html`, `@codemirror/theme-one-dark`), [esbuild](https://esbuild.github.io/), [TypeScript](https://www.typescriptlang.org/), [react-markdown](https://github.com/remarkjs/react-markdown) with [remark-gfm](https://github.com/remarkjs/remark-gfm), [electron-builder](https://www.electron.build/). Exact versions in `package-lock.json`.
 
 These projects make an offline-first teaching tool practical; residual bugs and UX are ours alone.
 

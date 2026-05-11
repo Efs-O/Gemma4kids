@@ -205,7 +205,7 @@ export function CodeRunner({ streaming, enabled = true }: Props) {
 
         {phase === 'idle' && (
           <div className="cr-msg">
-            Gemma is coding. Press <kbd>Space</kbd> to start, then dodge bugs and grab semicolons.
+            Gemma is thinking-coding. Press <kbd>Space</kbd> to start, then dodge bugs and grab semicolons.
           </div>
         )}
         {phase === 'dead' && (

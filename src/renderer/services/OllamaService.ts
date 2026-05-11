@@ -4,7 +4,6 @@ import { streamOllamaNativeChat } from '../llm/ollamaNativeChat';
 import type { ChatMessage, ToolDefinition } from '../llm/types';
 
 const OLLAMA_BASE = 'http://localhost:11434';
-const OLLAMA_TRANSCRIBE_TIMEOUT_MS = 25000;
 
 export type RuntimeKind = 'ollama' | 'llama_cpp';
 
@@ -60,7 +59,10 @@ export interface LLMRuntimeAdapter {
 export interface LlamaCppRuntimeConfig {
   serverPath: string;
   modelPath: string;
+  mmprojSearchPaths: string[];
   port: number;
+  sttModelPath: string;
+  sttPort: number;
   gpuLayers: number;
   numCtx: number;
   numPredict: number;
@@ -229,6 +231,24 @@ export async function transcribeAudioBlob(
   };
 }
 
+export async function transcribeAudioBlobWithRuntime(
+  adapter: LLMRuntimeAdapter,
+  blob: Blob,
+  model: string = 'gemma4:e4b',
+  keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+  languageHint?: string,
+): Promise<{ text: string; durationSeconds: number }> {
+  if (!adapter.transcribe) {
+    throw new Error('Voice input is not available for the selected runtime.');
+  }
+  const encoded = await audioBlobToWav16k(blob);
+  const text = await adapter.transcribe(encoded.audioBase64, model, keepAlive, languageHint);
+  return {
+    text,
+    durationSeconds: encoded.durationSeconds,
+  };
+}
+
 /**
  * Transcribe audio via Gemma 4 E4B.
  * audioBase64 must be a base64-encoded 16kHz mono WAV (use audioBlobToWav16kBase64).
@@ -248,32 +268,23 @@ export async function transcribe(
     numCtx: OLLAMA_TRANSCRIBE_PROFILE.numCtx,
     audioBase64Length: audioBase64.length,
   });
-  let res: Response;
-  try {
-    res = await fetch(`${OLLAMA_BASE}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [{
-          role: 'user',
-          // Audio must come before text prompt per Ollama workaround
-          images: [audioBase64],
-          content: buildTranscribePrompt(languageHint),
-        }],
-        think: OLLAMA_TRANSCRIBE_PROFILE.think,
-        keep_alive: keepAlive,
-        stream: false,
-        options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
-      }),
-      signal: AbortSignal.timeout(OLLAMA_TRANSCRIBE_TIMEOUT_MS),
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      throw new Error('Transcription took too long. Try again, or keep going without audio words.');
-    }
-    throw error;
-  }
+  const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [{
+        role: 'user',
+        // Audio must come before text prompt per Ollama workaround
+        images: [audioBase64],
+        content: buildTranscribePrompt(languageHint),
+      }],
+      think: OLLAMA_TRANSCRIBE_PROFILE.think,
+      keep_alive: keepAlive,
+      stream: false,
+      options: { num_ctx: OLLAMA_TRANSCRIBE_PROFILE.numCtx },
+    }),
+  });
 
   if (!res.ok) throw new Error(`Transcribe HTTP ${res.status}`);
 
@@ -326,13 +337,20 @@ function chatMessagesForLlamaCppIpc(messages: ChatMessage[]): ChatMessage[] {
 }
 
 export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntimeAdapter {
+  const sttConfig: LlamaCppSttConfig = {
+    serverPath: config.serverPath,
+    sttModelPath: config.sttModelPath,
+    mmprojSearchPaths: config.mmprojSearchPaths,
+    sttPort: config.sttPort,
+    gpuLayers: config.gpuLayers,
+  };
   return {
     runtime: 'llama_cpp',
     capabilities: {
       supportsThinking: true,
       supportsTools: true,
       supportsMultimodal: false,
-      supportsTranscription: false,
+      supportsTranscription: config.sttModelPath.trim() !== '',
     },
     healthCheck: async () => window.electronAPI.llamaCppHealthCheck(config),
     listModels: async () => {
@@ -423,6 +441,11 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
           }
         });
       });
+    },
+    transcribe: async (audioBase64: string, _model?: string, _keepAlive?: 0 | string, languageHint?: string) => {
+      const result = await window.electronAPI.llamaCppTranscribe(sttConfig, audioBase64, languageHint);
+      if (!result.success) throw new Error(result.error ?? 'Transcription failed');
+      return result.text ?? '';
     },
   };
 }

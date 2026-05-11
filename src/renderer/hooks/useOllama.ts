@@ -16,6 +16,7 @@ export interface UseOllamaResult {
   status: OllamaStatus;
   models: string[];
   errorMsg: string;
+  llamaMmprojPath: string | null;
   recheck: () => void;
 }
 
@@ -32,6 +33,7 @@ export function useOllama(
   const [status, setStatus] = useState<OllamaStatus>('checking');
   const [models, setModels] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const [llamaMmprojPath, setLlamaMmprojPath] = useState<string | null>(null);
 
   const check = useCallback(async () => {
     setStatus('checking');
@@ -41,6 +43,9 @@ export function useOllama(
       if (!health.ok) {
         throw new Error(health.error ?? 'The selected runtime is not ready.');
       }
+      if (runtime === 'llama_cpp') {
+        setLlamaMmprojPath((health as LlamaCppHealthResult).mmprojPath ?? null);
+      }
       const found = await adapter.listModels();
       const modelIds = found.map((model) => model.id);
       setModels(modelIds);
@@ -48,12 +53,13 @@ export function useOllama(
       adapter.warmupCodingModel(pickCodingModel(modelIds));
     } catch (error) {
       setModels([]);
+      setLlamaMmprojPath(null);
       setStatus('offline');
       setErrorMsg(error instanceof Error ? error.message : String(error));
     }
-  }, [adapter]);
+  }, [adapter, runtime]);
 
   useEffect(() => { check(); }, [check]);
 
-  return { runtime, adapter, status, models, errorMsg, recheck: check };
+  return { runtime, adapter, status, models, errorMsg, llamaMmprojPath, recheck: check };
 }

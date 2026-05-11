@@ -1,5 +1,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --open-browser-green: #059669;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 17px;
@@ -116,7 +120,7 @@ body {
 .btn-preview {
   height: 46px;
   padding: 0 22px;
-  background: #059669;
+  background: var(--open-browser-green);
   color: white;
   border: none;
   border-radius: 9px;
@@ -401,6 +405,7 @@ body {
 .message-user .message-content { color: white; }
 .message-content p { margin-bottom: 0.4em; }
 .message-content p:last-child { margin-bottom: 0; }
+.message-code-ready { color: var(--open-browser-green); font-style: normal; font-weight: 700; }
 
 .message-content pre {
   background: #1e1b4b;
