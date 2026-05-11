@@ -51,6 +51,8 @@ declare global {
     }>;
     finishReason?: string | null;
     error?: string;
+    promptTokens?: number;
+    evalTokens?: number;
   }
 
   interface Window {

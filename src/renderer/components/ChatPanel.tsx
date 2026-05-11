@@ -117,7 +117,7 @@ export function ChatPanel({
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const effectiveShowThinking = false;
+  const effectiveShowThinking = showThinking;
   const userScrolledUpRef = useRef(false);
   /** True only while we assign scrollTop — ignore synthetic scroll events for stick-to-bottom heuristics. */
   const programmaticScrollRef = useRef(false);
@@ -126,7 +126,7 @@ export function ChatPanel({
 
   // Picked once at mount; reshuffled after each assistant reply (messages.length changes).
   const starters = useMemo(
-    () => modelTier === 'simple' ? pickRandom(SIMPLE_STARTERS, 3) : pickRandom(ALL_STARTERS, 3),
+    () => modelTier === 'simple' ? pickRandom(SIMPLE_STARTERS, 5) : pickRandom(ALL_STARTERS, 5),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [modelTier],
   );

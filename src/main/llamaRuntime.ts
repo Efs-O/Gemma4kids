@@ -27,6 +27,8 @@ interface LlamaStreamEvent {
   toolCalls?: OpenAiToolCall[];
   finishReason?: string | null;
   error?: string;
+  promptTokens?: number;
+  evalTokens?: number;
 }
 
 interface ManagedLlamaServer {
@@ -596,16 +598,21 @@ async function streamLlamaChat(
     const toolAccum = new Map<number, { id: string; name: string; arguments: string }>();
     let tokenCount = 0;
     let thinkingCount = 0;
+    let promptTokens = 0;
+    let evalTokens = 0;
+    let storedFinishReason: string | null = null;
 
     const emitDone = (finishReason: string | null) => {
       appendLlamaRuntimeLog(
         logPath,
-        `[stream:done] requestId=${requestId} finish_reason=${String(finishReason)} tokens=${String(tokenCount)} thinking_chunks=${String(thinkingCount)} tool_calls=${String(toolAccum.size)}`,
+        `[stream:done] requestId=${requestId} finish_reason=${String(finishReason)} tokens=${String(tokenCount)} thinking_chunks=${String(thinkingCount)} tool_calls=${String(toolAccum.size)} prompt_tokens=${String(promptTokens)} eval_tokens=${String(evalTokens)}`,
       );
       broadcastToWindows('llama-cpp-stream-event', {
         requestId,
         type: 'done',
         finishReason,
+        promptTokens,
+        evalTokens,
       } satisfies LlamaStreamEvent);
     };
 
@@ -648,7 +655,7 @@ async function streamLlamaChat(
 
           const payload = trimmed.slice(5).trim();
           if (payload === '[DONE]') {
-            emitDone(null);
+            emitDone(storedFinishReason);
             managedAbortControllers.delete(requestId);
             return { success: true };
           }
@@ -666,12 +673,18 @@ async function streamLlamaChat(
               };
               finish_reason?: string | null;
             }>;
+            usage?: { prompt_tokens?: number; completion_tokens?: number };
           };
 
           try {
             chunk = JSON.parse(payload) as typeof chunk;
           } catch {
             continue;
+          }
+
+          if (chunk.usage) {
+            promptTokens = chunk.usage.prompt_tokens ?? promptTokens;
+            evalTokens = chunk.usage.completion_tokens ?? evalTokens;
           }
 
           const choice = chunk.choices?.[0];
@@ -715,17 +728,16 @@ async function streamLlamaChat(
           }
 
           if (choice.finish_reason !== undefined && choice.finish_reason !== null) {
+            storedFinishReason = choice.finish_reason;
             if (choice.finish_reason === 'tool_calls') {
               emitToolCalls();
             }
-            emitDone(choice.finish_reason);
-            managedAbortControllers.delete(requestId);
-            return { success: true };
+            // Don't return yet — llama-server sends a usage chunk after finish_reason, before [DONE].
           }
         }
       }
 
-      emitDone(null);
+      emitDone(storedFinishReason);
       managedAbortControllers.delete(requestId);
       return { success: true };
     } catch (error) {

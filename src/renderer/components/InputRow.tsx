@@ -383,9 +383,14 @@ export function InputRow({
   const meterClass = remaining > 50 ? 'ctx-meter ctx-meter-green'
     : remaining > 20 ? 'ctx-meter ctx-meter-orange'
     : 'ctx-meter ctx-meter-red';
-  const meterTitle = remaining > 50 ? "We're good - plenty of space!"
-    : remaining > 20 ? 'Context is filling up - think about starting fresh soon'
-    : 'Almost full - click to start a fresh chat!';
+  const meterTitle = remaining > 50 ? 'Fresh chat — click to start over'
+    : remaining > 20 ? 'Chat is getting long — click to start fresh!'
+    : 'Chat is too long! Click here to start fresh 🔄';
+  const meterFill = remaining > 50
+    ? `linear-gradient(to right, #16a34a ${ctxUsedPct}%, #bbf7d0 ${ctxUsedPct}%)`
+    : remaining > 20
+    ? `linear-gradient(to right, #ea580c ${ctxUsedPct}%, #fed7aa ${ctxUsedPct}%)`
+    : `linear-gradient(to right, #dc2626 ${ctxUsedPct}%, #fecaca ${ctxUsedPct}%)`;
   const controlsDisabled = status === 'streaming' || preparing;
   const sendLabel = preparing ? 'Preparing...' : 'Send';
   const acceptedFileExtensions = supportsVisualAttachments ? ACCEPTED_FILE_EXTENSIONS : ACCEPTED_AUDIO_EXTENSIONS;
@@ -464,13 +469,14 @@ export function InputRow({
           />
         </div>
         <div className="input-buttons-right">
-          {ctxUsedPct > 0 && (
+          {onClearContext && (
             <button
               className={meterClass}
               onClick={onClearContext}
               title={meterTitle}
+              style={{ background: meterFill }}
             >
-              {remaining}%
+              New Chat
             </button>
           )}
           {status === 'streaming'

@@ -368,7 +368,7 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
     warmupCodingModel: () => {
       // The main-process manager keeps llama-server warm once started.
     },
-    streamChat: async (params, handlers, signal) => {
+    streamChat: async (params, handlers, signal, onContextUsage) => {
       const requestId = `llama_${crypto.randomUUID()}`;
 
       await new Promise<void>((resolve) => {
@@ -401,6 +401,9 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
           if (event.type === 'done') {
             finished = true;
             finish();
+            if (event.promptTokens != null || event.evalTokens != null) {
+              onContextUsage?.(event.promptTokens ?? 0, event.evalTokens ?? 0);
+            }
             handlers.onDone(event.finishReason ?? null);
             resolve();
             return;
@@ -425,6 +428,7 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
           top_p: params.topP,
           top_k: params.topK,
           stream: true,
+          stream_options: { include_usage: true },
         }).then((result) => {
           if (!result.success && !finished) {
             finished = true;

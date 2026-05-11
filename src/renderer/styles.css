@@ -114,6 +114,7 @@ body {
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition: opacity 0.15s;
 }
 
@@ -127,6 +128,7 @@ body {
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition: opacity 0.15s;
 }
 
@@ -390,6 +392,7 @@ body {
 }
 
 .thinking-bubble summary::-webkit-details-marker { display: none; }
+.thinking-bubble summary:hover { background: #ede9fe; color: #4c1d95; }
 
 .thinking-content {
   padding: 0 14px 12px;
@@ -701,9 +704,7 @@ body {
   color: white;
 }
 .ctx-meter:hover { opacity: 0.85; transform: scale(1.05); }
-.ctx-meter-green  { background: #16a34a; }
-.ctx-meter-orange { background: #ea580c; }
-.ctx-meter-red    { background: #dc2626; animation: ctx-pulse 1.2s ease-in-out infinite; }
+.ctx-meter-red    { animation: ctx-pulse 1.2s ease-in-out infinite; }
 
 @keyframes ctx-pulse {
   0%, 100% { opacity: 1; }

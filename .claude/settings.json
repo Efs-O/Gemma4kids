@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(dir \"c:\\\\Users\\\\efso office\\\\Desktop\" /b)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\efso office\\\\Desktop\\\\\" | Where-Object { $_.Name -match 'forge' -or $_.Name -match 'Forge' })"
     ]
   },
   "hooks": {

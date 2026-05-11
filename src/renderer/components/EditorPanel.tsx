@@ -52,13 +52,15 @@ export function EditorPanel({ code, onChange, auditResult, isStreaming, saveStat
       wasStreamingRef.current = isStreaming;
       return;
     }
-    const scroller = view.scrollDOM;
-    const savedScroll = scroller.scrollTop;
-    view.dispatch({ changes: { from: 0, to: current.length, insert: code } });
     if (isStreaming) {
-      scroller.scrollTop = savedScroll;
-    } else if (wasStreamingRef.current) {
-      scroller.scrollTop = 0;
+      const snap = view.scrollSnapshot();
+      view.dispatch({ changes: { from: 0, to: current.length, insert: code } });
+      view.dispatch({ effects: snap });
+    } else {
+      view.dispatch({ changes: { from: 0, to: current.length, insert: code } });
+      if (wasStreamingRef.current) {
+        view.dispatch({ effects: EditorView.scrollIntoView(0) });
+      }
     }
     wasStreamingRef.current = isStreaming;
   }, [code, isStreaming]);

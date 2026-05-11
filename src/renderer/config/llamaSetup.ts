@@ -15,7 +15,7 @@ export const LLAMA_GPU_LAYERS_KEY = 'runtime.llama_cpp.gpuLayers';
 export const LLAMA_CACHE_TYPE_K_KEY = 'runtime.llama_cpp.cacheTypeK';
 export const LLAMA_CACHE_TYPE_V_KEY = 'runtime.llama_cpp.cacheTypeV';
 export const DEFAULT_LLAMA_HUB_ROOT = 'N:\\.cache\\huggingface\\hub';
-export const DEFAULT_LLAMA_CACHE_TYPE = 'f16';
+export const DEFAULT_LLAMA_CACHE_TYPE = 'q8_0';
 export const LLAMA_CACHE_TYPE_OPTIONS = ['f16', 'bf16', 'q8_0', 'q5_1', 'q5_0', 'q4_1', 'q4_0', 'iq4_nl'] as const;
 
 export const LLAMA_MODEL_PRESETS = [

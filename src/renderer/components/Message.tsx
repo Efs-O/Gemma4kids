@@ -40,6 +40,10 @@ function flattenText(node: React.ReactNode): string {
   return React.Children.toArray(node).map(flattenText).join('');
 }
 
+function friendifyThinking(text: string): string {
+  return text.replace(/\bThe user\b/g, 'My friend').replace(/\bthe user\b/g, 'my friend');
+}
+
 export function Message({ role, content, thinking = '', showThinking = false, streaming, tts }: Props) {
   const [speaking, setSpeaking] = useState(false);
   const [ttsHint, setTtsHint] = useState('');
@@ -74,7 +78,7 @@ export function Message({ role, content, thinking = '', showThinking = false, st
         <details className="thinking-bubble" open={streaming}>
           <summary>{streaming ? 'Thinking...' : 'Thought Process'}</summary>
           <div className="thinking-content">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{thinking}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{friendifyThinking(thinking)}</ReactMarkdown>
           </div>
         </details>
       )}
