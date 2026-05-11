@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colorful Picture</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #FF6B6B; /* Bright Reddish Orange */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .container {
+        width: 90vw;
+        height: 90vh;
+        background-color: #4ECDC4; /* Bright Teal */
+        border: 10px solid #FFD700; /* Gold border */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 20px 20px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .shape {
+        width: 80%;
+        height: 80%;
+        background-color: #FFD166; /* Bright Yellow */
+        border-radius: 25%;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Simple shape to represent the focus */
+    .focus-circle {
+        width: 60%;
+        height: 60%;
+        background-color: #A23A2A; /* Deep Red */
+        border-radius: 50%;
+        border: 5px solid #FFFFFF;
+    }
+
+    /* Adding some simple details to make it colorful */
+    .details {
+        position: absolute;
+        top: 10%;
+        left: 10%;
+        width: 80%;
+        height: 80%;
+        background-color: #6B8E23; /* Olive Green for background detail */
+        border-radius: 15px;
+    }
+
+    /* Main visual element */
+    .main-shape {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #FFA07A, #FFDAB9); /* Pink/Orange gradient */
+        border-radius: 50%;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="shape">
+            <div class="main-shape">
+                <div class="focus-circle"></div>
+                <div class="details"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

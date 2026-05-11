@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot Air Balloon</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #87ceeb; /* Sky blue background */
+            overflow: hidden; /* Ensures the balloon stays within the viewport */
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sky {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #87ceeb;
+        }
+
+        .balloon-container {
+            position: absolute;
+            bottom: 10%; /* Start the balloon near the bottom */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Aligns the balloon to the bottom center */
+        }
+
+        /* The Balloon Envelope */
+        .balloon {
+            position: relative;
+            width: 200px;
+            height: 250px;
+            background: radial-gradient(circle at 50% 0%, #ff4500, #ffa500 70%, #ff6347 100%); /* Orange/Red gradient for the body */
+            border-radius: 50% 50% 0 0; /* Rounded top, flat bottom */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        /* The Balloon Opening/Top Edge */
+        .balloon::after {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.3); /* Light shine effect */
+            border-top-left-radius: 50%;
+            border-top-right-radius: 50%;
+        }
+
+        /* The Basket */
+        .basket {
+            position: absolute;
+            bottom: -30px;
+            width: 100%;
+            height: 60px;
+            background-color: #8b4513; /* Brown for basket */
+            border-radius: 10px;
+            padding-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 11;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* The Ropes/Attachment */
+        .balloon::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 30px;
+            background-color: #a0522d; /* Ropes color */
+            z-index: 12;
+        }
+
+        /* The Heat Source (Flames) */
+        .flames {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 40px;
+            background-color: #ffaa00; /* Bright yellow/orange */
+            border-radius: 50% 50% 10px 10px;
+            z-index: 13;
+            box-shadow: 0 0 15px #ff4500;
+            animation: flicker 0.2s infinite alternate; /* Simple CSS 'animation' to suggest heat */
+        }
+
+        /* People in the basket (Simple decoration) */
+        .person {
+            width: 25px;
+            height: 35px;
+            background-color: #ffdab9; /* Skin tone */
+            border-radius: 5px 5px 0 0;
+            margin: 0 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .person::before {
+            content: '🧑'; /* Using an emoji character for simplicity, but styled as a shape */
+            font-size: 20px;
+            position: absolute;
+        }
+
+        /* Animation for the floating look (subtle vertical movement) */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .balloon-container {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Flicker animation for flames */
+        @keyframes flicker {
+            0% { height: 30px; background-color: #ffaa00; box-shadow: 0 0 12px #ff4500; }
+            100% { height: 35px; background-color: #ffb300; box-shadow: 0 0 20px #ff6347; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="sky"></div>
+
+    <div class="balloon-container">
+        <div class="balloon">
+            <!-- Ropes are attached via ::before pseudo-element -->
+            <div class="flames"></div>
+            <div class="basket">
+                <div class="person"></div>
+                <div class="person" style="margin-left: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

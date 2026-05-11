@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candy Shop</title>
+    <style>
+        body {
+            /* Bright, vivid background color */
+            background-color: #FFCCFF; /* Light Pink/Cotton Candy Sky */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            /* Ensures the whole screen is covered with color */
+        }
+
+        /* Candy Shop Building - The main structure */
+        .shop-building {
+            width: 80%;
+            max-width: 900px;
+            height: 300px;
+            background-color: #FFD700; /* Yellow/Gold base */
+            border: 20px solid #FF6347; /* Tomato Red border */
+            border-radius: 50% / 50% 20% 20% 20%; /* Funky curved shape */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px; /* Space for the ground/shop window */
+        }
+
+        /* Shop Sign */
+        .sign {
+            position: absolute;
+            top: -80px;
+            background-color: #FF1493; /* Deep Pink */
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-family: cursive, sans-serif;
+            font-size: 2.5em;
+            letter-spacing: 5px;
+            z-index: 10;
+            /* Adding a little shadow to lift it off the building */
+            text-shadow: 2px 2px 4px #8B0000; 
+        }
+
+        /* Shop Window area (The treats) */
+        .window-display {
+            width: 90%;
+            height: 120px;
+            background-color: #FFFF99; /* Very light yellow for the display glass */
+            border-top: 15px solid #A9A9A9; /* Gray sill */
+            box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 5;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 10px;
+        }
+
+        /* Candy Stick 1 (Rainbow Swirl) */
+        .candy {
+            width: 60px;
+            height: 100px;
+            background: linear-gradient(to bottom, #FF0000, #FFA500, #FFFF00, #008000, #0000FF, #800080);
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            transform: translateY(10px);
+            z-index: 15;
+        }
+
+        /* Candy Pop/Lollipop 1 (Pink/Blue) */
+        .candy-pop {
+            width: 80px;
+            height: 80px;
+            background-color: #FF69B4; /* Hot Pink */
+            border-radius: 50%;
+            z-index: 16;
+            position: relative;
+            /* Stick connecting it to the window */
+        }
+        .candy-pop::before {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 40px;
+            background-color: #FF69B4;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+        }
+
+        /* Gummy Bear Cluster */
+        .gummies {
+            display: flex;
+            gap: 15px;
+            z-index: 17;
+        }
+        .gummy {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+        .gummy-red { background-color: #FF4500; }
+        .gummy-blue { background-color: #4169E1; }
+        .gummy-green { background-color: #3CB371; }
+        .gummy-yellow { background-color: #FFD700; }
+        
+        /* Ground / Foreground */
+        .ground {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, #4CAF50 0%, #66BB6A 100%); /* Green grass effect */
+            z-index: 20;
+        }
+    </style>
+</head>
+<body>
+    <div class="shop-building">
+        <div class="sign">SWEET DREAMS CANDY</div>
+        <div class="window-display">
+            <div class="candy"></div>
+            <div class="candy-pop"></div>
+            <div class="gummies">
+                <div class="gummy gummy-red"></div>
+                <div class="gummy gummy-blue"></div>
+                <div class="gummy gummy-yellow"></div>
+                <div class="gummy gummy-green"></div>
+            </div>
+        </div>
+    </div>
+    <div class="ground"></div>
+</body>
+</html>

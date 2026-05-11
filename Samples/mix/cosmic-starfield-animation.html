@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Starfield Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1b003a 0%, #050010 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Shooting Star effect using CSS for extra flair */
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px white;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 1px;
+            background: linear-gradient(to right, white, transparent);
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(0) translateY(0) rotate(-45deg) scale(0);
+                opacity: 1;
+            }
+            10% {
+                transform: translateX(200px) translateY(200px) rotate(-45deg) scale(1);
+                opacity: 1;
+            }
+            20% {
+                transform: translateX(400px) translateY(400px) rotate(-45deg) scale(0);
+                opacity: 0;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .star-trail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Glowing Planet Style */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="star-trail" id="star-container"></div>
+    <canvas id="spaceCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        const starContainer = document.getElementById('star-container');
+
+        let width, height, stars = [];
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Create Star Data
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2,
+                    opacity: Math.random(),
+                    speed: Math.random() * 0.05,
+                    color: `hsl(${Math.random() * 60 + 200}, 100%, 80%)` // Blue/Purple hues
+                });
+            }
+
+            // Create some glowing planets
+            createPlanets();
+        }
+
+        function createPlanets() {
+            // Remove old planets
+            const oldPlanets = document.querySelectorAll('.planet');
+            oldPlanets.forEach(p => p.remove());
+
+            const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff4500'];
+            for(let i = 0; i < 4; i++) {
+                const planet = document.createElement('div');
+                planet.className = 'planet';
+                const size = Math.random() * 60 + 40;
+                planet.style.width = size + 'px';
+                planet.style.height = size + 'px';
+                planet.style.left = Math.random() * 80 + 'vw';
+                planet.style.top = Math.random() * 80 + 'vh';
+                planet.style.backgroundColor = colors[i];
+                planet.style.boxShadow = `0 0 30 ${colors[i]}`;
+                starContainer.appendChild(planet);
+            }
+        }
+
+        function createShootingStar() {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            star.style.top = Math.random() * 50 + 'vh';
+            star.style.left = (Math.random() * 50) + 'vw';
+            star.style.animation = `shoot ${Math.random() * 2 + 1}s linear forwards`;
+            starContainer.appendChild(star);
+
+            setTimeout(() => {
+                star.remove();
+            }, 3000);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Stars
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = star.color;
+                ctx.globalAlpha = star.opacity;
+                ctx.fill();
+
+                // Twinkle effect
+                star.opacity += (Math.random() - 0.5) * 0.1;
+                if (star.opacity < 0) star.opacity = 0;
+                if (star.opacity > 1) star.opacity = 1;
+
+                // Subtle drift
+                star.y -= star.speed;
+                if (star.y < 0) star.y = height;
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Shooting stars interval
+        setInterval(createShootingStar, 3000);
+
+        window.addEventListener('resize', init);
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

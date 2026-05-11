@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Sign</title>
+    <style>
+        body {
+            background-color: #ffcc00; /* Bright yellow background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .sign-container {
+            position: relative;
+            width: 80vw;
+            height: 70vh;
+            background-color: #ff69b4; /* Hot pink sign */
+            border-radius: 20px;
+            box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border: 8px solid #3cb371; /* Green border */
+        }
+
+        h1 {
+            color: white;
+            font-size: 3em;
+            text-shadow: 3px 3px #ff4500; /* Orange shadow */
+            margin-bottom: 10px;
+            background-color: #ff8c00; /* Orange banner background */
+            padding: 5px 15px;
+            border-radius: 10px;
+        }
+
+        .flower {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: transparent; /* Base for color effects */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Flower 1: Red Rose */
+        .flower.red {
+            width: 70px;
+            height: 70px;
+            background-color: #ff0000;
+            top: 10%;
+            left: 15%;
+            transform: rotate(45deg);
+            border-radius: 50% 50% 0 0;
+        }
+        .flower.red::before {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #ff4500; /* Center detail */
+            border-radius: 50%;
+        }
+
+        /* Flower 2: Pink Tulip */
+        .flower.pink {
+            width: 50px;
+            height: 80px;
+            background-color: #ff69b4;
+            top: 30%;
+            right: 5%;
+            transform: rotate(-30deg);
+        }
+
+        /* Flower 3: Yellow Daisy */
+        .flower.yellow {
+            width: 40px;
+            height: 40px;
+            background-color: #ffd700;
+            top: 60%;
+            left: 40%;
+            border-radius: 50%;
+        }
+
+        /* Flower 4: Blue Bell */
+        .flower.blue {
+            width: 55px;
+            height: 55px;
+            background-color: #4169e1;
+            bottom: 10%;
+            right: 10%;
+            border-radius: 40% 60% 60% 40%;
+        }
+
+        /* Flower 5: Green Leaf accent */
+        .flower.leaf {
+            width: 80px;
+            height: 40px;
+            background-color: #32cd32;
+            border-radius: 50% 50% 0 0;
+            top: 45%;
+            left: 10%;
+            transform: rotate(15deg);
+            opacity: 0.8;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sign-container">
+        <h1>Welcome! 🎉</h1>
+        
+        <div class="flower red"></div>
+        <div class="flower pink"></div>
+        <div class="flower yellow"></div>
+        <div class="flower blue"></div>
+        <div class="flower leaf"></div>
+    </div>
+</body>
+</html>

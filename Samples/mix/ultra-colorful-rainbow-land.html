@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra Colorful Rainbow Land</title>
+    <style>
+        /* Global Styling: Ensure full coverage and bright background */
+        body {
+            background-color: #87CEEB; /* Light Sky Blue background */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        /* The Rainbow Arc Container */
+        .rainbow {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 350px;
+            z-index: 10;
+        }
+        
+        /* Individual Rainbow Bands */
+        .band {
+            position: absolute;
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3); /* Enhanced shadow for depth */
+            /* Use a vibrant, saturated color palette */
+            background-color: var(--color); 
+        }
+        
+        .band.red { --color: #FF1493; bottom: 250px; } /* Deep Pink/Red */
+        .band.orange { --color: #FF8C00; bottom: 150px; } /* Dark Orange */
+        .band.yellow { --color: #FFFF00; bottom: 50px; } /* Bright Lemon Yellow */
+        .band.green { --color: #39FF14; bottom: 0; } /* Neon Green */
+
+
+        /* The Ground Layer - Now a vibrant, multi-colored mix */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to top, #4CAF50 0%, #66BB6A 100%);
+            z-index: 20;
+        }
+
+        /* Cute Clouds */
+        .cloud {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 15;
+        }
+        
+        /* Cloud 1 (Big) */
+        .cloud-1 {
+            width: 200px;
+            height: 110px;
+            bottom: 120px;
+            left: 15%;
+        }
+        /* Cloud 1 segments (using pseudo-elements) */
+        .cloud-1::before, .cloud-1::after {
+            content: '';
+            position: absolute;
+            background-color: white;
+        }
+        .cloud-1::before {
+            width: 120px;
+            height: 80px;
+            top: 20px;
+            left: 10px;
+            border-radius: 50%;
+        }
+        .cloud-1::after {
+            width: 150px;
+            height: 90px;
+            top: 10px;
+            right: 10px;
+            border-radius: 50%;
+        }
+
+        /* Cloud 2 (Small) */
+        .cloud-2 {
+            width: 100px;
+            height: 60px;
+            bottom: 180px;
+            right: 30%;
+        }
+        /* Cloud 2 segments (using pseudo-elements) */
+        .cloud-2::before {
+            width: 70px;
+            height: 45px;
+            top: 5px;
+            left: 5px;
+            border-radius: 50%;
+        }
+        .cloud-2::after {
+            width: 100px;
+            height: 70px;
+            top: 0px;
+            right: 0px;
+            border-radius: 50%;
+        }
+
+        /* --- NEW BRIGHT COLOR ELEMENTS: FLOWERS --- */
+
+        .flower {
+            position: absolute;
+            z-index: 25;
+            /* Flower Head */
+            width: 40px;
+            height: 40px;
+            background-color: var(--petal-color);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            /* Stem */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .flower-stem {
+            width: 5px;
+            height: 40px;
+            background-color: #228B22; /* Forest Green Stem */
+            position: absolute;
+            bottom: -20px; /* Positioned on the ground */
+            z-index: 26;
+        }
+
+        /* Flower instances */
+        .f1 {
+            bottom: 130px;
+            left: 10%;
+            --petal-color: #FF69B4; /* Hot Pink */
+        }
+        .f2 {
+            bottom: 110px;
+            left: 30%;
+            --petal-color: #4169E1; /* Royal Blue */
+        }
+        .f3 {
+            bottom: 140px;
+            left: 55%;
+            --petal-color: #FFD700; /* Gold Yellow */
+        }
+        .f4 {
+            bottom: 120px;
+            left: 75%;
+            --petal-color: #3CB371; /* Medium Sea Green */
+        }
+        .f5 {
+            bottom: 135px;
+            left: 90%;
+            --petal-color: #FF4500; /* Vivid Red-Orange */
+        }
+        
+    </style>
+</head>
+<body >
+    <div class="rainbow">
+        <div class="band red"></div>
+        <div class="band orange"></div>
+        <div class="band yellow"></div>
+        <div class="band green"></div>
+    </div>
+
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+
+    <!-- Colorful Flowers -->
+    <div class="flower f1"><div class="flower-stem"></div></div>
+    <div class="flower f2"><div class="flower-stem"></div></div>
+    <div class="flower f3"><div class="flower-stem"></div></div>
+    <div class="flower f4"><div class="flower-stem"></div></div>
+    <div class="flower f5"><div class="flower-stem"></div></div>
+    
+    <div class="ground"></div>
+</body>
+</html>

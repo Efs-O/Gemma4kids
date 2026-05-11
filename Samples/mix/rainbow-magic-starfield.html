@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Magic Starfield</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height, stars, shootingStars;
+
+    // Configuration
+    const STAR_COUNT = 500;
+    const SHOOTING_STAR_CHANCE = 0.03;
+
+    // Rainbow colors for stars and shooting stars
+    const RAINBOW_COLORS = [
+        '#FF0000', // Red
+        '#FF7F00', // Orange
+        '#FFFF00', // Yellow
+        '#00FF00', // Green
+        '#0000FF', // Blue
+        '#4B0082', // Indigo
+        '#8B00FF', // Violet
+        '#00FFFF', // Cyan
+        '#FF00FF'  // Magenta
+    ];
+
+    class Star {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 2.5;
+            this.speed = Math.random() * 0.4 + 0.1;
+            this.opacity = Math.random();
+            this.twinkleSpeed = Math.random() * 0.05;
+            // Pick a bright rainbow color
+            this.color = RAINBOW_COLORS[Math.floor(Math.random() * RAINBOW_COLORS.length)];
+        }
+
+        update() {
+            this.y += this.speed;
+            if (this.y > height) {
+                this.y = 0;
+                this.x = Math.random() * width;
+            }
+
+            // Twinkle effect
+            this.opacity += this.twinkleSpeed;
+            if (this.opacity > 1 || this.opacity < 0.1) {
+                this.twinkleSpeed *= -1;
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = Math.max(0, this.opacity);
+            // Add a little glow to the star
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset for next drawing
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    class ShootingStar {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * (height / 2);
+            this.length = Math.random() * 150 + 80;
+            this.speed = Math.random() * 12 + 15;
+            this.opacity = 1;
+            this.angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1); 
+            // Pick a random rainbow color for the streak
+            this.color = RAINBOW_COLORS[Math.floor(Math.random() * RAINBOW_COLORS.length)];
+        }
+
+        update() {
+            this.x += Math.cos(this.angle) * this.speed;
+            this.y += Math.sin(this.angle) * this.speed;
+            this.opacity -= 0.015;
+
+            // If it goes off screen or fades out
+            if (this.opacity <= 0 || this.x > width || this.y > height) {
+                this.opacity = 0; 
+            }
+        }
+
+        draw() {
+            if (this.opacity <= 0) return;
+
+            ctx.save();
+            ctx.beginPath();
+            const gradient = ctx.createLinearGradient(
+                this.x, this.y, 
+                this.x - Math.cos(this.angle) * this.length, 
+                this.y - Math.sin(this.angle) * this.length
+            );
+            
+            gradient.addColorStop(0, this.color);
+            gradient.addColorStop(0.5, '#FFFFFF'); // Middle is bright white
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(
+                this.x - Math.cos(this.angle) * this.length, 
+                this.y - Math.sin(this.angle) * this.length
+            );
+            ctx.globalAlpha = this.opacity;
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    function init() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        stars = [];
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push(new Star());
+        }
+
+        shootingStars = [];
+    }
+
+    function animate() {
+        // Dark background
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Create a colorful nebula background effect
+        // We use multiple overlapping large radial gradients to create a rainbow nebula
+        const nebulaGradients = [
+            { color: '#1a0033', x: 0.2, y: 0.3 }, // Purple nebula
+            { color: '#001a33', x: 0.8, y: 0.2 }, // Blue nebula
+            { color: '#33001a', x: 0.5, y: 0.7 }, // Red nebula
+            { color: '#00331a', x: 0.7, y: 0.8 }  // Green nebula
+        ];
+
+        nebulaGradients.forEach(g => {
+            const grad = ctx.createRadialGradient(
+                width * g.x, height * g.y, 0, 
+                width * g.x, height * g.y, width * 0.6
+            );
+            grad.addColorStop(0, g.color);
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.globalAlpha = 0.4;
+            ctx.fillRect(0, 0, width, height);
+        });
+        ctx.globalAlpha = 1.0;
+
+        // Update and draw stars
+        stars.forEach(star => {
+            star.update();
+            star.draw();
+        });
+
+        // Randomly spawn shooting stars
+        if (Math.random() < SHOOTING_STAR_CHANCE) {
+            shootingStars.push(new ShootingStar());
+        }
+
+        // Update and draw shooting stars
+        for (let i = shootingStars.length - 1; i >= 0; i--) {
+            shootingStars[i].update();
+            shootingStars[i].draw();
+            if (shootingStars[i].opacity <= 0) {
+                shootingStars.splice(i, 1);
+            }
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', init);
+
+    init();
+    animate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greek Village Scene</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #f0f8ff; /* Light sky blue background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        .scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sky {
+            width: 100%;
+            height: 50%;
+            background-color: #87ceeb; /* Bright sky blue */
+            position: relative;
+        }
+        .ground {
+            width: 100%;
+            height: 30%;
+            background-color: #ffdd66; /* Sandy yellow ground */
+            position: relative;
+            border-top: 10px solid #3cb371; /* Green base */
+        }
+        .village {
+            width: 20%;
+            height: 50%;
+            background-color: #f0e68c; /* Pale yellow building color */
+            border-radius: 15px 15px 0 0;
+            position: absolute;
+            bottom: 10%;
+            left: 15%;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .roof {
+            width: 100%;
+            height: 30%;
+            background-color: #e74c3c; /* Bright terracotta roof */
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            position: absolute;
+            top: -15px;
+        }
+        .window {
+            width: 20%;
+            height: 20%;
+            background-color: #3498db; /* Bright blue window */
+            margin: 5%;
+            border-radius: 5px;
+            position: absolute;
+        }
+        .window.left { left: 20%; top: 30%; }
+        .window.right { right: 20%; top: 30%; }
+        .sun {
+            width: 80px;
+            height: 80px;
+            background-color: #ffeb3b; /* Bright yellow sun */
+            border-radius: 50%;
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+        }
+        .cloud {
+            width: 150px;
+            height: 60px;
+            background-color: #ffffff;
+            border-radius: 50px;
+            position: absolute;
+            top: 15%;
+            left: 45%;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+        }
+        .cloud::before {
+            width: 100px;
+            height: 40px;
+            top: 10px;
+            left: -50px;
+        }
+        .cloud::after {
+            width: 80px;
+            height: 35px;
+            top: 15px;
+            left: 110px;
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="sky">
+            <div class="sun"></div>
+            <div class="cloud"></div>
+        </div>
+        <div class="ground">
+            <!-- Village Structure -->
+            <div class="village">
+                <div class="roof"></div>
+                <div class="window left"></div>
+                <div class="window right"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

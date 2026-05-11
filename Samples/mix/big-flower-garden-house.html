@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Flower Garden House</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100vw;
+            background-color: #6495ED; /* Bright medium blue sky */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .scene-container {
+            width: 95vw;
+            height: 90vh; /* Increased size */
+            background-color: #f0f0f0; /* Light ground/base */
+            border-radius: 30px; /* More rounded corners */
+            position: relative;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        /* --- House Styles (Bigger) --- */
+        .house {
+            position: absolute;
+            bottom: 70px; /* Adjusted position to sit on the larger garden */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 450px; /* Bigger width */
+            height: 350px; /* Bigger height */
+            background-color: #FFD700; /* Bright yellow walls */
+            border-radius: 20px; /* Softer edges */
+            border: 10px solid #FF8C00; /* Thicker orange trim */
+            z-index: 10;
+        }
+
+        .roof {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 225px solid transparent;
+            border-right: 225px solid transparent;
+            border-bottom: 180px solid #FF4500; /* Bigger roof */
+            z-index: 11;
+        }
+
+        .door {
+            position: absolute;
+            bottom: 30px; /* Adjusted position */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px; /* Bigger door */
+            height: 90px;
+            background-color: #4B0082; /* Dark purple door */
+            border-radius: 8px;
+            border: 4px solid #FFD700;
+        }
+
+        /* --- Garden Styles (Bigger area) --- */
+        .garden {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%; /* Bigger garden area */
+            background: linear-gradient(to top, #3CB371, #2E8B57); /* Green gradient for grass */
+            z-index: 5;
+        }
+
+        /* --- Flower Styles (Bigger) --- */
+        .flower {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 5s ease-in-out infinite; /* Slightly slower float */
+            z-index: 6;
+        }
+
+        .flower1 {
+            width: 60px; /* Bigger size */
+            height: 60px;
+            background-color: #FF69B4; /* Hot Pink */
+            left: 10%;
+            bottom: 15%;
+        }
+
+        .flower2 {
+            width: 80px; /* Bigger size */
+            height: 80px;
+            background-color: #FFA500; /* Orange */
+            right: 20%;
+            bottom: 40%;
+            animation-duration: 6s;
+        }
+
+        .flower3 {
+            width: 45px; /* Bigger size */
+            height: 45px;
+            background-color: #00CED1; /* Turquoise */
+            left: 45%;
+            bottom: 5%;
+            animation-duration: 4.5s;
+        }
+
+        .flower4 {
+            width: 70px; /* Bigger size */
+            height: 70px;
+            background-color: #FF1493; /* Deep Pink */
+            right: 10%;
+            bottom: 20%;
+            animation-duration: 5.5s;
+        }
+
+        /* Keyframe Animation for Flowers */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); } /* Larger float movement */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene-container">
+        <div class="house">
+            <div class="roof"></div>
+            <div class="door"></div>
+        </div>
+        <div class="garden"></div>
+
+        <div class="flower flower1"></div>
+        <div class="flower flower2"></div>
+        <div class="flower flower3"></div>
+        <div class="flower flower4"></div>
+    </div>
+
+</body>
+</html>

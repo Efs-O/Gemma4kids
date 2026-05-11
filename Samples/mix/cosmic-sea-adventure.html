@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Sea Adventure</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #001a33 0%, #00050a 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #0088ff;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">The Cosmic Sea</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        const particles = [];
+        const dragons = [];
+        const bubbles = [];
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Create Stars (Starlight Ocean)
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2,
+                    speed: Math.random() * 0.5 + 0.2,
+                    opacity: Math.random(),
+                    color: `hsla(${Math.random() * 60 + 180}, 100%, 70%,`
+                });
+            }
+
+            // Create Sea-Dragons (Neon Electricity)
+            for (let i = 0; i < 3; i++) {
+                dragons.push(new SeaDragon());
+            }
+
+            // Create Bubbles
+            for (let i = 0; i < 20; i++) {
+                bubbles.push(new Bubble());
+            }
+        }
+
+        class SeaDragon {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.length = 100 + Math.random() * 150;
+                this.segments = [];
+                this.hue = Math.random() > 0.5 ? 320 : 190; // Pink or Cyan
+                this.speedX = (Math.random() - 0.5) * 3;
+                this.speedY = (Math.random() - 0.5) * 2;
+                this.angle = Math.random() * Math.PI * 2;
+                
+                for (let i = 0; i < 20; i++) {
+                    this.segments.push({ x: this.x, y: this.y });
+                }
+            }
+
+            update() {
+                // Move head
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Wiggle motion
+                this.speedX += Math.sin(Date.now() * 0.002) * 0.1;
+                this.speedY += Math.cos(Date.now() * 0.002) * 0.1;
+
+                // Bounce off walls
+                if (this.x < -100) this.x = width + 100;
+                if (this.x > width + 100) this.x = -100;
+                if (this.y < -100) this.y = height + 100;
+                if (this.y > height + 100) this.y = -100;
+
+                // Update segments (follow the leader)
+                this.segments[0].x = this.x;
+                this.segments[0].y = this.y;
+
+                for (let i = 1; i < this.segments.length; i++) {
+                    const seg = this.segments[i];
+                    const prev = this.segments[i - 1];
+                    const dx = prev.x - seg.x;
+                    const dy = prev.y - seg.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+                    
+                    const minDistance = 8;
+                    if (distance > minDistance) {
+                        seg.x = prev.x - Math.cos(angle) * minDistance;
+                        seg.y = prev.y - Math.sin(angle) * minDistance;
+                    }
+                }
+
+                // Randomly spawn bubbles from dragons
+                if (Math.random() < 0.05) {
+                    bubbles.push(new Bubble(this.x, this.y, this.hue));
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.lineCap = 'round';
+                ctx.lineWidth = 12;
+                ctx.strokeStyle = `hsla(${this.hue}, 100%, 60%, 0.6)`;
+                ctx.moveTo(this.segments[0].x, this.segments[0].y);
+                
+                for (let i = 1; i < this.segments.length; i++) {
+                    ctx.lineTo(this.segments[i].x, this.segments[i].y);
+                }
+                ctx.stroke();
+
+                // Add glowing effect to the head
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
+                ctx.fillStyle = `white`;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = `hsl(${this.hue}, 100%, 70%)`;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Bubble {
+            constructor(x, y, hue) {
+                this.x = x || Math.random() * width;
+                this.y = y || height + 50;
+                this.size = Math.random() * 5 + 2;
+                this.speedY = Math.random() * 1 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 1;
+                this.hue = hue || 180;
+                this.opacity = 0.6;
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                this.opacity -= 0.002;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 100%, 80%, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function animate() {
+            // Dark blue ocean fade effect
+            ctx.fillStyle = 'rgba(0, 5, 15, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Stars
+            particles.forEach(p => {
+                p.y += p.speed;
+                if (p.y > height) p.y = 0;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = p.color + p.opacity + ')';
+                ctx.fill();
+            });
+
+            // Draw and update Bubbles
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                bubbles[i].update();
+                bubbles[i].draw();
+                if (bubbles[i].y < -20 || bubbles[i].opacity <= 0) {
+                    bubbles.splice(i, 1);
+                }
+            }
+
+            // Draw and update Dragons
+            dragons.forEach(d => {
+                d.update();
+                d.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        animate();
+    </script>
+</body>
+</html>

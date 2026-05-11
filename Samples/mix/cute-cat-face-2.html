@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Cat Face</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #ff99cc; /* Bright Pink Background */
+            font-family: 'Comic Sans MS', cursive; /* Fun font for kids */
+            overflow: hidden;
+        }
+
+        .cat-face {
+            width: 350px;
+            height: 350px;
+            background-color: #fffacd; /* Pale Lemon Face */
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 15px 30px rgba(255, 165, 0, 0.7);
+            border: 10px solid #333;
+        }
+
+        /* Ears - More pointed */
+        .ear {
+            width: 70px;
+            height: 70px;
+            background-color: #ff4500; /* Bright Orange-Red Ears */
+            border-radius: 50% 50% 0 0;
+            position: absolute;
+            top: -40px;
+            border: 5px solid #333;
+        }
+
+        .ear.left {
+            left: 25px;
+            transform: rotate(-30deg);
+        }
+
+        .ear.right {
+            right: 25px;
+            transform: rotate(30deg);
+        }
+
+        /* Eyes - Bigger and rounder */
+        .eye-container {
+            position: absolute;
+            top: 120px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .eye {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border-radius: 50%;
+            position: relative;
+            border: 6px solid #333;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .pupil {
+            width: 25px;
+            height: 25px;
+            background-color: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .eye.left {
+            left: 60px;
+        }
+
+        .eye.right {
+            right: 60px;
+        }
+
+        /* Mouth - A simple happy curve */
+        .mouth {
+            width: 120px;
+            height: 40px;
+            background-color: #ff69b4; /* Pink Mouth */
+            border-radius: 0 0 60px 60px;
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid #333;
+        }
+
+        /* Whiskers (Using simple lines) */
+        .whiskers {
+            position: absolute;
+            top: 250px;
+            width: 100%;
+            height: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .whisker {
+            width: 40px;
+            height: 2px;
+            background-color: #333;
+            transform-origin: 0 50%;
+        }
+
+        .whisker:nth-child(1) {
+            transform: rotate(-45deg);
+            margin-left: 20px;
+        }
+
+        .whisker:nth-child(2) {
+            transform: rotate(45deg);
+            margin-right: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="cat-face">
+        <div class="ear left"></div>
+        <div class="ear right"></div>
+
+        <div class="eye-container">
+            <div class="eye left">
+                <div class="pupil"></div>
+            </div>
+            <div class="eye right">
+                <div class="pupil"></div>
+            </div>
+        </div>
+
+        <div class="mouth"></div>
+
+        <div class="whiskers">
+            <div class="whisker"></div>
+            <div class="whisker"></div>
+        </div>
+    </div>
+</body>
+</html>

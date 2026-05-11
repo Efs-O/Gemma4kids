@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow after Rain</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #2c3e50, #000000);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Rain effect */
+        .rain-container {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .drop {
+            position: absolute;
+            background-color: rgba(174, 194, 224, 0.5);
+            width: 2px;
+            height: 15px;
+            top: -20px;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        /* Rainbow effect */
+        .rainbow-container {
+            position: relative;
+            width: 600px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            opacity: 0;
+            animation: appear 6s ease-in-out forwards;
+            z-index: 2;
+        }
+
+        .arc {
+            border-radius: 50% 50% 0 0;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            bottom: 0;
+            transform: scale(0.8);
+            opacity: 0.7;
+            animation: pulse 4s ease-in-out infinite alternate;
+        }
+
+        .arc1 { border: 15px solid #ff0000; width: 100%; height: 100%; border-radius: 50% 50% 0 0; }
+        .arc2 { border: 15px solid #ff7f00; width: 85%; height: 85%; border-radius: 50% 50% 0 0; bottom: -5%; }
+        .arc3 { border: 15px solid #ffff00; width: 70%; height: 70%; border: 15px solid #ffff00; border-radius: 50% 50% 0 0; bottom: -10%; }
+        .arc4 { border: 15px solid #00ff00; width: 55%; height: 55%; border-radius: 50% 50% 0 0; bottom: -15%; }
+        .arc5 { border: 15px solid #0000ff; width: 40%; height: 40%; border-radius: 50% 50% 0 0; bottom: -20%; }
+        .arc6 { border: 15px solid #4b0082; width: 25%; height: 25%; border-radius: 50% 50% 0 0; bottom: -25%; }
+        .arc7 { border: 15px solid #9400d3; width: 10%; height: 10%; border-radius: 50% 50% 0 0; bottom: -30%; }
+
+        @keyframes appear {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 0; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        /* Sun effect */
+        .sun {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #fff700, #ff8c00);
+            border-radius: 50%;
+            box-shadow: 0 0 50px #ff8c00;
+            opacity: 0;
+            animation: sun-fade 8s ease-in-out forwards;
+            z-index: 0;
+        }
+
+        @keyframes sun-fade {
+            0% { opacity: 0; transform: scale(0.5); }
+            70% { opacity: 0; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sun"></div>
+    <div class="rain-container" id="rain"></div>
+    
+    <div class            class="rainbow-container">
+        <div class="arc arc1"></div>
+        <div class="arc arc2"></div>
+        <div class="arc arc3"></div>
+        <div class="arc arc4"></div>
+        <div class="arc arc5"></div>
+        <div class="arc arc6"></div>
+        <div class="arc arc7"></div>
+    </div>
+
+    <script>
+        const rainContainer = document.getElementById('rain');
+        const dropCount = 100;
+
+        for (let i = 0; i < dropCount; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'drop';
+            drop.style.left = Math.random() * 100 + 'vw';
+            drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+            drop.style.animationDelay = Math.random() * 2 + 's';
+            rainContainer.appendChild(drop);
+        }
+
+        // Stop rain after some time to let rainbow shine
+        setTimeout(() => {
+            rainContainer.style.transition = 'opacity 2';
+            rainContainer.style.opacity = '0';
+        }, 4000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Shapes</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #FFD700; /* Gold background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .art-canvas {
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(120deg, #FF6B6B 0%, #4ECDC4 40%, #4D96FF 70%, #963AFF 100%); /* Vibrant gradient */
+        position: relative;
+    }
+
+    /* Large overlapping circles */
+    .circle-1 {
+        width: 40vw;
+        height: 40vh;
+        background-color: #FFFFFF;
+        border-radius: 50%;
+        position: absolute;
+        top: 10%;
+        left: 5%;
+        box-shadow: 0 0 25px #FFD166;
+    }
+
+    .circle-2 {
+        width: 30vw;
+        height: 30vh;
+        background-color: #FF007F; /* Pink */
+        border-radius: 50%;
+        position: absolute;
+        bottom: 15%;
+        right: 10%;
+        box-shadow: 0 0 25px #00FFFF;
+    }
+
+    .circle-3 {
+        width: 20vw;
+        height: 20vh;
+        background-color: #00FF00; /* Green */
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        box-shadow: 0 0 25px #00FF00;
+    }
+
+    .circle-4 {
+        width: 15vw;
+        height: 15vh;
+        background-color: #FFD166; /* Yellow */
+        border-radius: 50%;
+        position: absolute;
+        bottom: 10%;
+        left: 30%;
+        box-shadow: 0 0 25px #FF6B6B;
+    }
+
+    /* Adding fun details */
+    .sparkle {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        background-color: #FFFFFF;
+        border-radius: 50%;
+        top: 10%;
+        right: 10%;
+        box-shadow: 0 0 10px yellow, 0 0 10px cyan;
+    }
+
+    .sparkle.top {
+        top: 10%;
+        left: 10%;
+        background-color: #FF007F;
+    }
+
+    .sparkle.bottom {
+        bottom: 10%;
+        right: 10%;
+        background-color: #00FF00;
+    }
+</style>
+</head>
+<body style="background-color: #FFD700;">
+    <div class="art-canvas">
+        <div class="circle-1"></div>
+        <div class="circle-2"></div>
+        <div class="circle-3"></div>
+        <div class="circle-4"></div>
+        <div class="sparkle top"></div>
+        <div class="sparkle bottom"></div>
+    </div>
+</body>
+</html>

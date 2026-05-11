@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Jungle</title>
+    <style>
+        /* Reset and Full Screen Background */
+        body {
+            background-color: #4CAF50; /* Bright Forest Green */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Jungle Floor / Foreground Layer */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to top, #2E7D32 0%, #66BB6A 100%); /* Dark to light green gradient */
+            z-index: 1;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Sun in the sky */
+        .sun {
+            position: absolute;
+            top: 50px;
+            left: 10%;
+            width: 150px;
+            height: 150px;
+            background-color: #FFEB3B; /* Bright Yellow */
+            border-radius: 50%;
+            box-shadow: 0 0 50px 20px rgba(255, 235, 227, 0.8);
+            z-index: 5;
+        }
+
+        /* Big Leaf 1 (Foreground) */
+        .leaf {
+            position: absolute;
+            bottom: 150px;
+            left: 15%;
+            width: 150px;
+            height: 150px;
+            background-color: #008966; /* Deep Teal Green */
+            border-radius: 50% 50% 20% 20% / 70% 70% 30% 30%;
+            z-index: 10;
+            transform: rotate(-15deg);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Big Leaf 2 (Midground) */
+        .leaf-2 {
+            position: absolute;
+            bottom: 100px;
+            left: 55%;
+            width: 200px;
+            height: 200px;
+            background-color: #388E3C; /* Medium Green */
+            border-radius: 50% 50% 20% 20% / 70% 70% 30% 30%;
+            z-index: 11;
+            transform: rotate(10deg);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Banana Tree (Simple Trunk and Leaves) */
+        .tree-trunk {
+            position: absolute;
+            bottom: 150px;
+            left: 25%;
+            width: 40px;
+            height: 250px;
+            background-color: #8D6E63; /* Brown */
+            z-index: 8;
+            border-radius: 5px;
+        }
+
+        .tree-foliage {
+            position: absolute;
+            top: -10px;
+            left: -20px;
+            width: 100px;
+            height: 100px;
+            background-color: #43A047; /* Bright Spring Green */
+            border-radius: 50%;
+            z-index: 9;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Monkey character (Simple shape) */
+        .monkey {
+            position: absolute;
+            bottom: 180px;
+            left: 75%;
+            width: 80px;
+            height: 100px;
+            background-color: #A1887F; /* Monkey color */
+            border-radius: 50% 50% 30% 30% / 100% 100% 60% 60%;
+            z-index: 12;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .monkey::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            width: 15px;
+            height: 15px;
+            background-color: #000;
+            border-radius: 50%;
+        }
+
+    </style>
+</head>
+<body >
+    <div class="sun"></div>
+    <div class="leaf"></div>
+    <div class="leaf-2"></div>
+    
+    <div class="tree-trunk"></div>
+    <div class="tree-foliage"></div>
+
+    <div class="monkey"></div>
+
+    <div class="ground"></div>
+</body>
+</html>

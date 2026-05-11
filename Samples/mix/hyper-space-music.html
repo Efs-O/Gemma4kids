@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyper-Space Music Warp</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000010; /* Very deep space blue */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00f2ff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px #00f2ff;
+            pointer-events: none;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-overlay">HYPER-DRIVE: MUSICAL MODE</div>
+    <canvas id="warpCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('warpCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, stars, notes;
+        const starCount = 400;
+        const speed = 0.05;
+        const starColors = ['#00f2ff', '#ff00ff', '#7000ff', '#ffffff'];
+        const noteSymbols = ['♪', '♫', '♩', '♬'];
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            stars = [];
+            for (let i = 0; i < starCount; i++) {
+                stars.push(new Star());
+            }
+
+            notes = [];
+            for (let i = 0; i < 15; i++) {
+                notes.push(new MusicNote());
+            }
+        }
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = (Math.random() - 0.5) * width * 2;
+                this.y = (Math.random() - 0.5) * height * 2;
+                this.z = Math.random() * width;
+                this.color = starColors[Math.floor(Math.random() * starColors.length)];
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.z -= (width * speed);
+                if (this.z <= 0) {
+                    this.reset();
+                    this.z = width; 
+                }
+            }
+
+            draw() {
+                const sx = (this.x / this.z) * width + width / 2;
+                const sy = (this.y / this.z) * height + height / 2;
+                const brightness = Math.min(1, 500 / this.z);
+
+                const prevZ = this.z + (width * speed);
+                const px = (this.x / prevZ) * width + width / 2;
+                const py = (this.y / prevZ) * height + height / 2;
+
+                ctx.beginPath();
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = this.size * (width / this.z) * 0.5;
+                ctx.globalAlpha = brightness;
+                ctx.moveTo(px, py);
+                ctx.lineTo(sx, sy);
+                ctx.stroke();
+            }
+        }
+
+        class MusicNote {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = (Math.random() - 0.5) * width * 1.5;
+                this.y = (Math.random() - 0.5) * height * 1.5;
+                this.z = Math.random() * width;
+                this.symbol = noteSymbols[Math.floor(Math.random() * noteSymbols.length)];
+                this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+                this.fontSize = Math.random() * 20 + 20;
+            }
+
+            update() {
+                this.z -= (width * speed);
+                if (this.z <= 0) {
+                    this.reset();
+                    this.z = width;
+                }
+            }
+
+            draw() {
+                const sx = (this.x / this.z) * width + width / 2;
+                const sy = (this.y / this.z) * height + height / 2;
+                
+                // Only draw if it's in front of the camera
+                if (sx > 0 && sx < width && sy > 0 && sy < height) {
+                    const scale = (width / this.z) * 0.5;
+                    const opacity = Math.min(1, 1000 / this.z);
+                    
+                    ctx.save();
+                    ctx.globalAlpha = opacity;
+                    ctx.fillStyle = this.color;
+                    ctx.font = `${this.fontSize * scale}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.symbol, sx, sy);
+                    ctx.restore();
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 15, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            notes.forEach(note => {
+                note.update();
+                note.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

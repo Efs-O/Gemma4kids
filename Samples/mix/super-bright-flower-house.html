@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Bright Flower House</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #00FFFF; /* Electric Cyan Sky */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Comic Sans MS', cursive; /* Fun font for kids */
+        }
+
+        .scene {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- House Styling (Brighter) --- */
+        .house {
+            width: 220px;
+            height: 160px;
+            background-color: #FF69B4; /* Hot Pink Body */
+            border: 6px solid #FFD700; /* Bright Gold outline */
+            border-radius: 15px 15px 0 0;
+            position: relative;
+            z-index: 10;
+            box-shadow: 8px 8px 20px rgba(255, 0, 0, 0.5); /* Stronger shadow */
+        }
+
+        .house-roof {
+            width: 0;
+            height: 0;
+            border-left: 110px solid transparent;
+            border-right: 110px solid transparent;
+            border-bottom: 110px solid #FF4500; /* Bright Orange Roof */
+            position: absolute;
+            top: -110px;
+            left: 0;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            z-index: 11;
+        }
+
+        .door {
+            width: 50px;
+            height: 70px;
+            background-color: #32CD32; /* Lime Green door */
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 8px;
+        }
+
+        /* --- Garden Styling (Brighter) --- */
+        .garden {
+            width: 100%;
+            height: 35%;
+            background-color: #39FF14; /* Neon Green Grass */
+            position: absolute;
+            bottom: 0;
+            z-index: 1;
+        }
+
+        /* --- Flowers Styling (Vivid) --- */
+        .flower {
+            position: absolute;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            opacity: 1; /* Fully opaque for maximum color */
+        }
+
+        .red-flower {
+            background-color: #FF007F; /* Vivid Magenta */
+            top: 60px;
+            left: 12%;
+            transform: rotate(30deg);
+        }
+
+        .yellow-flower {
+            background-color: #FFFF00; /* Pure Yellow */
+            bottom: 15%;
+            right: 10%;
+        }
+
+        .blue-flower {
+            background-color: #0000FF; /* Deep Blue */
+            top: 30%;
+            right: 25%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="house">
+            <div class="house-roof"></div>
+            <div class="door"></div>
+        </div>
+
+        <div class="garden"></div>
+
+        <div class="flower red-flower"></div>
+        <div class="flower yellow-flower"></div>
+        <div class="flower blue-flower"></div>
+    </div>
+</body>
+</html>

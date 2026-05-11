@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Day</title>
+    <style>
+        /* Set background to a vivid color, not white */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #87ceeb; /* Vivid sky blue background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+
+        /* The Ground/Grass area */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30vh;
+            background-color: #5cb85c; /* Bright, vivid grass green */
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        /* Cloud Base */
+        .cloud {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Specific Clouds */
+        .cloud1 {
+            width: 200px;
+            height: 80px;
+            bottom: 20%;
+            left: 10%;
+        }
+        .cloud1::before {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 60px;
+            border-radius: 50%;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffffff;
+        }
+        .cloud1::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 50px;
+            border-radius: 50%;
+            top: 20px;
+            left: 10%;
+            background-color: #ffffff;
+        }
+        
+        .cloud2 {
+            width: 250px;
+            height: 100px;
+            bottom: 15%;
+            left: 60%;
+        }
+        .cloud2::before {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 80px;
+            border-radius: 50%;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffffff;
+        }
+        .cloud2::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 70px;
+            border-radius: 50%;
+            top: 0px;
+            left: 20%;
+            background-color: #ffffff;
+        }
+
+        /* Rainbow Styling */
+        .rainbow-container {
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            width: 90%;
+            height: 30%;
+            transform: rotate(-10deg); /* Gentle curve */
+            z-index: 10;
+        }
+
+        .band {
+            position: absolute;
+            width: 100%;
+            height: 10%; /* Height of the band */
+            border-radius: 50%; /* Makes it slightly curved */
+            z-index: 1; /* Layers over each other */
+        }
+
+        /* Colors (ROYGBIV) */
+        .band-red { top: 0%; background-color: #ff4136; }
+        .band-orange { top: 10%; background-color: #ff851b; }
+        .band-yellow { top: 20%; background-color: #ffdc00; }
+        .band-green { top: 30%; background-color: #2ecc4c; }
+        .band-blue { top: 40%; background-color: #007bff; }
+        .band-indigo { top: 50%; background-color: #673ab7; }
+        .band-violet { top: 60%; background-color: #9c27b0; }
+
+    </style>
+</head>
+<body>
+    
+    <div class="rainbow-container">
+        <div class="band band-red"></div>
+        <div class="band band-orange"></div>
+        <div class="band band-yellow"></div>
+        <div class="band band-green"></div>
+        <div class="band band-blue"></div>
+        <div class="band band-indigo"></div>
+        <div class="band band-violet"></div>
+    </div>
+
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    
+    <div class="ground"></div>
+
+</body>
+</html>

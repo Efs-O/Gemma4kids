@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Colourful Kite</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #FFC0CB; /* Light Pink starting point */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Sky Background Gradient - More vibrant */
+    .sky-bg {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, #87CEEB 0%, #6495ED 60%, #FFD700 100%); /* Blue to CornflowerBlue to Gold */
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+
+    /* Kite Group Positioning */
+    .kite-group {
+        position: absolute;
+        top: 20vh; /* Moved slightly lower */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+    }
+
+    /* The Kite Shape (Using border-radius heavily for curves) */
+    .kite {
+        width: 140px;
+        height: 200px;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Main Body Shape - Multi-colour pattern simulated with overlapping divs */
+    .kite::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: #FF6347; /* Base Colour: Bright Red-Orange */
+        border-radius: 50% / 100% 100% 0 0; 
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        z-index: 1;
+    }
+
+    /* Decorative Element 1 (Blue/Cyan) */
+    .kite-detail-1 {
+        position: absolute;
+        top: 0;
+        left: 20px;
+        width: 30px;
+        height: 40px;
+        background-color: #00FFFF; /* Cyan */
+        border-radius: 50% 50% 0 0;
+        z-index: 2;
+    }
+
+    /* Decorative Element 2 (Magenta/Purple) */
+    .kite-detail-2 {
+        position: absolute;
+        bottom: 0;
+        right: 30px;
+        width: 30px;
+        height: 40px;
+        background-color: #FF00FF; /* Magenta */
+        border-radius: 50% 50% 0 0;
+        z-index: 2;
+    }
+    
+    /* Decorative Element 3 (Yellow/Green accent) */
+    .kite-detail-3 {
+        position: absolute;
+        top: 10%;
+        left: 15px;
+        width: 10px;
+        height: 10px;
+        background-color: #ADFF2F; /* Green Yellow */
+        border-radius: 50%;
+        z-index: 2;
+    }
+
+
+    /* The Tail (String trail - Rainbow Effect) */
+    .kite-tail {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 6px;
+        height: 70px;
+        background: linear-gradient(to bottom, #FF0000, #FFFF00, #0000FF); /* Rainbow Gradient String */
+        z-index: 5;
+    }
+    
+    /* Wind Gust Effect (More colourful puffs) */
+    .wind-puff {
+        position: absolute;
+        width: 50px;
+        height: 30px;
+        border-radius: 50%;
+        opacity: 0;
+        animation: puffFloat 6s infinite ease-out;
+        z-index: 5;
+        box-shadow: 0 0 10px rgba(255, 165, 0, 0.8); /* Orange glow */
+    }
+
+    .wind-puff:nth-child(1) { 
+        top: 10vh; 
+        left: 10vw; 
+        animation-delay: 0s;
+    }
+    .wind-puff:nth-child(2) { 
+        top: 25vh; 
+        left: 90vw; 
+        animation-delay: 1.5s;
+    }
+
+    /* Keyframe Animation for subtle floating effect */
+    @keyframes puffFloat {
+        0% {
+            opacity: 0;
+            transform: translate(0, 0) scale(0.5);
+        }
+        15% {
+            opacity: 0.9;
+            transform: translate(10px, -10px) scale(1.1);
+        }
+        100% {
+            opacity: 0;
+            transform: translate(50px, 60px) scale(1.5);
+        }
+    }
+</style>
+</head>
+<body>
+    <div class="sky-bg"></div>
+    
+    <!-- Kite Elements -->
+    <div class="kite-group">
+        <div class="kite">
+            <div class="kite-detail-1"></div>
+            <div class="kite-detail-2"></div>
+            <div class="kite-detail-3"></div>
+        </div>
+        <div class="kite-tail"></div>
+    </div>
+
+    <!-- Wind Puffs for movement illusion -->
+    <div class="wind-puff"></div>
+    <div class="wind-puff"></div>
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flower Garden House</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100vw;
+            background-color: #87CEEB; /* Bright sky blue background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .scene-container {
+            width: 90vw;
+            height: 80vh;
+            background-color: #f0f0f0; /* Light ground/base */
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* --- House Styles --- */
+        .house {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 250px;
+            background-color: #FFD700; /* Bright yellow walls */
+            border-radius: 15px;
+            border: 8px solid #FF8C00; /* Orange trim */
+            z-index: 10;
+        }
+
+        .roof {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-bottom: 120px solid #FF4500; /* Bright red roof */
+            z-index: 11;
+        }
+
+        .door {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 60px;
+            background-color: #4B0082; /* Dark purple door */
+            border-radius: 5px;
+            border: 3px solid #FFD700;
+        }
+
+        /* --- Garden Styles --- */
+        .garden {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%; /* Takes up the bottom half of the scene container */
+            background: linear-gradient(to top, #3CB371, #2E8B57); /* Green gradient for grass */
+            z-index: 5;
+        }
+
+        /* --- Flower Styles --- */
+        .flower {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 4s ease-in-out infinite;
+            z-index: 6;
+        }
+
+        .flower1 {
+            width: 40px;
+            height: 40px;
+            background-color: #FF69B4; /* Hot Pink */
+            left: 10%;
+            bottom: 10%;
+        }
+
+        .flower2 {
+            width: 60px;
+            height: 60px;
+            background-color: #FFA500; /* Orange */
+            right: 15%;
+            bottom: 30%;
+            animation-duration: 5s;
+        }
+
+        .flower3 {
+            width: 30px;
+            height: 30px;
+            background-color: #00CED1; /* Turquoise */
+            left: 40%;
+            bottom: 5%;
+            animation-duration: 4s;
+        }
+
+        .flower4 {
+            width: 50px;
+            height: 50px;
+            background-color: #FF1493; /* Deep Pink */
+            right: 5%;
+            bottom: 15%;
+            animation-duration: 6s;
+        }
+
+        /* Keyframe Animation for Flowers */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene-container">
+        <div class="house">
+            <div class="roof"></div>
+            <div class="door"></div>
+        </div>
+        <div class="garden"></div>
+
+        <div class="flower flower1"></div>
+        <div class="flower flower2"></div>
+        <div class="flower flower3"></div>
+        <div class="flower flower4"></div>
+    </div>
+
+</body>
+</html>

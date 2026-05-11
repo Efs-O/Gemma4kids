@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyper Neon Pulse</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #010101; /* Very dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body >
+    <canvas id="cyberCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('cyberCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+        const PARTICLE_COUNT = 200; // Increased particle count for more density
+
+        class Particle {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 3; // Increased speed for more dynamic movement
+                this.vy = (Math.random() - 0.5) * 3;
+                this.radius = Math.random() * 4 + 1;
+                // Now generating a wider, brighter spectrum of colors
+                this.color = `hsl(${Math.random() * 360}, 100%, 70%)`; 
+                this.life = Math.random() * 0.5 + 0.5;
+                this.decay = Math.random() * 0.015 + 0.005;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off walls
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                this.life -= this.decay;
+                if (this.life <= 0) {
+                    this.init();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life;
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // Geometric Ring Class
+        class Ring {
+            constructor(radius, color, speed) {
+                this.radius = radius;
+                this.color = color;
+                this.speed = speed;
+                this.angle = Math.random() * Math.PI * 2;
+            }
+
+            draw() {
+                this.angle += this.speed;
+                const pulse = Math.sin(this.angle) * 30; // Increased pulse intensity
+                const currentRadius = this.radius + pulse;
+
+                ctx.beginPath();
+                ctx.arc(width / 2, height / 2, currentRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 4; // Thicker line for impact
+                ctx.shadowBlur = 25; // Stronger glow
+                ctx.shadowColor = this.color;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        let rings = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+
+            // New, super bright color palette
+            rings = [
+                new Ring(120, '#ff00ff', 0.03), // Bright Magenta
+                new Ring(250, '#00ff00', 0.02), // Electric Green
+                new Ring(350, '#ffff00', 0.015)  // Bright Yellow
+            ];
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#111111'; // Slightly lighter dark lines
+            ctx.lineWidth = 1;
+            const gridSize = 40; // Smaller grid for more visual texture
+
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            // Semi-transparent clear for motion blur effect
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            drawGrid();
+
+            // Draw Particles
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Draw Connection Lines for particles near each other
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 120) { // Increased connection distance slightly
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = particles[i].color;
+                        ctx.globalAlpha = (1 - distance / 120) * 0.6; // Brighter connection lines
+                        ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            }
+
+            // Draw Pulsing Rings
+            rings.forEach(r => r.draw());
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body >
+</html>

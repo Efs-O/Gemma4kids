@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butterfly Garden Animation</title>
+    <style>
+        :root {
+            --sky-color: #87CEEB;
+            --grass-color: #7cfc00;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #e0f7fa 60%, #7cfc00 60%, #228B22 100%);
+        }
+
+        #garden {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Flower Styles */
+        .flower {
+            position: absolute;
+            bottom: 35%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: bottom center;
+            animation: sway 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes sway {
+            from { transform: rotate(-2deg); }
+            to { transform: rotation(2deg); }
+        }
+
+        .petal-container {
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+
+        .petal {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50% 50% 0 50%;
+            opacity: 0.9;
+        }
+
+        .petal:nth-child(1) { transform: translate(0, 0) rotate(0deg); }
+        .petal:nth-child(2) { transform: translate(15px, 0) rotate(72deg); }
+        .petal:nth-child(3) { transform: translate(15px, 15px) rotate(144deg); }
+        .petal:nth-child(4) { transform: translate(0, 15px) rotate(216deg); }
+        .petal:nth-child(5) { transform: translate(-15px, 15px) rotate(288deg); }
+        .petal:nth-child(6) { transform: translate(-15px, 0) rotate(360deg); }
+
+        .flower-center {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #ffd700;
+            border-radius: 50%;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+        }
+
+        .stem {
+            width: 6px;
+            height: 100px;
+            background: #2e8b57;
+            border-radius: 3px;
+        }
+
+        /* Butterfly Styles */
+        .butterfly {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .wing {
+            position: absolute;
+            width: 20px;
+            height: 25px;
+            border-radius: 50% 50% 20% 50%;
+            opacity: 0.8;
+            transform-origin: center;
+            animation: flap 0.2s ease-in-out infinite alternate;
+        }
+
+        .wing-left {
+            left: -15px;
+            transform-origin: right center;
+        }
+
+        .wing-right {
+            left: 5px;
+            border-radius: 50% 50% 50% 20%;
+            transform-origin: left center;
+        }
+
+        @keyframes flap {
+            from { transform: scaleX(1); }
+            to { transform: scaleX(0.2); }
+        }
+
+        .body {
+            position: absolute;
+            width: 4px;
+            height: 15px;
+            background: #333;
+            border-radius: 5px;
+            left: 13px;
+            top: 5px;
+            z-index: 101;
+        }
+
+        /* Sun */
+        .sun {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            width: 80px;
+            height: 80px;
+            background: #fff700;
+            border-radius: 50%;
+            box-shadow: 0 0 50px #ffeb3b;
+        }
+    </style>
+</head>
+<body>
+
+<div id="garden">
+    <div class="sun"></div>
+</div>
+
+<script>
+    const garden = document.getElementById('garden');
+    const colors = ['#ff69b4', '#ff4500', '#da70d6', '#9370db', '#00ced1', '#ff1493'];
+    const petalColors = ['#ffb6c1', '#ff69b4', '#dda0dd', '#f08080', '#ffffff'];
+
+    // Create Flowers
+    function createFlower(x, y, size) {
+        const flower = document.createElement('div');
+        flower.className = 'flower';
+        flower.style.left = x + 'px';
+        flower.style.bottom = y + 'px';
+        flower.style.transform = `scale(${size})`;
+
+        const petalContainer = document.createElement('div');
+        petalContainer.className = 'petal-container';
+
+        const color = petalColors[Math.floor(Math.random() * petalColors.length)];
+
+        for (let i = 0; i < 6; i++) {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            petal.style.backgroundColor = color;
+            petalContainer.appendChild(petal);
+        }
+
+        const center = document.createElement('div');
+        center.className = 'flower-center';
+        petalContainer.appendChild(center);
+
+        const stem = document.createElement('div');
+        stem.className = 'stem';
+        stem.style.height = (80 + Math.random() * 100) + 'px';
+
+        flower.appendChild(petalContainer);
+        flower.appendChild(stem);
+        garden.appendChild(flower);
+    }
+
+    // Create Butterflies
+    class Butterfly {
+        constructor() {
+            this.el = document.createElement('div');
+            this.el.className = 'butterfly';
+            this.x = Math.random() * window.innerWidth;
+            this.y = Math.random() * window.innerHeight;
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = (Math.random() - 0.5) * 2;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            
+            this.init();
+        }
+
+        init() {
+            const wingL = document.createElement('div');
+            const wingR = document.createElement('div');
+            const body = document.createElement('div');
+
+            wingL.className = 'wing wing-left';
+            wingR.className = 'wing wing-right';
+            body.className = 'body';
+
+            wingL.style.backgroundColor = this.color;
+            wingR.style.backgroundColor = this.color;
+            
+            this.el.appendChild(wingL);
+            this.el.appendChild(wingR);
+            this.el.appendChild(body);
+            garden.appendChild(this.el);
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Bounce off edges
+            if (this.x < 0 || this.x > window.innerWidth) this.vx *= -1;
+            if (this.y < 0 || this.y > window.innerHeight * 0.8) this.vy *= -1;
+
+            // Add some "flutter" randomness
+            this.vx += (Math.random() - 0.5) * 0.2;
+            this.vy += (Math.random() - 0.5) * 0.2;
+
+            // Limit speed
+            const maxSpeed = 2;
+            this.vx = Math.max(Math.min(this.vx, maxSpeed), -maxSpeed);
+            this.vy = Math.max(Math.min(this.vy, maxSpeed), -maxSpeed);
+
+            this.el.style.left = this.x + 'px';
+            this.el.style.top = this.y + 'px';
+            
+            // Rotate butterfly based on direction
+            const angle = Math.atan2(this.vy, this.vx) * (180 / Math.PI);
+            this.el.style.transform = `rotate(${angle + 90}deg)`;
+        }
+    }
+
+    const butterflies = [];
+
+    // Initialize Garden
+    function init() {
+        // Create random flowers
+        for (let i = 0; i < 15; i++) {
+            createFlower(
+                Math.random() * window.innerWidth,
+                Math.random() * 15 + 5,
+                0.5 + Math.random()
+            );
+        }
+
+        // Create butterflies
+        for (let i = 0; i < 8; i++) {
+            butterflies.push(new Butterfly());
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    function animate() {
+        butterflies.forEach(b => b.update());
+        requestAnimationFrame(animate);
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Έδεσσα - Καταρράκτης Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #2c3e50, #000000);
+        }
+
+        /* Το τοπίο (δάσος) */
+        .forest {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #1a2a1a 0%, #0a0f0a 100%);
+            z-index: 1;
+        }
+
+        /* Ο καταρράκτης */
+        .waterfall-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        /* Τα σωματίδια του νερού */
+        .drop {
+            position: absolute;
+            background: rgba(173, 216, 230, 0.6);
+            width: 4px;
+            height: 20px;
+            top: -50px;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(calc(100vh + 50px));
+            }
+        }
+
+        /* Η αφρός στη βάση */
+        .mist {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+            filter: blur(15px);
+            z-index: 3;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.8; transform: translateX(-50%) scale(1.2); }
+        }
+
+        .title {
+            position: absolute;
+            top: 50px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 2.5rem;
+            z-index: 10;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="title">Η Μαγεία της Έδεσσας 🌊</div>
+    <div class="forest"></div>
+    <div class="waterfall-container" id="waterfall"></div>
+    <div class="mist"></div>
+
+    <script>
+        const waterfall = document.getElementById('waterfall');
+        const dropCount = 60;
+
+        function createDrops() {
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'drop';
+                
+                // Τυχαία θέση και ταχύτητα
+                const posX = Math.random() * 150;
+                const delay = Math.random() * 2;
+                const duration = 0.5 + Math.random() * 1;
+                const width = 2 + Math.random() * 5;
+
+                drop.style.left = posX + 'px';
+                drop.style.animationDelay = delay + 's';
+                drop.style.animationDuration = duration + 's';
+                drop.style.width = width + 'px';
+
+                waterfall.appendChild(drop);
+            }
+        }
+
+        createDrops();
+    </script>
+</body>
+</html>

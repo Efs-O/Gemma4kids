@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Underwater Adventure</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000510; /* Very dark navy/black for neon pop */
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">Neon Deep Sea</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let bubbles = [];
+        let fish = [];
+        // Neon-friendly bright colors
+        const fishColors = ['#00FF00', '#FF00FF', '#00FFFF', '#FFFF00', '#FF3300', '#7700FF'];
+
+        class Bubble {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.radius = Math.random() * 6 + 2;
+                this.speedY = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.color = fishColors[Math.floor(Math.random() * fishColors.length)];
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+
+                if (this.y + this.radius < 0) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                
+                // Neon Glow Effect
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Inner glow
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Fish {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * (canvas.height * 0.7) + 50;
+                this.size = Math.random() * 30 + 20;
+                this.speedX = (Math.random() * 2 + 1.5) * (Math.random() > 0.5 ? 1 : -1);
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.color = fishColors[Math.floor(Math.random() * fishColors.length)];
+                this.wiggle = 0;
+                this.wiggleSpeed = Math.random() * 0.1 + 0.05;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY + Math.sin(this.wiggle) * 0.8;
+                this.wiggle += this.wiggleSpeed;
+
+                if (this.x > canvas.width + 150) {
+                    this.x = -150;
+                } else if (this.x < -150) {
+                    this.x = canvas.width + 150;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                if (this.speedX < 0) {
+                    ctx.scale(-1, 1);
+                }
+
+                // Add Neon Glow to the whole fish
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+
+                // Tail
+                ctx.beginPath();
+                ctx.moveTo(-this.size, 0);
+                ctx.lineTo(-this.size - 15, -15);
+                ctx.lineTo(-this.size - 15, 15);
+                ctx.closePath();
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                // Tail outline for extra neon pop
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Body
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size, this.size/1.8, 0, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                // Body outline
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Eye
+                ctx.beginPath();
+                ctx.arc(this.size * 0.6, -this.size * 0.2, this.size * 0.15, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.size * 0.65, -this.size * 0.2, this.size * 0.07, 0, Math.PI * 2);
+                ctx.fillStyle = 'black';
+                ctx.fill();
+
+                // Fin
+                ctx.beginPath();
+                ctx.ellipse(0, -this.size * 0.3, this.size * 0.4, this.size * 0.1, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function init() {
+            for (let i = 0; i < 50; i++) {
+                bubbles.push(new Bubble());
+            }
+            for (let i = 0; i < 8; i++) {
+                fish.push(new Fish());
+            }
+        }
+
+        function animate() {
+            // Dark background for neon contrast
+            ctx.fillStyle = '#000510';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Subtle glowing particles in background
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
+            for(let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            bubbles.forEach(b => {
+                b.update();
+                b.draw();
+            });
+
+            fish.forEach(f => {
+                f.update();
+                f.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

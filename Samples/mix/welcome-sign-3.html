@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Sign</title>
+    <style>
+        body {
+            background-color: #ffcc00; /* Bright yellow background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        .sign-container {
+            position: relative;
+            width: 70vw;
+            height: 50vh;
+            background-color: #ff69b4; /* Hot pink sign */
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border: 12px solid #3cb371; /* Green border */
+            animation: pulseSign 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseSign {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1 {
+            color: white;
+            font-size: 5em;
+            text-shadow: 4px 4px #ff4500; /* Orange shadow */
+            margin: 0;
+            background-color: #ff8c00; /* Orange banner background */
+            padding: 10px 40px;
+            border-radius: 20px;
+            animation: spinText 5s linear infinite;
+        }
+
+        @keyframes spinText {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Make text not spin so it's readable, but make the container dance */
+        h1 {
+            animation: bounceText 2s ease-in-out infinite;
+        }
+
+        @keyframes bounceText {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .flower {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: rotateFlower 6s linear infinite;
+        }
+
+        @keyframes rotateFlower {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Flower 1: Red Rose */
+        .flower.red {
+            width: 80px;
+            height: 80px;
+            background-color: #ff0000;
+            top: -40px;
+            left: -40px;
+            border-radius: 50%;
+            border: 4px solid #b30000;
+        }
+        .flower.red::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #ffcc00;
+            border-radius: 50%;
+        }
+
+        /* Flower 2: Pink Tulip */
+        .flower.pink {
+            width: 60px;
+            height: 90px;
+            background-color: #ff69b4;
+            top: -30px;
+            right: -30px;
+            border-radius: 50% 50% 20% 20%;
+            animation-direction: reverse;
+        }
+
+        /* Flower 3: Yellow Daisy */
+        .flower.yellow {
+            width: 70px;
+            height: 70px;
+            background-color: #ffd700;
+            bottom: -40px;
+            left: 20%;
+            border-radius: 50%;
+            border: 5px dashed #ffa500;
+            animation-duration: 4s;
+        }
+
+        /* Flower 4: Blue Bell */
+        .flower.blue {
+            width: 70px;
+            height: 70px;
+            background-color: #4169e1;
+            bottom: -30px;
+            right: -30px;
+            border-radius: 30% 70% 70% 30%;
+            animation-duration: 8s;
+        }
+
+        /* Flower 5: Green Leaf accent */
+        .flower.leaf {
+            width: 100px;
+            height: 50px;
+            background-color: #32cd32;
+            top: 50%;
+            left: -60px;
+            border-radius: 0 100% 0 100%;
+            animation: rotateLeaf 10s linear infinite;
+        }
+
+        @keyframes rotateLeaf {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sign-container">
+        <div class="flower red"></div>
+        <div class="flower pink"></div>
+        <div class="flower yellow"></div>
+        <div class="flower blue"></div>
+        <div class="flower leaf"></div>
+        
+        <h1>Welcome! 🎉</h1>
+    </div>
+</body>
+</html>

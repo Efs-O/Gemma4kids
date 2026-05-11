@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butterflies, Flowers, and Twinkling Stars</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            /* Darker blue/purple gradient for a night sky feel to show stars better */
+            background: linear-gradient(to bottom, #020111 0%, #191a5e 50%, #4CAF50 70%, #2e7d32 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gardenCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gardenCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let butterflies = [];
+        let flowers = [];
+        let stars = [];
+
+        const BUTTERFLY_COUNT = 12;
+        const FLOWER_COUNT = 8;
+        const STAR_COUNT = 100;
+
+        class Star {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * (height * 0.7); // Only in the sky area
+                this.size = Math.random() * 1.5;
+                this.opacity = Math.random();
+                this.twinkleSpeed = Math.random() * 0.03 + 0.01;
+            }
+
+            draw() {
+                // Animate opacity for twinkling effect
+                this.opacity += this.twinkleSpeed;
+                if (this.opacity > 1 || this.opacity < 0) {
+                    this.twinkleSpeed = -this.twinkleSpeed;
+                }
+                
+                // If opacity goes way out of bounds due to logic, reset it
+                if (this.opacity > 1.5) this.opacity = 1;
+                if (this.opacity < -0.5) this.opacity = 0;
+
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(this.opacity)})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Flower {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 10 + 15;
+                this.sway = 0;
+                this.swaySpeed = Math.random() * 0.02 + 0.01;
+            }
+
+            draw() {
+                this.sway += this.swaySpeed;
+                const swayOffset = Math.sin(this.sway) * 5;
+
+                // Stem
+                ctx.strokeStyle = '#1b5e20';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(this.x, height);
+                ctx.quadraticCurveTo(this.x + swayOffset, this.y + 20, this.x + swayOffset, this.y);
+                ctx.stroke();
+
+                // Petals
+                ctx.fillStyle = this.color;
+                const petalCount = 5;
+                for (let i = 0; i < petalCount; i++) {
+                    const angle = (i * (Math.PI * 2)) / petalCount;
+                    const px = this.x + swayOffset + Math.cos(angle) * this.size;
+                    const py = this.y + Math.sin(angle) * this.size;
+                    
+                    ctx.beginPath();
+                    ctx.arc(px, py, this.size * 0.7, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Center
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(this.x + swayOffset, this.y, this.size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Butterfly {
+            constructor() {
+                this.init();
+                this.x = Math.random() * width;
+                this.y = Math.random() * (height * 0.6);
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * (height * 0.6);
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.size = Math.random() * 5 + 8;
+                this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+                this.wingFlap = 0;
+                this.flapSpeed = Math.random() * 0.2 + 0.1;
+            }
+
+            update() {
+                this.vx += (Math.random() - 0.5) * 0.4;
+                this.vy += (Math.random() - 0.5) * 0.4;
+
+                const maxSpeed = 3;
+                if (Math.abs(this.vx) > maxSpeed) this.vx *= 0.9;
+                if (Math.abs(this.vy) > maxSpeed) this.vy *= 0.9;
+
+                this.x += this.vx;
+                this.y += this.vy;
+                this.wingFlap += this.flapSpeed;
+
+                if (this.x < -50) this.x = width + 50;
+                if (this.x > width + 50) this.x = -50;
+                if (this.y < -50) this.y = height * 0.7;
+                if (this.y > height * 0.7) this.y = -50;
+            }
+
+            draw() {
+                const flap = Math.sin(this.wingFlap);
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                const angle = Math.atan2(this.vy, this.vx);
+                ctx.rotate(angle + Math.PI / 2);
+
+                const wingScale = Math.abs(flap);
+
+                // Left Wing
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.ellipse(-this.size * wingScale, 0, this.size * 1.2, this.size * 1.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Right Wing
+                ctx.beginPath();
+                ctx.ellipse(this.size * wingScale, 0, this.size * 1.2, this.size * 1.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Body
+                ctx.fillStyle = '#222';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size * 0.2, this.size * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            createGarden();
+        }
+
+        function createGarden() {
+            // Reset and recreate all elements
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push(new Star());
+            }
+
+            butterflies = [];
+            for (let i = 0; i < BUTTERFLY_COUNT; i++) {
+                butterflies.push(new Butterfly());
+            }
+
+            flowers = [];
+            const colors = ['#ff4081', '#e91e63', '#f44336', '#ffeb3b', '#2196f3', '#9c27b0'];
+            for (let i = 0; i < FLOWER_COUNT; i++) {
+                const x = Math.random() * width;
+                const y = height * 0.75 + (Math.random() * (height * 0.2));
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                flowers.push(new Flower(x, y, color));
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Draw Stars first (background layer)
+            stars.forEach(star => star.draw());
+
+            // 2. Draw Flowers (mid layer)
+            flowers.forEach(flower => flower.draw());
+
+            // 3. Draw Butterflies (foreground layer)
+            butterflies.forEach(butterfly => {
+                butterfly.update();
+                butterfly.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

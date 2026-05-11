@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyper-Space Warp</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000010; /* Very deep space blue */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00f2ff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px #00f2ff;
+            pointer-events: none;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-overlay">HYPER-DRIVE: ACTIVE</div>
+    <canvas id="warpCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('warpCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, stars;
+        const starCount = 600;
+        const speed = 0.05;
+        const starColors = ['#00f2ff', '#ff00ff', '#7000ff', '#ffffff'];
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            stars = [];
+            for (let i = 0; i < starCount; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Position in 3D space
+                this.x = (Math.random() - 0.5) * width * 2;
+                this.y = (Math.random() - 0.5) * height * 2;
+                this.z = Math.random() * width; // Depth
+                
+                this.color = starColors[Math.floor(Math.random() * starColors.length)];
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                // Move towards the camera (decrease Z)
+                this.z -= (width * speed);
+
+                // If star passes camera, reset it to the far distance
+                if (this.z <= 0) {
+                    this.reset();
+                    this.z = width; 
+                }
+            }
+
+            draw() {
+                // Project 3D coordinates to 2D screen
+                const sx = (this.x / this.z) * width + width / 2;
+                const sy = (this.y / this.z) * height + height / 2;
+
+                // Calculate brightness based on proximity
+                const brightness = Math.min(1, 500 / this.z);
+
+                // Draw the "streak" effect
+                // We draw a line from the previous position to the current one to create motion blur
+                const prevZ = this.z + (width * speed);
+                const px = (this.x / prevZ) * width + width / 2;
+                const py = (this.y / prevZ) * height + height / 2;
+
+                ctx.beginPath();
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = this.size * (width / this.z) * 0.5; // Thickness increases as it gets closer
+                ctx.globalAlpha = brightness;
+                ctx.moveTo(px, py);
+                ctx.lineTo(sx, sy);
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            // Create a trail effect by not clearing the background fully
+            ctx.fillStyle = 'rgba(0, 0, 15, 0.2)';
+            ctx.fillRect(0, 0, width, height);
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', init);
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

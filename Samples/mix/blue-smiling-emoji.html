@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Smiling Emoji</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #cc66ff; /* Vivid background color (Purple) */
+            font-family: sans-serif;
+        }
+
+        .emoji-face {
+            width: 80vmin; /* Relative size to view height/width */
+            height: 80vmin;
+            background-color: #66ccff; /* NEW Bright blue face color */
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            border: 10px solid #3399ff; /* Adjusted border color */
+            z-index: 1;
+        }
+
+        /* Eyes */
+        .eye {
+            width: 15%;
+            height: 15%;
+            background-color: #333; /* Dark color for eyes */
+            border-radius: 50%;
+            position: absolute;
+            top: 25%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        /* Position the left and right eyes */
+        .eye.left {
+            left: 20%;
+        }
+
+        .eye.right {
+            right: 20%;
+        }
+
+        /* Pupils (optional, adding white highlight for sparkle) */
+        .pupil {
+            width: 30%;
+            height: 30%;
+            background-color: #333;
+            border-radius: 50%;
+            /* Using a little white circle for a sparkle effect */
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .eye.left .pupil {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .eye.right .pupil {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+
+        /* Smile */
+        .smile {
+            width: 70%;
+            height: 35%;
+            background-color: transparent;
+            border: 0;
+            border-top: 15px solid #ff3366; /* NEW Contrasting red/pink color for the smile */
+            border-radius: 0 0 50% 50%; /* Rounded bottom edges */
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="emoji-face">
+        <div class="eye left">
+            <div class="pupil"></div>
+        </div>
+        <div class="eye right">
+            <div class="pupil"></div>
+        </div>
+        <div class="smile"></div>
+    </div>
+</body>
+</html>

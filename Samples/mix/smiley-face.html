@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smiley Face</title>
+    <style>
+        body {
+            /* Bright, vivid background color (sky blue to keep it bright) */
+            background-color: #FFD700; /* Gold Yellow background for general cheer */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .smiley-face {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background-color: #FFEB3B; /* Bright Sunny Yellow */
+            border-radius: 50%;
+            border: 10px solid #FFC107; /* Slightly darker yellow border for definition */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        /* Eyes */
+        .eye {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-color: #000000;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .eye.left {
+            top: 100px;
+            left: 100px;
+        }
+
+        .eye.right {
+            top: 100px;
+            right: 100px;
+        }
+
+        /* Pupil/Highlight in the eyes (optional but adds depth) */
+        .eye::before {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background-color: #000000;
+            border-radius: 50%;
+        }
+        
+        .eye.left::before {
+            top: 15px;
+            left: 15px;
+        }
+        
+        .eye.right::before {
+            top: 15px;
+            right: 15px;
+        }
+
+
+        /* Mouth */
+        .mouth {
+            position: absolute;
+            bottom: 80px;
+            width: 200px;
+            height: 100px;
+            border: 20px solid #FF5722; /* Bright Orange color for the smile line */
+            border-radius: 0 0 50% 50%; /* Only curve the bottom */
+            border-top: none;
+            z-index: 2;
+            box-sizing: border-box;
+            /* Using a gradient fill for a fun, thick smile look */
+            background: linear-gradient(to bottom, #FF5722 0%, #FF9800 100%); 
+        }
+
+    </style>
+</head>
+<body>
+    <div class="smiley-face">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="mouth"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #000033 0%, #000066 50%, #004488 100%);
+        }
+
+        #canvas {
+            display: block;
+        }
+
+        /* Starfield effect using CSS for background stars */
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Rocket Styling */
+        #rocket-container {
+            position: absolute;
+            bottom: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 120px;
+            z-index: 10;
+            animation: launch 6s forwards cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .rocket-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #e63946, #f1faee, #e63946);
+            border-radius: 50% 50% 10% 10% / 70% 70% 30% 30%;
+            position: relative;
+        }
+
+        .rocket-window {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background-color: #a8dadc;
+            border: 3px solid #1d3557;
+            border-radius: 50%;
+        }
+
+        .rocket-fin {
+            position: absolute;
+            bottom: 0;
+            width: 30px;
+            height: 40px;
+            background-color: #e63946;
+            z-index: -1;
+        }
+
+        .fin-left {
+            left: -15px;
+            border-radius: 100% 0 0 0;
+        }
+
+        .fin-right {
+            right: -15px;
+            border-radius: 0 100% 0 0;
+        }
+
+        /* Exhaust Flame */
+        .exhaust {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 80px;
+            background: linear-gradient(to bottom, #ff9e00, #ff5400, transparent);
+            border-radius: 50%;
+            filter: blur(5px);
+            animation: flicker 0.1s infinite alternate;
+        }
+
+        @keyframes launch {
+            0% { bottom: -200px; }
+            20% { bottom: 100px; }
+            40% { bottom: 300px; }
+            60% { bottom: 600px; }
+            80% { bottom: 1000px; }
+            100% { bottom: 2000px; }
+        }
+
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.8; }
+            100% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="stars-container"></div>
+
+    <div id="rocket-container">
+        <div class="rocket-body">
+            <div class="rocket-window"></div>
+            <div class="rocket-fin fin-left"></div>
+            <div class="rocket-fin fin-right"></div>
+        </div>
+        <div class="exhaust"></div>
+    </div>
+
+    <canvas id="particlesCanvas"></canvas>
+
+    <script>
+        const starsContainer = document.getElementById('stars-container');
+        const canvas = document.getElementById('particlesCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Create Stars
+        function createStars() {
+            const count = 150;
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 'px';
+                star.style.width = size;
+                star.style.height = size;
+                star.style.top = Math.random() * 100 + 'vh';
+                star.style.left = Math.random() * 100 + 'vw';
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Particle System for Exhaust
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 8 + 4;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 5 + 2;
+                this.color = `hsl(${Math.random() * 30 + 20}, 100%, 50%)`;
+                this.opacity = 1;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.opacity -= 0.02;
+                if (this.size > 0.2) this.size -= 0.1;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        let particles = [];
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Get rocket position to spawn particles at exhaust
+            const rocket = document.getElementById('rocket-container');
+            const rect = rocket.getBoundingClientRect();
+            
+            // Only spawn particles if rocket is on screen
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.bottom;
+                
+                for (let i = 0; i < 5; i++) {
+                    particles.push(new Particle(centerX, centerY));
+                }
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                if (particles[i].opacity <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        createStars();
+        animate();
+    </script>
+</body>
+</html>

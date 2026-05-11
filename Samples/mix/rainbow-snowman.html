@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rainbow Snowman</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #00FFFF; /* Bright Cyan background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .snowman-container {
+        position: relative;
+        width: 350px;
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Snowman Body (Bottom Sphere - Bright Blue) */
+    .body {
+        width: 180px;
+        height: 180px;
+        background-color: #00BFFF; /* Deep Sky Blue */
+        border-radius: 50%;
+        position: relative;
+        z-index: 10;
+        box-shadow: 0 0 30px #FFD700; /* Gold glow */
+    }
+
+    /* Snowman Head (Bright Pink) */
+    .head {
+        width: 120px;
+        height: 120px;
+        background-color: #FF69B4; /* Hot Pink */
+        border-radius: 50%;
+        position: absolute;
+        top: 25px;
+        z-index: 11;
+    }
+
+    /* Snowman Hat (Bright Orange/Red Triangle) */
+    .hat {
+        width: 0;
+        height: 0;
+        border-left: 60px solid transparent;
+        border-right: 60px solid transparent;
+        border-bottom: 60px solid #FF4500; /* Orange Red Hat */
+        position: absolute;
+        top: 15px;
+        z-index: 5;
+    }
+
+    /* Coal (Detail on the Head - Bright Black/Dark Grey) */
+    .coal {
+        width: 35px;
+        height: 35px;
+        background-color: #333333; /* Dark Grey Coal */
+        border-radius: 50%;
+        position: absolute;
+        top: 35px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 12;
+    }
+
+    /* Arms (Bright Yellow Sticks) */
+    .arm-left {
+        width: 12px;
+        height: 120px;
+        background-color: #FFD700; /* Bright Gold Stick */
+        position: absolute;
+        top: 55px;
+        left: 25px;
+        transform: rotate(-10deg);
+    }
+
+    .arm-right {
+        width: 12px;
+        height: 120px;
+        background-color: #FFD700; /* Bright Gold Stick */
+        position: absolute;
+        top: 55px;
+        right: 25px;
+        transform: rotate(10deg);
+    }
+
+    /* Scarf (Vibrant Purple/Green) */
+    .scarf {
+        width: 140px;
+        height: 25px;
+        background-color: #9333FF; /* Bright Purple Scarf */
+        position: absolute;
+        top: 170px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 10px;
+    }
+</style>
+</head>
+<body style="background-color: #00FFFF;">
+    <div class="snowman-container">
+        <div class="body"></div>
+        <div class="head">
+            <div class="coal"></div>
+        </div>
+        <div class="hat"></div>
+        <div class="arm-left"></div>
+        <div class="arm-right"></div>
+        <div class="scarf"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Butterflies and Flowers</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 70%, #4CAF50 70%, #4CAF50 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gardenCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gardenCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let butterflies = [];
+        let flowers = [];
+
+        const BUTTERFLY_COUNT = 15;
+        const FLOWER_COUNT = 8;
+
+        class Flower {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 10 + 15;
+                this.sway = 0;
+                this.swaySpeed = Math.random() * 0.02 + 0.01;
+            }
+
+            draw() {
+                this.sway += this.swaySpeed;
+                const swayOffset = Math.sin(this.sway) * 5;
+
+                // Stem
+                ctx.strokeStyle = '#2e7d32';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(this.x, height);
+                ctx.quadraticCurveTo(this.x + swayOffset, this.y + 20, this.x + swayOffset, this.y);
+                ctx.stroke();
+
+                // Petals
+                ctx.fillStyle = this.color;
+                const petalCount = 5;
+                for (let i = 0; i < petalCount; i++) {
+                    const angle = (i * (Math.PI * 2)) / petalCount;
+                    const px = this.x + swayOffset + Math.cos(angle) * this.size;
+                    const py = this.y + Math.sin(angle) * this.size;
+                    
+                    ctx.beginPath();
+                    ctx.arc(px, py, this.size * 0.7, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Center
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(this.x + swayOffset, this.y, this.size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Butterfly {
+            constructor() {
+                this.init();
+                // Start at random positions but not too far off screen initially
+                this.x = Math.random() * width;
+                this.y = Math.random() * (height * 0.6);
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * (height * 0.6);
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.size = Math.random() * 5 + 8;
+                this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+                this.wingFlap = 0;
+                this.flapSpeed = Math.random() * 0.2 + 0.1;
+            }
+
+            update() {
+                // Fluttery movement
+                this.vx += (Math.random() - 0.5) * 0.5;
+                this.vy += (Math.random() - 0.5) * 0.5;
+
+                // Limit speed
+                const maxSpeed = 3;
+                if (this.vx > maxSpeed) this.vx = maxSpeed;
+                if (this.vx < -maxSpeed) this.vx = -maxSpeed;
+                if (this.vy > maxSpeed) this.vy = maxSpeed;
+                if (this.vy < -maxSpeed) this.vy = -maxSpeed;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Flap wings
+                this.wingFlap += this.flapSpeed;
+
+                // Screen wrap
+                if (this.x < -50) this.x = width + 50;
+                if (this.x > width + 50) this.x = -50;
+                if (this.y < -50) this.y = height * 0.7;
+                if (this.y > height * 0.7) this.y = -50;
+            }
+
+            draw() {
+                const flap = Math.sin(this.wingFlap);
+                
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                // Rotate butterfly to face movement direction
+                const angle = Math.atan2(this.vy, this.vx);
+                ctx.rotate(angle + Math.PI / 2);
+
+                // Draw Wings
+                ctx.fillStyle = this.color;
+                
+                // Scale X to simulate flapping (wing folding)
+                // Using absolute value of sin to ensure wings exist even when "folded"
+                const wingScale = Math.abs(flap);
+
+                // Left Wing
+                ctx.beginPath();
+                ctx.ellipse(-this.size * wingScale, 0, this.size * 1.2, this.size * 1.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Left Wing Detail (pattern)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(-this.size * wingScale, 0, this.size * 0.5, this.size * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Right Wing
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.ellipse(this.size * wingScale, 0, this.size * 1.2, this.size * 1.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Right Wing Detail
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(this.size * wingScale, 0, this.size * 0.5, this.size * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Body
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size * 0.2, this.size * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            createGarden();
+        }
+
+        function createGarden() {
+            butterflies = [];
+            for (let i = 0; i < BUTTERFLY_COUNT; i++) {
+                butterflies.push(new Butterfly());
+            }
+
+            flowers = [];
+            const colors = ['#ff4081', '#e91e63', '#f44336', '#ffeb3b', '#2196f3', '#9c27b0'];
+            for (let i = 0; i < FLOWER_COUNT; i++) {
+                const x = Math.random() * width;
+                const y = height * 0.7 + (Math.random() * (height * 0.25));
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                flowers.push(new Flower(x, y, color));
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw background-ish part (already handled by CSS gradient)
+            
+            // Draw Flowers
+            flowers.forEach(flower => flower.draw());
+
+            // Draw Butterflies
+            butterflies.forEach(butterfly => {
+                butterfly.update();
+                butterfly.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        
+        resize();
+        animate();
+    </script>
+</body>
+</html>
