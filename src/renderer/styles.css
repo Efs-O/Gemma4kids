@@ -542,6 +542,8 @@ body {
   gap: 10px;
 }
 
+.input-buttons-left { position: relative; }
+
 .input-buttons-right {
   margin-left: auto;
   flex-wrap: wrap;
@@ -1599,4 +1601,104 @@ body {
   .setup-title {
     font-size: 2rem;
   }
+}
+
+/* ── Welcome Screen ───────────────────────────────────────────── */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fffbf5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  z-index: 1000;
+}
+
+.welcome-logo {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+}
+
+.welcome-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #4c1d95;
+  text-align: center;
+}
+
+.welcome-subtitle {
+  font-size: 1.1rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.welcome-lang-tabs {
+  display: flex;
+  gap: 12px;
+}
+
+.welcome-lang-btn {
+  padding: 12px 28px;
+  border: 2px solid #ddd6fe;
+  border-radius: 12px;
+  background: white;
+  color: #4c1d95;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.welcome-lang-btn:hover {
+  background: #ede9fe;
+  border-color: #7c3aed;
+}
+
+.welcome-lang-btn-active {
+  background: #ede9fe;
+  border-color: #7c3aed;
+  color: #4c1d95;
+}
+
+.welcome-go-btn {
+  padding: 16px 56px;
+  background: #4c1d95;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.welcome-go-btn:hover { opacity: 0.85; }
+
+/* ── Voice mismatch hint ──────────────────────────────────────── */
+.voice-mismatch-hint {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fef08a;
+  color: #713f12;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: hint-fade-in 0.2s ease;
+  z-index: 10;
+}
+
+@keyframes hint-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }

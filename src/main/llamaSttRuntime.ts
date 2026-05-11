@@ -499,9 +499,11 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
     }
 
     const modelName = path.basename(sttConfig.sttModelPath, path.extname(sttConfig.sttModelPath));
-    const isGreek = typeof languageHint === 'string' && languageHint.toLowerCase().startsWith('el');
-    const prompt = isGreek
+    const hint = (languageHint ?? '').toLowerCase();
+    const prompt = hint.startsWith('el')
       ? 'Γράψε ακριβώς τα λόγια που άκουσες. Μόνο το κείμενο, χωρίς επεξήγηση.'
+      : hint.startsWith('de')
+      ? 'Transkribiere genau das Gesprochene. Gib nur den Text aus, ohne Erklärung.'
       : 'Transcribe the audio exactly. Output only the transcription, nothing else.';
 
     const logPath = managedSttServer?.logPath ?? getSttRuntimeLogPath();

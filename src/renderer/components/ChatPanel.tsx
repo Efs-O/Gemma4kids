@@ -6,6 +6,7 @@ import { createTTSService } from '../services/TTSService';
 import type { ModelTier } from '../utils/pickCodingModel';
 import type { SendMessageInput } from '../hooks/useChat';
 import type { LLMRuntimeAdapter } from '../services/OllamaService';
+import type { AppLanguage } from './WelcomeScreen';
 
 const ALL_STARTERS: { label: string; text: string }[] = [
   { label: '🏀 Make a bouncing ball animation', text: 'Make a bouncing ball animation' },
@@ -91,6 +92,7 @@ interface Props {
   modelTier?: ModelTier;
   supportsVisualAttachments: boolean;
   videoAttachmentFileRef?: MutableRefObject<File | null>;
+  appLanguage: AppLanguage;
 }
 
 export function ChatPanel({
@@ -114,6 +116,7 @@ export function ChatPanel({
   modelTier = 'full',
   supportsVisualAttachments,
   videoAttachmentFileRef,
+  appLanguage,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -296,6 +299,7 @@ export function ChatPanel({
           onClearContext={onClearContext}
           supportsVisualAttachments={supportsVisualAttachments}
           videoAttachmentFileRef={videoAttachmentFileRef}
+          appLanguage={appLanguage}
         />
     </div>
   );

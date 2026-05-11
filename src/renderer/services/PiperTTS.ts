@@ -1,6 +1,6 @@
 import type { TTSService } from './TTSService';
 
-function detectLang(text: string): string {
+export function detectLang(text: string): string {
   if (/[Ͱ-Ͽἀ-῿]/.test(text)) return 'el';
   if (/[äöüßÄÖÜ]/.test(text) ||
       /\b(ich|und|ist|das|nicht|eine|wir|hast|haben|kann|machen|auch|aber|dein|schau|sehr|jetzt|dann|hier|machst|bitte|klick|zeigt|zeige|füge|lass|probier)\b/i.test(text))

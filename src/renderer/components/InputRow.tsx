@@ -15,6 +15,7 @@ import {
 import type { LLMRuntimeAdapter } from '../services/OllamaService';
 import { transcribeAudioBlobWithRuntime } from '../services/OllamaService';
 import type { SendMessageInput } from '../hooks/useChat';
+import type { AppLanguage } from './WelcomeScreen';
 
 const ACCEPTED_IMAGE_EXTENSIONS = '.png,.jpg,.jpeg,.webp,.gif,.bmp,.heic,.heif';
 const ACCEPTED_AUDIO_EXTENSIONS = '.wav,.mp3,.m4a,.aac,.ogg,.webm';
@@ -44,6 +45,7 @@ interface Props {
   supportsVisualAttachments: boolean;
   /** Filled while a video attachment is active so Gemma's save_video_frame tool can read the File. */
   videoAttachmentFileRef?: MutableRefObject<File | null>;
+  appLanguage: AppLanguage;
 }
 
 function AttachIcon() {
@@ -103,6 +105,7 @@ export function InputRow({
   onClearContext,
   supportsVisualAttachments,
   videoAttachmentFileRef,
+  appLanguage,
 }: Props) {
   const [text, setText] = useState('');
   const [attachment, setAttachment] = useState<AttachmentState>(null);
@@ -261,9 +264,8 @@ export function InputRow({
       return trimmed ? { text: trimmed } : null;
     }
 
-    const languageHint = navigator.languages?.[0] ?? navigator.language;
     const activeTranscribeModel =
-      languageHint.toLowerCase().startsWith('el') && greekTranscribeModel
+      appLanguage === 'el' && greekTranscribeModel
         ? greekTranscribeModel
         : transcribeModel;
 
@@ -284,7 +286,7 @@ export function InputRow({
         attachment.item.file,
         activeTranscribeModel,
         0,
-        languageHint,
+        appLanguage,
       );
       return {
         text: buildAudioPrompt(messageText, transcript.text),
@@ -466,6 +468,7 @@ export function InputRow({
               void submitCurrentInput(spokenText);
             }}
             disabled={controlsDisabled}
+            appLanguage={appLanguage}
           />
         </div>
         <div className="input-buttons-right">

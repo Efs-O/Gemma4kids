@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { LLMRuntimeAdapter } from '../services/OllamaService';
 import { audioBlobToWav16k } from '../services/OllamaService';
+import type { AppLanguage } from './WelcomeScreen';
+import { detectLang } from '../services/PiperTTS';
 
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
 
@@ -14,6 +16,12 @@ function previewText(text: string, max = 140): string {
   return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
 }
 
+const MISMATCH_HINTS: Partial<Record<AppLanguage, string>> = {
+  en: 'I heard English! 🇬🇧 Restart to change language.',
+  de: 'Ich hörte Deutsch! 🇩🇪 Neustart zum Wechseln.',
+  el: 'Άκουσα Ελληνικά! 🇬🇷 Επανεκκίνηση για αλλαγή γλώσσας.',
+};
+
 interface Props {
   e4bAvailable: boolean;
   greekTranscribeModel: string | null;
@@ -23,10 +31,12 @@ interface Props {
   onTranscription: (text: string) => void;
   disabled?: boolean;
   disabledReason?: string;
+  appLanguage: AppLanguage;
 }
 
-export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, runtimeAdapter, onTranscription, disabled, disabledReason }: Props) {
+export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, runtimeAdapter, onTranscription, disabled, disabledReason, appLanguage }: Props) {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [mismatchHint, setMismatchHint] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const activeStreamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -34,6 +44,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deliverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mismatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ignoreStopRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -49,6 +60,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
     clearTimer(retryTimerRef);
     clearTimer(deliverTimerRef);
     clearTimer(errorResetTimerRef);
+    clearTimer(mismatchTimerRef);
   }, [clearTimer]);
 
   const stopActiveStream = useCallback(() => {
@@ -65,29 +77,18 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceStateSafe('transcribing');
     try {
-      // navigator.languages[0] is the OS display language, not the spoken language.
-      // Use it only to pick the Greek-optimised model; never pass it as a spoken-language
-      // hint to the STT prompt — that caused E4B to translate English speech into German
-      // when the OS was set to de-DE.
-      const osLocale = (navigator.languages?.[0] ?? navigator.language).toLowerCase();
       const encoded = await audioBlobToWav16k(blob);
-      // Revisit this override if future Gemma/Ollama releases improve Greek ASR
-      // on E4B. Current local tests on both synthetic and real Greek audio show
-      // E2B stays in Greek script more reliably, while E4B often drifts into
-      // mixed or non-Greek scripts.
       const activeTranscribeModel =
-        osLocale.startsWith('el') && greekTranscribeModel
+        appLanguage === 'el' && greekTranscribeModel
           ? greekTranscribeModel
           : transcribeModel;
       const keepAlive = activeTranscribeModel === codingModel
         ? estimateWarmKeepAlive(encoded.durationSeconds)
         : 0;
-      // Pass no languageHint → E4B uses the auto-detect generic prompt.
-      // Only exception: Greek OS locale uses the Greek model which already handles el-GR well.
-      const languageHintForSTT = osLocale.startsWith('el') ? osLocale : undefined;
+      const languageHintForSTT = appLanguage;
       console.info('[voice:transcribe:selected-model]', {
         attempt,
-        osLocale,
+        appLanguage,
         languageHintForSTT,
         activeTranscribeModel,
         codingModel,
@@ -111,6 +112,20 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         deliverTimerRef.current = null;
         if (mountedRef.current) {
           onTranscription(text);
+          if (text.trim().length > 8) {
+            const detected = detectLang(text) as AppLanguage;
+            if (detected !== appLanguage) {
+              const hint = MISMATCH_HINTS[detected] ?? null;
+              if (hint) {
+                if (mismatchTimerRef.current) clearTimeout(mismatchTimerRef.current);
+                setMismatchHint(hint);
+                mismatchTimerRef.current = setTimeout(() => {
+                  mismatchTimerRef.current = null;
+                  setMismatchHint(null);
+                }, 4000);
+              }
+            }
+          }
         }
       }, 200);
     } catch (err) {
@@ -238,13 +253,18 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   }
 
   return (
-    <button
-      className="btn-mic"
-      onClick={() => { void startRecording(); }}
-      disabled={disabled}
-      title="Speak your idea!"
-    >
-      🎤
-    </button>
+    <>
+      {mismatchHint && (
+        <div className="voice-mismatch-hint" role="status">{mismatchHint}</div>
+      )}
+      <button
+        className="btn-mic"
+        onClick={() => { void startRecording(); }}
+        disabled={disabled}
+        title="Speak your idea!"
+      >
+        🎤
+      </button>
+    </>
   );
 }

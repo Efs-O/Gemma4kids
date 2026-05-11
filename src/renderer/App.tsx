@@ -14,6 +14,8 @@ import type { LlamaCppRuntimeConfig, RuntimeKind } from './services/OllamaServic
 import { DEFAULT_LLAMA_CACHE_TYPE, getConfiguredLlamaPathForModel, LLAMA_CACHE_TYPE_K_KEY, LLAMA_CACHE_TYPE_V_KEY, LLAMA_GPU_LAYERS_KEY, LLAMA_MODEL_PRESETS, LLAMA_NUM_CTX_KEY, LLAMA_NUM_PREDICT_KEY, LLAMA_PORT_KEY, LLAMA_SERVER_PATH_KEY, LLAMA_STT_PORT_KEY, persistLlamaModelPaths, readLlamaCppSetupConfig, readSelectedRuntime, RUNTIME_SELECTED_KEY, type LlamaCppSetupConfig, type LlamaModelPresetId } from './config/llamaSetup';
 import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, pickCodingModel, pickGreekTranscribeModel, pickTranscribeModel, sortGemma4CodingModelsSmallestFirst, getModelTier } from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
+import { WelcomeScreen } from './components/WelcomeScreen';
+import type { AppLanguage } from './components/WelcomeScreen';
 
 function titleToFilename(html: string, fallback: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -26,6 +28,7 @@ function pointsToMmproj(filePath: string): boolean {
 }
 
 export default function App() {
+  const [appLanguage, setAppLanguage] = useState<AppLanguage | null>(null);
   const [selectedRuntime, setSelectedRuntime] = useState<RuntimeKind>(() => readSelectedRuntime());
   const [llamaSetup, setLlamaSetup] = useState<LlamaCppSetupConfig>(() => readLlamaCppSetupConfig());
   const [showSetupAssistant, setShowSetupAssistant] = useState(true);
@@ -291,6 +294,8 @@ export default function App() {
     setUiError('');
   }, [clearContext]);
 
+  if (!appLanguage) return <WelcomeScreen onSelect={setAppLanguage} />;
+
   if (showSetupAssistant) return <SetupAssistant selectedRuntime={selectedRuntime} llamaSetup={llamaSetup} runtimeStatus={runtimeStatus} runtimeError={runtimeErrorMsg} mmprojWarning={llamaMmprojWarning} onRuntimeChange={handleRuntimeSelection} onLlamaSetupChange={handleLlamaSetupChange} onLlamaModelPathChange={handleLlamaModelPathChange} onClose={closeSetupAssistant} />;
 
   if (runtimeStatus === 'checking') return <StartupChecking selectedRuntime={selectedRuntime} />;
@@ -353,6 +358,7 @@ export default function App() {
               modelTier={modelTier}
               supportsVisualAttachments={supportsVisualAttachments}
               videoAttachmentFileRef={videoAttachmentFileRef}
+              appLanguage={appLanguage}
             />
           </div>
         </div>
