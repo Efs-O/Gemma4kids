@@ -1,37 +1,27 @@
-import { app, BrowserWindow, type IpcMain } from 'electron';
+import { type IpcMain } from 'electron';
 import { stopManagedSttServer } from './llamaSttRuntime';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { randomUUID } from 'crypto';
+import {
+  findMmprojForConfig,
+  runtimeConfigKey,
+  broadcastToWindows,
+  buildHealthResult,
+  getLlamaRuntimeLogPath,
+  resetLlamaRuntimeLog,
+  appendLlamaRuntimeLog,
+  summarizeChatRequest,
+  validateLlamaConfig,
+  getLlamaStartupTimeoutMs,
+  resolveLlamaServerCommand,
+  canReachLlamaServer,
+} from './llamaCppUtils';
+import { streamLlamaChat } from './llamaCppStream';
 
-const LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS = 120000;
-const LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS = 240000;
 const LLAMA_DEFAULT_BATCH_SIZE = 512;
-const LLAMA_RUNTIME_LOG = 'llama-cpp-runtime.log';
 
-interface OpenAiToolCall {
-  id: string;
-  type: 'function';
-  function: {
-    name: string;
-    arguments: string;
-  };
-}
-
-interface LlamaStreamEvent {
-  requestId: string;
-  type: 'token' | 'thinking' | 'tool_calls' | 'done' | 'error';
-  token?: string;
-  thinking?: string;
-  toolCalls?: OpenAiToolCall[];
-  finishReason?: string | null;
-  error?: string;
-  promptTokens?: number;
-  evalTokens?: number;
-}
-
-interface ManagedLlamaServer {
+export interface ManagedLlamaServer {
   configKey: string;
   config: LlamaCppConfig;
   process: ChildProcess;
@@ -43,249 +33,10 @@ interface OllamaCleanupState {
   models: string[];
 }
 
-const managedAbortControllers = new Map<string, AbortController>();
-let managedLlamaServer: ManagedLlamaServer | null = null;
+export const managedAbortControllers = new Map<string, AbortController>();
+export let managedLlamaServer: ManagedLlamaServer | null = null;
 let managedLlamaStartup: { configKey: string; promise: Promise<LlamaCppHealthResult> } | null = null;
 let ollamaCleanupState: OllamaCleanupState = { runtime: 'ollama', models: [] };
-
-function isMmprojPath(filePath: string): boolean {
-  return path.basename(filePath).toLowerCase().includes('mmproj');
-}
-
-function extractGemmaFamilyToken(filePath: string): string | null {
-  const lower = filePath.toLowerCase();
-  if (lower.includes('e2b')) return 'e2b';
-  if (lower.includes('e4b')) return 'e4b';
-  if (lower.includes('26b')) return '26b';
-  if (lower.includes('31b')) return '31b';
-  return null;
-}
-
-function resolveMmprojSearchDirs(primaryModelPath: string, extraModelPaths: string[]): Array<{ dir: string; family: string | null }> {
-  const orderedPaths = [primaryModelPath, ...extraModelPaths];
-  const seenDirs = new Set<string>();
-  const dirs: Array<{ dir: string; family: string | null }> = [];
-
-  for (const rawPath of orderedPaths) {
-    const trimmed = rawPath.trim();
-    if (!trimmed || !fs.existsSync(trimmed)) continue;
-
-    try {
-      const stat = fs.statSync(trimmed);
-      if (stat.isFile() && isMmprojPath(trimmed)) continue;
-      const dir = stat.isDirectory() ? trimmed : path.dirname(trimmed);
-      if (!seenDirs.has(dir)) {
-        seenDirs.add(dir);
-        dirs.push({ dir, family: extractGemmaFamilyToken(trimmed) ?? extractGemmaFamilyToken(dir) });
-      }
-    } catch {
-      // Ignore invalid search candidates and continue with the rest.
-    }
-  }
-
-  return dirs;
-}
-
-function findMmprojForConfig(modelPath: string, extraModelPaths: string[]): string | null {
-  const targetFamily = extractGemmaFamilyToken(modelPath);
-  for (const { dir, family } of resolveMmprojSearchDirs(modelPath, extraModelPaths)) {
-    if (targetFamily && family && family !== targetFamily) continue;
-    try {
-      const files = fs.readdirSync(dir);
-      const found = files.find(
-        (file) => file.toLowerCase().includes('mmproj') && file.toLowerCase().endsWith('.gguf'),
-      );
-      if (found) return path.join(dir, found);
-    } catch {
-      // Ignore unreadable directories and continue searching other configured paths.
-    }
-  }
-
-  return null;
-}
-
-function runtimeConfigKey(config: LlamaCppConfig): string {
-  return JSON.stringify({
-    serverPath: config.serverPath.trim(),
-    modelPath: config.modelPath.trim(),
-    mmprojSearchPaths: config.mmprojSearchPaths.map((value) => value.trim()),
-    port: config.port,
-    gpuLayers: config.gpuLayers,
-    numCtx: config.numCtx,
-    numPredict: config.numPredict,
-    cacheTypeK: config.cacheTypeK.trim(),
-    cacheTypeV: config.cacheTypeV.trim(),
-    reasoningEnabled: config.reasoningEnabled,
-  });
-}
-
-function broadcastToWindows(channel: string, payload: unknown): void {
-  for (const win of BrowserWindow.getAllWindows()) {
-    if (!win.isDestroyed()) {
-      win.webContents.send(channel, payload);
-    }
-  }
-}
-
-function buildHealthResult(
-  ok: boolean,
-  state: string,
-  message: string,
-  error?: string,
-  details?: string[],
-): LlamaCppHealthResult {
-  return { ok, state, message, error, details };
-}
-
-function getLlamaRuntimeLogPath(): string {
-  return path.join(app.getPath('userData'), LLAMA_RUNTIME_LOG);
-}
-
-function resetLlamaRuntimeLog(): string {
-  const logPath = getLlamaRuntimeLogPath();
-  fs.writeFileSync(logPath, '', 'utf8');
-  return logPath;
-}
-
-function appendLlamaRuntimeLog(logPath: string, line: string): void {
-  try {
-    fs.appendFileSync(logPath, `${new Date().toISOString()} ${line}\n`, 'utf8');
-  } catch {
-    // Logging should never break runtime startup.
-  }
-}
-
-function summarizeChatRequest(request: Record<string, unknown>): string {
-  const model = typeof request.model === 'string' ? request.model : '(missing)';
-  const messages = Array.isArray(request.messages) ? request.messages : [];
-  const tools = Array.isArray(request.tools) ? request.tools : [];
-  const lastRoles = messages
-    .slice(-4)
-    .map((message) => {
-      if (!message || typeof message !== 'object') return 'unknown';
-      const role = 'role' in message && typeof message.role === 'string' ? message.role : 'unknown';
-      const toolCalls = 'tool_calls' in message && Array.isArray(message.tool_calls) ? message.tool_calls.length : 0;
-      return toolCalls > 0 ? `${role}(tool_calls:${String(toolCalls)})` : role;
-    })
-    .join(' -> ');
-
-  return JSON.stringify({
-    model,
-    messageCount: messages.length,
-    toolCount: tools.length,
-    maxTokens: typeof request.max_tokens === 'number' ? request.max_tokens : null,
-    temperature: typeof request.temperature === 'number' ? request.temperature : null,
-    topP: typeof request.top_p === 'number' ? request.top_p : null,
-    topK: typeof request.top_k === 'number' ? request.top_k : null,
-    stream: request.stream === true,
-    lastRoles,
-  });
-}
-
-function validateLlamaConfig(config: LlamaCppConfig): LlamaCppHealthResult | null {
-  const serverPath = config.serverPath.trim();
-  const modelPath = config.modelPath.trim();
-
-  if (!serverPath) {
-    return buildHealthResult(false, 'binary_missing', 'Add the llama-server binary path in Setup first.', 'llama-server binary path is empty.');
-  }
-  if (!modelPath) {
-    return buildHealthResult(false, 'model_missing', 'Add your GGUF model path in Setup first.', 'llama.cpp model path is empty.');
-  }
-  if (isMmprojPath(modelPath)) {
-    return buildHealthResult(false, 'model_missing', 'That path points to an mmproj file. Put the actual Gemma model .gguf in this tab, not the projector file.', `Model path points to mmproj instead of a text model: ${modelPath}`);
-  }
-  if (!Number.isInteger(config.port) || config.port < 1024 || config.port > 65535) {
-    return buildHealthResult(false, 'invalid_port', 'Pick a port between 1024 and 65535.', `Invalid llama.cpp port: ${String(config.port)}`);
-  }
-  if (!Number.isInteger(config.numCtx) || config.numCtx < 4096 || config.numCtx > 262144) {
-    return buildHealthResult(false, 'invalid_ctx', 'Pick a context length between 4096 and 262144.', `Invalid llama.cpp context length: ${String(config.numCtx)}`);
-  }
-  if (!Number.isInteger(config.numPredict) || config.numPredict < 256 || config.numPredict > 131072) {
-    return buildHealthResult(false, 'invalid_predict', 'Pick generation tokens between 256 and 131072.', `Invalid llama.cpp generation token limit: ${String(config.numPredict)}`);
-  }
-  if (!config.cacheTypeK.trim()) {
-    return buildHealthResult(false, 'invalid_cache_type', 'Pick a cache type for K.', 'llama.cpp cacheTypeK is empty.');
-  }
-  if (!config.cacheTypeV.trim()) {
-    return buildHealthResult(false, 'invalid_cache_type', 'Pick a cache type for V.', 'llama.cpp cacheTypeV is empty.');
-  }
-  if (!fs.existsSync(modelPath)) {
-    return buildHealthResult(false, 'model_missing', 'I could not find that GGUF model file.', `Model path does not exist: ${modelPath}`);
-  }
-  const modelStat = fs.statSync(modelPath);
-  if (modelStat.isDirectory()) {
-    return buildHealthResult(false, 'model_missing', 'That path is a folder, not a GGUF file. Paste the full path including the filename (e.g. …\\model.gguf).', `Model path is a directory: ${modelPath}`);
-  }
-  if (!modelStat.isFile()) {
-    return buildHealthResult(false, 'model_missing', 'That path does not point to a file.', `Model path is not a regular file: ${modelPath}`);
-  }
-  if (path.extname(modelPath).toLowerCase() !== '.gguf') {
-    return buildHealthResult(false, 'model_missing', 'That file does not look like a GGUF model — the path should end in .gguf.', `Model path does not have .gguf extension: ${modelPath}`);
-  }
-  return null;
-}
-
-function getLlamaStartupTimeoutMs(modelPath: string): number {
-  const lower = modelPath.toLowerCase();
-  if (lower.includes('31b') || lower.includes('26b')) {
-    return LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS;
-  }
-  return LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS;
-}
-
-function resolveLlamaServerCommand(serverPath: string): { command: string; args: string[] } {
-  const trimmed = serverPath.trim();
-  if (!trimmed) {
-    throw new Error('llama-server binary path is empty.');
-  }
-
-  if (!path.isAbsolute(trimmed)) {
-    return { command: trimmed, args: [] };
-  }
-
-  const candidates: string[] = [];
-  if (fs.existsSync(trimmed)) {
-    const st = fs.statSync(trimmed);
-    if (st.isFile()) {
-      candidates.push(trimmed);
-    } else if (st.isDirectory()) {
-      const exeName = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server';
-      candidates.push(path.join(trimmed, exeName));
-    }
-  } else {
-    candidates.push(trimmed);
-    if (process.platform === 'win32' && !path.extname(trimmed)) {
-      candidates.push(`${trimmed}.exe`);
-    }
-  }
-
-  for (const candidate of candidates) {
-    try {
-      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-        return { command: candidate, args: [] };
-      }
-    } catch {
-      // ignore stat errors for candidate
-    }
-  }
-
-  throw new Error(
-    `llama-server binary not found at ${trimmed}. Use the path to the llama-server program ` +
-      `(on Windows, often ...\\bin\\llama-server.exe), not only the source or build folder.)`,
-  );
-}
-
-async function canReachLlamaServer(port: number, timeoutMs: number): Promise<boolean> {
-  try {
-    const res = await fetch(`http://127.0.0.1:${port}/v1/models`, {
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
 
 async function stopManagedLlamaServer(): Promise<void> {
   const current = managedLlamaServer;
@@ -324,10 +75,7 @@ async function unloadOllamaModels(models: string[]): Promise<void> {
       const response = await fetch('http://127.0.0.1:11434/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          keep_alive: 0,
-        }),
+        body: JSON.stringify({ model, keep_alive: 0 }),
         signal: AbortSignal.timeout(15000),
       });
       appendLlamaRuntimeLog(
@@ -389,38 +137,24 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     const detectedMmproj = findMmprojForConfig(config.modelPath, config.mmprojSearchPaths);
     const spawnArgs = [
       ...commandInfo.args,
-      '-m',
-      config.modelPath,
+      '-m', config.modelPath,
       ...(detectedMmproj ? ['--mmproj', detectedMmproj] : []),
-      '--host',
-      '127.0.0.1',
-      '--port',
-      String(config.port),
+      '--host', '127.0.0.1',
+      '--port', String(config.port),
       '--jinja',
       ...(config.reasoningEnabled ? [] : ['--reasoning', 'off']),
-      '--ctx-size',
-      String(ctxSize),
-      '--batch-size',
-      String(LLAMA_DEFAULT_BATCH_SIZE),
-      '--parallel',
-      '1',
-      '--cache-type-k',
-      cacheTypeK,
-      '--cache-type-v',
-      cacheTypeV,
-      '--flash-attn',
-      'on',
-      '--n-gpu-layers',
-      gpuLayers,
+      '--ctx-size', String(ctxSize),
+      '--batch-size', String(LLAMA_DEFAULT_BATCH_SIZE),
+      '--parallel', '1',
+      '--cache-type-k', cacheTypeK,
+      '--cache-type-v', cacheTypeV,
+      '--flash-attn', 'on',
+      '--n-gpu-layers', gpuLayers,
     ];
     const logPath = resetLlamaRuntimeLog();
     appendLlamaRuntimeLog(logPath, `[spawn:config] ctx_size=${String(ctxSize)} startup_timeout_s=${String(Math.round(startupTimeoutMs / 1000))}`);
     appendLlamaRuntimeLog(logPath, `[spawn] ${commandInfo.command} ${spawnArgs.join(' ')}`);
-    const proc = spawn(
-      commandInfo.command,
-      spawnArgs,
-      { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
-    );
+    const proc = spawn(commandInfo.command, spawnArgs, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
 
     let spawnProcessError: string | null = null;
     proc.once('error', (err) => {
@@ -446,20 +180,14 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       appendLlamaRuntimeLog(logPath, `[exit] code=${String(code)} signal=${String(signal)}`);
     });
 
-    managedLlamaServer = {
-      configKey,
-      config,
-      process: proc,
-      logPath,
-    };
+    managedLlamaServer = { configKey, config, process: proc, logPath };
 
     const startedAt = Date.now();
     while (Date.now() - startedAt < startupTimeoutMs) {
       if (spawnProcessError !== null) {
         managedLlamaServer = null;
         return buildHealthResult(
-          false,
-          'binary_missing',
+          false, 'binary_missing',
           'Could not start llama-server. Check that the path is the real program (llama-server.exe on Windows).',
           spawnProcessError,
           [`Command: ${commandInfo.command}`, `Log file: ${logPath}`],
@@ -468,8 +196,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       if (proc.exitCode !== null) {
         managedLlamaServer = null;
         return buildHealthResult(
-          false,
-          'server_exited_early',
+          false, 'server_exited_early',
           'llama.cpp stopped before it was ready.',
           stderr || `llama-server exited with code ${String(proc.exitCode)}.`,
           [
@@ -491,8 +218,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
 
     await stopManagedLlamaServer();
     return buildHealthResult(
-      false,
-      'startup_timeout',
+      false, 'startup_timeout',
       'llama.cpp took too long to start.',
       stderr || `Timed out after ${String(Math.round(startupTimeoutMs / 1000))} seconds while waiting for /v1/models.`,
       [
@@ -546,7 +272,7 @@ async function fetchLlamaModels(config: LlamaCppConfig): Promise<{ success: bool
   }
 }
 
-async function streamLlamaChat(
+async function streamLlamaChatWithHealth(
   requestId: string,
   config: LlamaCppConfig,
   request: Record<string, unknown>,
@@ -555,216 +281,7 @@ async function streamLlamaChat(
   if (!health.ok) {
     return { success: false, error: health.error ?? health.message ?? 'llama.cpp is not ready.' };
   }
-
-  const controller = new AbortController();
-  managedAbortControllers.set(requestId, controller);
-  const logPath = managedLlamaServer?.logPath ?? getLlamaRuntimeLogPath();
-  appendLlamaRuntimeLog(logPath, `[stream:start] requestId=${requestId} ${summarizeChatRequest(request)}`);
-
-  try {
-    const response = await fetch(`http://127.0.0.1:${config.port}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-      signal: controller.signal,
-    });
-    appendLlamaRuntimeLog(logPath, `[stream:response] requestId=${requestId} status=${String(response.status)} ok=${String(response.ok)}`);
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => '');
-      appendLlamaRuntimeLog(logPath, `[stream:http-error] requestId=${requestId} body=${body.slice(0, 1000)}`);
-      managedAbortControllers.delete(requestId);
-      broadcastToWindows('llama-cpp-stream-event', {
-        requestId,
-        type: 'error',
-        error: `HTTP ${response.status}: ${body}`,
-      } satisfies LlamaStreamEvent);
-      return { success: true };
-    }
-
-    if (!response.body) {
-      managedAbortControllers.delete(requestId);
-      broadcastToWindows('llama-cpp-stream-event', {
-        requestId,
-        type: 'error',
-        error: 'llama.cpp returned an empty response body.',
-      } satisfies LlamaStreamEvent);
-      return { success: true };
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    const toolAccum = new Map<number, { id: string; name: string; arguments: string }>();
-    let tokenCount = 0;
-    let thinkingCount = 0;
-    let promptTokens = 0;
-    let evalTokens = 0;
-    let storedFinishReason: string | null = null;
-
-    const emitDone = (finishReason: string | null) => {
-      appendLlamaRuntimeLog(
-        logPath,
-        `[stream:done] requestId=${requestId} finish_reason=${String(finishReason)} tokens=${String(tokenCount)} thinking_chunks=${String(thinkingCount)} tool_calls=${String(toolAccum.size)} prompt_tokens=${String(promptTokens)} eval_tokens=${String(evalTokens)}`,
-      );
-      broadcastToWindows('llama-cpp-stream-event', {
-        requestId,
-        type: 'done',
-        finishReason,
-        promptTokens,
-        evalTokens,
-      } satisfies LlamaStreamEvent);
-    };
-
-    const emitToolCalls = () => {
-      if (toolAccum.size === 0) return;
-      const toolCalls: OpenAiToolCall[] = [...toolAccum.entries()]
-        .sort(([a], [b]) => a - b)
-        .map(([, acc]) => ({
-          id: acc.id || randomUUID(),
-          type: 'function',
-          function: {
-            name: acc.name,
-            arguments: acc.arguments,
-          },
-        }));
-      appendLlamaRuntimeLog(
-        logPath,
-        `[stream:tool-calls] requestId=${requestId} count=${String(toolCalls.length)} names=${toolCalls.map((call) => call.function.name).join(',')}`,
-      );
-
-      broadcastToWindows('llama-cpp-stream-event', {
-        requestId,
-        type: 'tool_calls',
-        toolCalls,
-      } satisfies LlamaStreamEvent);
-    };
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data:')) continue;
-
-          const payload = trimmed.slice(5).trim();
-          if (payload === '[DONE]') {
-            emitDone(storedFinishReason);
-            managedAbortControllers.delete(requestId);
-            return { success: true };
-          }
-
-          let chunk: {
-            choices?: Array<{
-              delta?: {
-                content?: string | null;
-                reasoning_content?: string | null;
-                tool_calls?: Array<{
-                  index?: number;
-                  id?: string;
-                  function?: { name?: string; arguments?: string };
-                }>;
-              };
-              finish_reason?: string | null;
-            }>;
-            usage?: { prompt_tokens?: number; completion_tokens?: number };
-          };
-
-          try {
-            chunk = JSON.parse(payload) as typeof chunk;
-          } catch {
-            continue;
-          }
-
-          if (chunk.usage) {
-            promptTokens = chunk.usage.prompt_tokens ?? promptTokens;
-            evalTokens = chunk.usage.completion_tokens ?? evalTokens;
-          }
-
-          const choice = chunk.choices?.[0];
-          if (!choice) continue;
-
-          const content = choice.delta?.content;
-          if (content) {
-            tokenCount += 1;
-            if (tokenCount === 1) {
-              appendLlamaRuntimeLog(logPath, `[stream:first-token] requestId=${requestId} token=${JSON.stringify(content.slice(0, 120))}`);
-            }
-            broadcastToWindows('llama-cpp-stream-event', {
-              requestId,
-              type: 'token',
-              token: content,
-            } satisfies LlamaStreamEvent);
-          }
-
-          const thinking = choice.delta?.reasoning_content;
-          if (thinking) {
-            thinkingCount += 1;
-            broadcastToWindows('llama-cpp-stream-event', {
-              requestId,
-              type: 'thinking',
-              thinking,
-            } satisfies LlamaStreamEvent);
-          }
-
-          const deltaToolCalls = choice.delta?.tool_calls;
-          if (deltaToolCalls) {
-            for (const toolCall of deltaToolCalls) {
-              const idx = toolCall.index ?? 0;
-              if (!toolAccum.has(idx)) {
-                toolAccum.set(idx, { id: '', name: '', arguments: '' });
-              }
-              const acc = toolAccum.get(idx)!;
-              if (toolCall.id) acc.id = toolCall.id;
-              if (toolCall.function?.name) acc.name += toolCall.function.name;
-              if (toolCall.function?.arguments) acc.arguments += toolCall.function.arguments;
-            }
-          }
-
-          if (choice.finish_reason !== undefined && choice.finish_reason !== null) {
-            storedFinishReason = choice.finish_reason;
-            if (choice.finish_reason === 'tool_calls') {
-              emitToolCalls();
-            }
-            // Don't return yet — llama-server sends a usage chunk after finish_reason, before [DONE].
-          }
-        }
-      }
-
-      emitDone(storedFinishReason);
-      managedAbortControllers.delete(requestId);
-      return { success: true };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      appendLlamaRuntimeLog(logPath, `[stream:exception] requestId=${requestId} message=${message}`);
-      if (message === 'This operation was aborted') {
-        emitDone('cancelled');
-      } else {
-        broadcastToWindows('llama-cpp-stream-event', {
-          requestId,
-          type: 'error',
-          error: message,
-        } satisfies LlamaStreamEvent);
-      }
-      managedAbortControllers.delete(requestId);
-      return { success: true };
-    } finally {
-      reader.releaseLock();
-    }
-  } catch (error) {
-    managedAbortControllers.delete(requestId);
-    appendLlamaRuntimeLog(
-      logPath,
-      `[stream:startup-error] requestId=${requestId} message=${error instanceof Error ? error.message : String(error)}`,
-    );
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
-  }
+  return streamLlamaChat(requestId, config, request, managedAbortControllers, () => managedLlamaServer?.logPath ?? null);
 }
 
 export function registerLlamaRuntimeIpcHandlers(ipcMain: IpcMain): void {
@@ -794,7 +311,7 @@ export function registerLlamaRuntimeIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('llama-cpp-start-stream', async (_event, { requestId, config, request }: { requestId: string; config: LlamaCppConfig; request: Record<string, unknown> }) => {
-    return streamLlamaChat(requestId, config, request);
+    return streamLlamaChatWithHealth(requestId, config, request);
   });
 
   ipcMain.handle('llama-cpp-abort-stream', async (_event, { requestId }: { requestId: string }) => {

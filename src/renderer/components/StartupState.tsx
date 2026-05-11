@@ -6,10 +6,19 @@ interface CheckingProps {
 }
 
 export function StartupChecking({ selectedRuntime }: CheckingProps) {
+  const isLlama = selectedRuntime === 'llama_cpp';
   return (
     <div className="startup-screen">
-      <div style={{ fontSize: 64 }}>🤖</div>
-      <div className="startup-title">Checking {selectedRuntime === 'ollama' ? 'Ollama' : 'llama.cpp'}...</div>
+      <div style={{ fontSize: 64 }}>{isLlama ? '⚙️' : '🤖'}</div>
+      <div className="startup-title">
+        {isLlama ? 'Loading model' : 'Starting Gemma'}
+        <span className="loading-dot">.</span>
+        <span className="loading-dot">.</span>
+        <span className="loading-dot">.</span>
+      </div>
+      <div className="startup-msg">
+        Gemma is loading into memory — this can take a minute or two for big models. Please wait!
+      </div>
     </div>
   );
 }
