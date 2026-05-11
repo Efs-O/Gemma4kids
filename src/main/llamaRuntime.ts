@@ -142,7 +142,6 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       '--host', '127.0.0.1',
       '--port', String(config.port),
       '--jinja',
-      ...(config.reasoningEnabled ? [] : ['--reasoning', 'off']),
       '--ctx-size', String(ctxSize),
       '--batch-size', String(LLAMA_DEFAULT_BATCH_SIZE),
       '--parallel', '1',

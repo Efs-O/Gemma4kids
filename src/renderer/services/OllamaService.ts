@@ -429,6 +429,7 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
           top_k: params.topK,
           stream: true,
           stream_options: { include_usage: true },
+          chat_template_kwargs: { enable_thinking: params.think },
         }).then((result) => {
           if (!result.success && !finished) {
             finished = true;
