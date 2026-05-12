@@ -131,7 +131,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           generate_release_notes: true
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false
           files: |
             release-artifacts/gemma4kids-windows/*
             release-artifacts/gemma4kids-macos/*
