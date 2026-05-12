@@ -35,6 +35,7 @@ interface Props {
   status: 'idle' | 'streaming' | 'error';
   onSend: (input: SendMessageInput) => void;
   onCancel: () => void;
+  onVoiceActivityChange?: (active: boolean) => void;
   e4bAvailable: boolean;
   greekTranscribeModel: string | null;
   transcribeModel: string;
@@ -96,6 +97,7 @@ export function InputRow({
   status,
   onSend,
   onCancel,
+  onVoiceActivityChange,
   e4bAvailable,
   greekTranscribeModel,
   transcribeModel,
@@ -464,6 +466,7 @@ export function InputRow({
             transcribeModel={transcribeModel}
             codingModel={codingModel}
             runtimeAdapter={runtimeAdapter}
+            onVoiceActivityChange={onVoiceActivityChange}
             onTranscription={(spokenText) => {
               void submitCurrentInput(spokenText);
             }}

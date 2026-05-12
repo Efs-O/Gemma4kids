@@ -29,12 +29,13 @@ interface Props {
   codingModel: string;
   runtimeAdapter: LLMRuntimeAdapter;
   onTranscription: (text: string) => void;
+  onVoiceActivityChange?: (active: boolean) => void;
   disabled?: boolean;
   disabledReason?: string;
   appLanguage: AppLanguage;
 }
 
-export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, runtimeAdapter, onTranscription, disabled, disabledReason, appLanguage }: Props) {
+export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, runtimeAdapter, onTranscription, onVoiceActivityChange, disabled, disabledReason, appLanguage }: Props) {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [mismatchHint, setMismatchHint] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -215,6 +216,10 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
       stopActiveStream();
     };
   }, [clearAllTimers, stopActiveStream]);
+
+  useEffect(() => {
+    onVoiceActivityChange?.(voiceState !== 'idle');
+  }, [onVoiceActivityChange, voiceState]);
 
   if (!e4bAvailable) {
     return (

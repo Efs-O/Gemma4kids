@@ -18,7 +18,9 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import type { AppLanguage } from './components/WelcomeScreen';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
-const MUSIC_TRACK_SRC = './background-music.mp3';
+const MUSIC_TRACK_SRC = './Awakening.mp3';
+const MUSIC_VOLUME_NORMAL = 0.35;
+const MUSIC_VOLUME_DUCKED = 0.12;
 
 function titleToFilename(html: string, fallback: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -41,7 +43,11 @@ export default function App() {
     return stored == null ? true : stored === 'true';
   });
   const [showThinking, setShowThinking] = useState<boolean>(() => localStorage.getItem('g4k-show-thinking') === 'true');
-  const [musicEnabled, setMusicEnabled] = useState<boolean>(() => localStorage.getItem(MUSIC_ENABLED_KEY) === 'true');
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem(MUSIC_ENABLED_KEY);
+    return stored == null ? true : stored === 'true';
+  });
+  const [voiceActive, setVoiceActive] = useState(false);
 
   const llamaCodingModels = useMemo(() => sortGemma4CodingModelsSmallestFirst(LLAMA_MODEL_PRESETS.map((preset) => preset.modelTag)), []);
   const activeLlamaModel = useMemo(() => (userModel && llamaCodingModels.includes(userModel)) ? userModel : pickCodingModel(llamaCodingModels), [llamaCodingModels, userModel]);
@@ -160,11 +166,11 @@ export default function App() {
     const audio = audioRef.current ?? new Audio(MUSIC_TRACK_SRC);
     audioRef.current = audio;
     audio.loop = true;
-    audio.volume = 0.35;
+    audio.volume = voiceActive ? MUSIC_VOLUME_DUCKED : MUSIC_VOLUME_NORMAL;
 
     const handleError = () => {
       setMusicEnabled(false);
-      setUiError('I could not play the background music yet. Add the chosen MP3 as "background-music.mp3" and try again.');
+      setUiError('I could not play the background music yet. Make sure "Awakening.mp3" is in the app bundle and try again.');
     };
 
     audio.addEventListener('error', handleError);
@@ -178,7 +184,11 @@ export default function App() {
     return () => {
       audio.removeEventListener('error', handleError);
     };
-  }, [musicEnabled]);
+  }, [musicEnabled, voiceActive]);
+  useEffect(() => {
+    if (!audioRef.current || !musicEnabled) return;
+    audioRef.current.volume = voiceActive ? MUSIC_VOLUME_DUCKED : MUSIC_VOLUME_NORMAL;
+  }, [musicEnabled, voiceActive]);
   useEffect(() => () => {
     if (!audioRef.current) return;
     audioRef.current.pause();
@@ -255,6 +265,9 @@ export default function App() {
   const handleToggleMusic = useCallback(() => {
     setUiError('');
     setMusicEnabled((current) => !current);
+  }, []);
+  const handleVoiceActivityChange = useCallback((active: boolean) => {
+    setVoiceActive(active);
   }, []);
   const handleRuntimeSelection = useCallback((runtime: RuntimeKind) => {
     setSelectedRuntime(runtime);
@@ -395,6 +408,7 @@ export default function App() {
               onSend={sendMessage}
               onCancel={cancel}
               onRetry={retry}
+              onVoiceActivityChange={handleVoiceActivityChange}
               e4bAvailable={voiceInputAvailable}
               greekTranscribeModel={greekTranscribeModel}
               transcribeModel={transcribeModel}

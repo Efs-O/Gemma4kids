@@ -81,6 +81,7 @@ interface Props {
   onSend: (input: SendMessageInput) => void;
   onCancel: () => void;
   onRetry: () => void;
+  onVoiceActivityChange?: (active: boolean) => void;
   e4bAvailable: boolean;
   greekTranscribeModel: string | null;
   transcribeModel: string;
@@ -105,6 +106,7 @@ export function ChatPanel({
   onSend,
   onCancel,
   onRetry,
+  onVoiceActivityChange,
   e4bAvailable,
   greekTranscribeModel,
   transcribeModel,
@@ -290,6 +292,7 @@ export function ChatPanel({
           status={status}
           onSend={onSend}
           onCancel={onCancel}
+          onVoiceActivityChange={onVoiceActivityChange}
           e4bAvailable={e4bAvailable}
           greekTranscribeModel={greekTranscribeModel}
           transcribeModel={transcribeModel}

@@ -161,6 +161,28 @@ function buildTranscribePrompt(languageHint?: string): string {
   return 'Transcribe exactly what is spoken in the audio. First infer whether the speech is Greek, German, English, or another language. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages unless the speaker actually switches languages. If the speech is Greek, return Greek script. If the speech is German, return German spelling. If the speech is English, return English text. Output only the transcription text, with no newlines. Write numbers as digits.';
 }
 
+function stripPromptEcho(text: string, languageHint?: string): string {
+  const prompts = [
+    buildTranscribePrompt(languageHint),
+    buildTranscribePrompt('en'),
+    buildTranscribePrompt('de'),
+    buildTranscribePrompt('el'),
+    buildTranscribePrompt(),
+  ];
+
+  let cleaned = text.trim();
+  for (const prompt of prompts) {
+    if (cleaned === prompt) {
+      return '';
+    }
+    if (cleaned.startsWith(prompt)) {
+      cleaned = cleaned.slice(prompt.length).trimStart();
+    }
+  }
+
+  return cleaned.trim();
+}
+
 function previewText(text: string, max = 140): string {
   const normalized = text.replace(/\s+/g, ' ').trim();
   return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
@@ -289,7 +311,8 @@ export async function transcribe(
   if (!res.ok) throw new Error(`Transcribe HTTP ${res.status}`);
 
   const data = await res.json() as { message?: { content?: string } };
-  const text = (data.message?.content ?? '').trim();
+  const rawText = (data.message?.content ?? '').trim();
+  const text = stripPromptEcho(rawText, languageHint);
   if (!text) throw new Error('Empty transcription returned');
   console.info('[transcribe:done]', {
     model,
