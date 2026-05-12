@@ -36,7 +36,7 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026) — targeting
 | **Editor & projects** | Resizable sidebar (**saved animations**) + chat widths. Files save to **`Documents/KidAnimations/`** with `-2`, `-3`… suffixes on name collisions. An **unsaved-changes dot** turns red when the editor has been modified and green on successful save. A **"Gemma's version"** button reverts manual edits back to the last AI-generated code. |
 | **Code Runner** | Side-scroller mini-game plays while Gemma streams (26B/31B only). Press **Space** to jump and dodge bugs. High score persists in localStorage. |
 | **TTS ("Read")** | **Piper** in main process: read-aloud speaker button on every assistant message when `piper` binary + voice ONNX bundles are installed. Detects language (EN/DE/EL) and routes to the matching voice — no cloud. See **[SETUP.md](SETUP.md)**. |
-| **Multilingual** | All system prompts instruct Gemma to reply in the child's own language. Language is detected automatically from the text (Greek Unicode ranges, German diacritics, English default). Motion keywords in Greek (κινούμενο, κίνηση, πέφτει…) and German (animiert, bewegt, fallen…) are recognised by the router. |
+| **Multilingual** | A **language picker** (🇬🇧 EN / 🇩🇪 DE / 🇬🇷 EL) on the welcome screen sets the session language before anything loads. All system prompts instruct Gemma to reply in the chosen language. Motion keywords in Greek (κινούμενο, κίνηση, πέφτει…) and German (animiert, bewegt, fallen…) are recognised by the intent router. The STT pipeline uses the selected language directly — no browser-locale guessing. |
 
 ---
 
@@ -61,7 +61,7 @@ ollama pull gemma4:31b   # workstation — highest quality, 64 k context, ~20 GB
 
 **Option B — llama.cpp (advanced)**
 
-Download a [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) and point Gemma4kids at your GGUF model files via the setup screen. Gemma4kids spawns and manages `llama-server` automatically — one instance for the coding model, a separate one for STT. No Ollama installation needed. Vision and video features require an `mmproj` companion file alongside your GGUF; Gemma4kids searches for it automatically. Advanced options include GPU layer count, context size, max tokens, and K/V cache quantization (f16, bf16, q8_0, q5_1, q5_0, q4_1, q4_0, iq4_nl).
+Download a [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) and point Gemma4kids at your GGUF model files via the setup screen. Gemma4kids spawns and manages `llama-server` automatically — one instance for the coding model, a separate one for STT. No Ollama installation needed. **You can paste a folder path** — if the folder contains exactly one non-mmproj `.gguf`, the app selects it automatically. Vision and video features require an `mmproj` companion file alongside your GGUF; Gemma4kids searches for it automatically (including one level up from the model folder). Advanced options include GPU layer count, context size, max tokens, and K/V cache quantization (f16, bf16, q8_0, q5_1, q5_0, q4_1, q4_0, iq4_nl).
 
 **Video features (both runtimes):** frame extraction and audio capture require **ffmpeg** on your PATH.
 
@@ -94,9 +94,9 @@ GitHub Actions notes:
 
 ### 3. Launch and create
 
-1. Open Gemma4kids. The startup screen asks you to pick **Ollama** or **llama.cpp**.
+1. Open Gemma4kids. A **welcome screen** asks you to pick your language (🇬🇧 EN / 🇩🇪 DE / 🇬🇷 EL), then the startup screen asks you to pick **Ollama** or **llama.cpp**. While the model loads, animated dots and a progress message let you know it's working (large models can take a minute or two).
 2. Choose **Coding model**, **Think** / **Show Thoughts** as you like.
-3. Type a prompt or press the **mic** button to speak (STT model required).
+3. Type a prompt or press the **mic** button to speak (STT model required). While voice is being transcribed the **Send** button shows **"Preparing…"** and locks until the text is ready.
 4. Use the **paperclip** to attach an image or video before sending.
 5. **Save** → **Open in Browser** to see the animation full-screen.
 6. **Read** aloud only appears when Piper voices are installed — see **[SETUP.md](SETUP.md)**.
