@@ -1,5 +1,5 @@
 import * as esbuild from 'esbuild';
-import { copyFileSync, mkdirSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
 
 const mode = process.argv[2]; // 'main' | 'renderer' | undefined (both)
 
@@ -20,6 +20,9 @@ const buildRenderer = () => {
   copyFileSync('src/renderer/styles.css', 'dist/renderer/styles.css');
   copyFileSync('ollama logo.jpg', 'dist/renderer/ollama logo.jpg');
   copyFileSync('llama server.jpg', 'dist/renderer/llama server.jpg');
+  if (existsSync('background-music.mp3')) {
+    copyFileSync('background-music.mp3', 'dist/renderer/background-music.mp3');
+  }
   return esbuild.build({
     entryPoints: ['src/renderer/index.tsx'],
     bundle: true,

@@ -22,7 +22,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 18px;
   height: 66px;
   background: #4c1d95;
   flex-shrink: 0;
@@ -43,7 +43,7 @@ body {
 .model-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .model-selector {
@@ -87,7 +87,7 @@ body {
   accent-color: #f59e0b;
 }
 
-.header-controls { display: flex; align-items: center; gap: 12px; }
+.header-controls { display: flex; align-items: center; gap: 9px; }
 
 .filename-input {
   background: rgba(255, 255, 255, 0.18);
@@ -98,7 +98,7 @@ body {
   height: 46px;
   font-size: 1rem;
   font-family: inherit;
-  width: 175px;
+  width: 160px;
 }
 
 .filename-input::placeholder { color: rgba(255, 255, 255, 0.55); }
@@ -1021,7 +1021,7 @@ body {
 
 .btn-setup {
   height: 46px;
-  padding: 0 18px;
+  padding: 0 16px;
   background: rgba(255, 255, 255, 0.12);
   border: 1.5px solid rgba(255, 255, 255, 0.35);
   border-radius: 9px;
@@ -1034,6 +1034,23 @@ body {
 }
 
 .btn-setup:hover { background: rgba(255, 255, 255, 0.22); }
+
+.btn-music {
+  height: 46px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9px;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.btn-music:hover { background: rgba(255, 255, 255, 0.22); }
 
 .setup-overlay {
   min-height: 100vh;

@@ -17,6 +17,9 @@ import { auditHtml } from './htmlAudit';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import type { AppLanguage } from './components/WelcomeScreen';
 
+const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
+const MUSIC_TRACK_SRC = './background-music.mp3';
+
 function titleToFilename(html: string, fallback: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (!m) return fallback;
@@ -38,6 +41,7 @@ export default function App() {
     return stored == null ? true : stored === 'true';
   });
   const [showThinking, setShowThinking] = useState<boolean>(() => localStorage.getItem('g4k-show-thinking') === 'true');
+  const [musicEnabled, setMusicEnabled] = useState<boolean>(() => localStorage.getItem(MUSIC_ENABLED_KEY) === 'true');
 
   const llamaCodingModels = useMemo(() => sortGemma4CodingModelsSmallestFirst(LLAMA_MODEL_PRESETS.map((preset) => preset.modelTag)), []);
   const activeLlamaModel = useMemo(() => (userModel && llamaCodingModels.includes(userModel)) ? userModel : pickCodingModel(llamaCodingModels), [llamaCodingModels, userModel]);
@@ -132,16 +136,54 @@ export default function App() {
   const pendingAutoSave = useRef(false);
   const streamStartSaved = useRef<string | null>(null);
   const filenameRef = useRef(filename);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => { filenameRef.current = filename; }, [filename]);
   useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
   useEffect(() => { if (displayCode && savedCode && displayCode !== savedCode) setSaveStatus('unsaved'); }, [displayCode, savedCode]);
   useEffect(() => { localStorage.setItem('g4k-sidebar-width', String(sidebarWidth)); }, [sidebarWidth]);
   useEffect(() => { localStorage.setItem('g4k-chat-width', String(chatWidth)); }, [chatWidth]);
+  useEffect(() => { localStorage.setItem(MUSIC_ENABLED_KEY, String(musicEnabled)); }, [musicEnabled]);
   useEffect(() => {
     const modelsForCleanup = runtimeInUse === 'ollama' ? ollamaCleanupModels : [];
     void window.electronAPI.setOllamaCleanupTargets(runtimeInUse, modelsForCleanup);
   }, [ollamaCleanupModels, runtimeInUse]);
+  useEffect(() => {
+    if (!musicEnabled) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      return;
+    }
+
+    const audio = audioRef.current ?? new Audio(MUSIC_TRACK_SRC);
+    audioRef.current = audio;
+    audio.loop = true;
+    audio.volume = 0.35;
+
+    const handleError = () => {
+      setMusicEnabled(false);
+      setUiError('I could not play the background music yet. Add the chosen MP3 as "background-music.mp3" and try again.');
+    };
+
+    audio.addEventListener('error', handleError);
+    const playPromise = audio.play();
+    if (playPromise) {
+      void playPromise.catch(() => {
+        handleError();
+      });
+    }
+
+    return () => {
+      audio.removeEventListener('error', handleError);
+    };
+  }, [musicEnabled]);
+  useEffect(() => () => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+  }, []);
 
   useEffect(() => {
     const onMouseMove = (event: MouseEvent) => {
@@ -209,6 +251,10 @@ export default function App() {
   const handleShowThinkingToggle = useCallback((enabled: boolean) => {
     setShowThinking(enabled);
     localStorage.setItem('g4k-show-thinking', String(enabled));
+  }, []);
+  const handleToggleMusic = useCallback(() => {
+    setUiError('');
+    setMusicEnabled((current) => !current);
   }, []);
   const handleRuntimeSelection = useCallback((runtime: RuntimeKind) => {
     setSelectedRuntime(runtime);
@@ -313,6 +359,7 @@ export default function App() {
           availableCodingModels={availableCodingModels}
           chatThinkEnabled={chatThinkEnabled}
           showThinking={showThinking}
+          musicEnabled={musicEnabled}
           filename={filename}
           displayCode={displayCode}
           currentProjectFilename={currentProjectFilename}
@@ -320,6 +367,7 @@ export default function App() {
           onModelChange={handleModelChange}
           onThinkToggle={handleThinkToggle}
           onShowThinkingToggle={handleShowThinkingToggle}
+          onToggleMusic={handleToggleMusic}
           onFilenameChange={(value) => { setFilename(value); setUiError(''); }}
           onSave={handleSave}
           onOpenBrowser={handleOpenBrowser}

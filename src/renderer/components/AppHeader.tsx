@@ -6,6 +6,7 @@ interface Props {
   availableCodingModels: string[];
   chatThinkEnabled: boolean;
   showThinking: boolean;
+  musicEnabled: boolean;
   filename: string;
   displayCode: string;
   currentProjectFilename: string;
@@ -13,6 +14,7 @@ interface Props {
   onModelChange: (modelName: string) => void;
   onThinkToggle: (enabled: boolean) => void;
   onShowThinkingToggle: (enabled: boolean) => void;
+  onToggleMusic: () => void;
   onFilenameChange: (value: string) => void;
   onSave: () => void;
   onOpenBrowser: () => void;
@@ -27,6 +29,7 @@ export function AppHeader(props: Props) {
     availableCodingModels,
     chatThinkEnabled,
     showThinking,
+    musicEnabled,
     filename,
     displayCode,
     currentProjectFilename,
@@ -34,6 +37,7 @@ export function AppHeader(props: Props) {
     onModelChange,
     onThinkToggle,
     onShowThinkingToggle,
+    onToggleMusic,
     onFilenameChange,
     onSave,
     onOpenBrowser,
@@ -63,6 +67,9 @@ export function AppHeader(props: Props) {
         <button className="btn-preview" onClick={onOpenBrowser} disabled={!currentProjectFilename || isStreaming}>Open in Browser</button>
         <button className="btn-setup" onClick={onOpenSetup} aria-label="Setup assistant" title="Open Setup Assistant">Setup</button>
         <button className="btn-help" onClick={onToggleHelp} aria-label="Help" title="How to use Gemma4kids">?</button>
+        <button className="btn-music" onClick={onToggleMusic} aria-label="Background music" title="Toggle background music">
+          {musicEnabled ? 'Music Off' : 'Music On'}
+        </button>
       </div>
     </header>
   );
