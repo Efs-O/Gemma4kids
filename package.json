@@ -1,6 +1,6 @@
 {
   "name": "gemma4kids",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Offline AI coding teacher for kids — powered by Gemma 4",
   "main": "dist/main/main.js",
   "scripts": {
