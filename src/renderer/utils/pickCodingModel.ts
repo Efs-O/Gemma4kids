@@ -17,6 +17,11 @@ export function isGemma4EdgeE2b(name: string): boolean {
   return /^gemma4:e2b(?:$|[-.])/i.test(n);
 }
 
+/** True only for the plain latest Ollama E2B tag, not the suffixed variants. */
+export function isPlainGemma4E2b(name: string): boolean {
+  return normalizeOllamaModelRef(name).toLowerCase() === 'gemma4:e2b';
+}
+
 /** True for Gemma 4 26B workstation / MoE tags. */
 export function isGemma426b(name: string): boolean {
   const n = normalizeOllamaModelRef(name);

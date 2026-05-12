@@ -144,6 +144,8 @@ export function useChat(
   runtimeAdapter: LLMRuntimeAdapter,
   model: string,
   thinkEnabled: boolean,
+  thinkingAvailable: boolean,
+  onThinkingUnsupported: (modelName: string) => void,
   modelTier: ModelTier = 'full',
   runtimeLimits?: { numCtx?: number; numPredict?: number },
   videoAttachmentFileRef?: MutableRefObject<File | null>,
@@ -183,6 +185,7 @@ export function useChat(
     const myClearId = clearIdRef.current;
     let history = startHistory;
     const workstationLarge = isGemma426b(model) || isGemma431b(model);
+    let effectiveThinkEnabled = thinkEnabled && thinkingAvailable;
     const defaultNumCtx = workstationLarge ? OLLAMA_CHAT_WORKSTATION_CTX : OLLAMA_CHAT_PROFILE.numCtx;
     const defaultNumPredict = workstationLarge ? OLLAMA_CHAT_WORKSTATION_PREDICT : OLLAMA_CHAT_PROFILE.numPredict;
     const numCtx = runtimeLimits?.numCtx ?? defaultNumCtx;
@@ -232,14 +235,14 @@ export function useChat(
       let assembled = '';
       let thinking = '';
       let firedToolCalls: ToolCall[] | null = null;
-      let loopError: Error | null = null;
+      let loopError: unknown = null;
 
       await new Promise<void>((resolve) => {
         runtimeAdapter.streamChat(
           {
             model,
             messages: buildRequestMessages(history, modelTier, simpleMode),
-            think: thinkEnabled,
+            think: effectiveThinkEnabled,
             temperature: OLLAMA_CHAT_PROFILE.temperature,
             topP: OLLAMA_CHAT_PROFILE.topP,
             topK: OLLAMA_CHAT_PROFILE.topK,
@@ -289,8 +292,23 @@ export function useChat(
       }
 
       if (loopError) {
+        const normalizedError = loopError instanceof Error ? loopError : new Error(String(loopError));
+        const errorMessage = normalizedError.message;
+        const shouldRetryWithoutThinking =
+          effectiveThinkEnabled &&
+          /HTTP 500:/i.test(errorMessage) &&
+          /unable to load model/i.test(errorMessage);
+
+        if (shouldRetryWithoutThinking) {
+          onThinkingUnsupported(model);
+          effectiveThinkEnabled = false;
+          setStreamingText('');
+          setStreamingThinking('');
+          continue;
+        }
+
         setStatus('error');
-        setErrorMsg(formatRuntimeError(loopError, model));
+        setErrorMsg(formatRuntimeError(normalizedError, model));
         setStreamingText('');
         setStreamingThinking('');
         return;
@@ -380,7 +398,7 @@ export function useChat(
       setStatus('idle');
       return;
     }
-  }, [model, thinkEnabled, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
+  }, [model, onThinkingUnsupported, thinkEnabled, thinkingAvailable, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
 
   const sendMessage = useCallback((input: SendMessageInput) => {
     const { text, images, videos, hasAttachment, contextNote } = normalizeMessageInput(input);

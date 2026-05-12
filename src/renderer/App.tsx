@@ -12,12 +12,13 @@ import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
 import type { LlamaCppRuntimeConfig, RuntimeKind } from './services/OllamaService';
 import { DEFAULT_LLAMA_CACHE_TYPE, getConfiguredLlamaPathForModel, LLAMA_CACHE_TYPE_K_KEY, LLAMA_CACHE_TYPE_V_KEY, LLAMA_GPU_LAYERS_KEY, LLAMA_MODEL_PRESETS, LLAMA_NUM_CTX_KEY, LLAMA_NUM_PREDICT_KEY, LLAMA_PORT_KEY, LLAMA_SERVER_PATH_KEY, LLAMA_STT_PORT_KEY, persistLlamaModelPaths, readLlamaCppSetupConfig, readSelectedRuntime, RUNTIME_SELECTED_KEY, type LlamaCppSetupConfig, type LlamaModelPresetId } from './config/llamaSetup';
-import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, pickCodingModel, pickGreekTranscribeModel, pickTranscribeModel, sortGemma4CodingModelsSmallestFirst, getModelTier } from './utils/pickCodingModel';
+import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, isPlainGemma4E2b, pickCodingModel, pickGreekTranscribeModel, pickTranscribeModel, sortGemma4CodingModelsSmallestFirst, getModelTier } from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import type { AppLanguage } from './components/WelcomeScreen';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
+const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
 const MUSIC_TRACK_SRC = './Awakening.mp3';
 const MUSIC_VOLUME_NORMAL = 0.35;
 const MUSIC_VOLUME_DUCKED = 0.12;
@@ -46,6 +47,16 @@ export default function App() {
   const [musicEnabled, setMusicEnabled] = useState<boolean>(() => {
     const stored = localStorage.getItem(MUSIC_ENABLED_KEY);
     return stored == null ? true : stored === 'true';
+  });
+  const [thinkingDisabledModels, setThinkingDisabledModels] = useState<string[]>(() => {
+    const stored = localStorage.getItem(THINKING_DISABLED_MODELS_KEY);
+    if (!stored) return [];
+    try {
+      const parsed = JSON.parse(stored) as unknown;
+      return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
+    } catch {
+      return [];
+    }
   });
   const [voiceActive, setVoiceActive] = useState(false);
 
@@ -99,6 +110,10 @@ export default function App() {
     return [...new Set(collected.map((model) => model.trim()).filter(Boolean))];
   }, [codingModel, greekTranscribeModel, transcribeModel]);
   const modelTier = useMemo(() => getModelTier(codingModel), [codingModel]);
+  const thinkingAvailable = useMemo(
+    () => !isPlainGemma4E2b(codingModel) && !thinkingDisabledModels.includes(codingModel),
+    [codingModel, thinkingDisabledModels],
+  );
   const misconfiguredMmprojTabs = useMemo(
     () => LLAMA_MODEL_PRESETS
       .filter((preset) => pointsToMmproj(llamaSetup.modelPaths[preset.id]))
@@ -123,7 +138,20 @@ export default function App() {
     [llamaSetup.numCtx, llamaSetup.numPredict, runtimeInUse],
   );
   const videoAttachmentFileRef = useRef<File | null>(null);
-  const { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext, injectContext } = useChat(runtimeAdapter, codingModel, chatThinkEnabled, modelTier, customRuntimeLimits, videoAttachmentFileRef);
+  const { messages, streamingText, streamingThinking, latestCode, lastSaved, lastAudit, status, errorMsg, ctxUsedPct, sendMessage, cancel, retry, clearContext, injectContext } = useChat(
+    runtimeAdapter,
+    codingModel,
+    chatThinkEnabled,
+    thinkingAvailable,
+    (modelName) => {
+      setThinkingDisabledModels((current) => current.includes(modelName) ? current : [...current, modelName]);
+      setChatThinkEnabled(false);
+      localStorage.setItem('g4k-chat-think', 'false');
+    },
+    modelTier,
+    customRuntimeLimits,
+    videoAttachmentFileRef,
+  );
 
   const [sidebarWidth, setSidebarWidth] = useState(() => { const stored = localStorage.getItem('g4k-sidebar-width'); const value = stored ? parseInt(stored, 10) : 196; return Number.isNaN(value) || value < 80 || value > 400 ? 196 : value; });
   const [chatWidth, setChatWidth] = useState(() => { const stored = localStorage.getItem('g4k-chat-width'); const value = stored ? parseInt(stored, 10) : 390; return Number.isNaN(value) || value < 200 || value > 700 ? 390 : value; });
@@ -150,6 +178,13 @@ export default function App() {
   useEffect(() => { localStorage.setItem('g4k-sidebar-width', String(sidebarWidth)); }, [sidebarWidth]);
   useEffect(() => { localStorage.setItem('g4k-chat-width', String(chatWidth)); }, [chatWidth]);
   useEffect(() => { localStorage.setItem(MUSIC_ENABLED_KEY, String(musicEnabled)); }, [musicEnabled]);
+  useEffect(() => { localStorage.setItem(THINKING_DISABLED_MODELS_KEY, JSON.stringify(thinkingDisabledModels)); }, [thinkingDisabledModels]);
+  useEffect(() => {
+    if (!thinkingAvailable && chatThinkEnabled) {
+      setChatThinkEnabled(false);
+      localStorage.setItem('g4k-chat-think', 'false');
+    }
+  }, [chatThinkEnabled, thinkingAvailable]);
   useEffect(() => {
     const modelsForCleanup = runtimeInUse === 'ollama' ? ollamaCleanupModels : [];
     void window.electronAPI.setOllamaCleanupTargets(runtimeInUse, modelsForCleanup);
@@ -371,6 +406,7 @@ export default function App() {
           codingModel={codingModel}
           availableCodingModels={availableCodingModels}
           chatThinkEnabled={chatThinkEnabled}
+          thinkingAvailable={thinkingAvailable}
           showThinking={showThinking}
           musicEnabled={musicEnabled}
           filename={filename}

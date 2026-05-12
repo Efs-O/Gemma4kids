@@ -13,7 +13,7 @@ directories:
   output: release
 
 win:
-  icon: assets/icon.png
+  icon: icon.png
   signAndEditExecutable: false
   extraResources:
     - from: piper/win
@@ -33,7 +33,7 @@ nsis:
   license: LICENSE
 
 mac:
-  icon: assets/icon.png
+  icon: icon.png
   category: public.app-category.education
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
@@ -54,7 +54,7 @@ dmg:
   title: "Gemma4kids ${version}"
 
 linux:
-  icon: assets/icon.png
+  icon: icon.png
   category: Education
   extraResources:
     - from: piper/linux/x64/piper

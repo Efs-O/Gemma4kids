@@ -5,6 +5,7 @@ interface Props {
   codingModel: string;
   availableCodingModels: string[];
   chatThinkEnabled: boolean;
+  thinkingAvailable: boolean;
   showThinking: boolean;
   musicEnabled: boolean;
   filename: string;
@@ -28,6 +29,7 @@ export function AppHeader(props: Props) {
     codingModel,
     availableCodingModels,
     chatThinkEnabled,
+    thinkingAvailable,
     showThinking,
     musicEnabled,
     filename,
@@ -53,8 +55,8 @@ export function AppHeader(props: Props) {
           {availableCodingModels.map((modelName) => <option key={modelName} value={modelName}>{modelName}</option>)}
         </select>
         <label className="think-toggle" title="Controls thinking for the coding reply model. Voice transcription always keeps thinking off.">
-          <input type="checkbox" checked={chatThinkEnabled} onChange={(event) => onThinkToggle(event.target.checked)} />
-          <span>Think {chatThinkEnabled ? 'On' : 'Off'}</span>
+          <input type="checkbox" checked={chatThinkEnabled} onChange={(event) => onThinkToggle(event.target.checked)} disabled={!thinkingAvailable} />
+          <span>{thinkingAvailable ? `Think ${chatThinkEnabled ? 'On' : 'Off'}` : 'Think Unavailable'}</span>
         </label>
         <label className="think-toggle" title="Show Gemma's reasoning bubble when the reply model returns it.">
           <input type="checkbox" checked={showThinking} onChange={(event) => onShowThinkingToggle(event.target.checked)} />
