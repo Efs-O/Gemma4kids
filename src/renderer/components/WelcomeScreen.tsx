@@ -25,7 +25,7 @@ export function WelcomeScreen({ onSelect }: Props) {
     <div className="welcome-overlay">
       <img
         className="welcome-logo"
-        src="assets/icon.png"
+        src="GEMMA.png"
         alt="Gemma4kids"
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
       />

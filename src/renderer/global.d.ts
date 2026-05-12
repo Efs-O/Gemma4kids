@@ -12,6 +12,7 @@ declare global {
     cacheTypeK: string;
     cacheTypeV: string;
     reasoningEnabled: boolean;
+    sttModelPath?: string;
   }
 
   interface LlamaCppSttConfig {
@@ -29,6 +30,7 @@ declare global {
     message?: string;
     details?: string[];
     mmprojPath?: string;
+    sttMmprojPath?: string;
   }
 
   interface LlamaCppModelInfo {

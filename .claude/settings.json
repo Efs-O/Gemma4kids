@@ -12,7 +12,11 @@
       "Bash(curl -s http://127.0.0.1:8080/v1/chat/completions -H \"Content-Type: application/json\" -d \"{\\\\\"model\\\\\":\\\\\"gemma-4-26B-A4B-it-UD-Q3_K_M.gguf\\\\\",\\\\\"messages\\\\\":[{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"What is 2+2?\\\\\"}],\\\\\"max_tokens\\\\\":200,\\\\\"stream\\\\\":false,\\\\\"chat_template_kwargs\\\\\":{\\\\\"enable_thinking\\\\\":true}}\")",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); c=d['choices'][0]['message']; print\\('CONTENT:',repr\\(c.get\\('content',''\\)[:300]\\)\\); print\\('REASONING:',repr\\(c.get\\('reasoning_content',''\\)[:300]\\)\\)\")",
       "Bash(curl -s http://127.0.0.1:8080/v1/chat/completions -H \"Content-Type: application/json\" -d \"{\\\\\"model\\\\\":\\\\\"gemma-4-26B-A4B-it-UD-Q3_K_M.gguf\\\\\",\\\\\"messages\\\\\":[{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"What is 2+2?\\\\\"}],\\\\\"max_tokens\\\\\":200,\\\\\"stream\\\\\":false,\\\\\"chat_template_kwargs\\\\\":{\\\\\"enable_thinking\\\\\":false}}\")",
-      "Bash(curl -s http://127.0.0.1:8080/v1/chat/completions -H \"Content-Type: application/json\" -d \"{\\\\\"model\\\\\":\\\\\"gemma-4-26B-A4B-it-UD-Q3_K_M.gguf\\\\\",\\\\\"messages\\\\\":[{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"What is 2+2?\\\\\"},{\\\\\"role\\\\\":\\\\\"assistant\\\\\",\\\\\"content\\\\\":\\\\\"2 + 2 = 4\\\\\"},{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"And 3+3?\\\\\"}],\\\\\"max_tokens\\\\\":200,\\\\\"stream\\\\\":false,\\\\\"chat_template_kwargs\\\\\":{\\\\\"enable_thinking\\\\\":true}}\")"
+      "Bash(curl -s http://127.0.0.1:8080/v1/chat/completions -H \"Content-Type: application/json\" -d \"{\\\\\"model\\\\\":\\\\\"gemma-4-26B-A4B-it-UD-Q3_K_M.gguf\\\\\",\\\\\"messages\\\\\":[{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"What is 2+2?\\\\\"},{\\\\\"role\\\\\":\\\\\"assistant\\\\\",\\\\\"content\\\\\":\\\\\"2 + 2 = 4\\\\\"},{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"And 3+3?\\\\\"}],\\\\\"max_tokens\\\\\":200,\\\\\"stream\\\\\":false,\\\\\"chat_template_kwargs\\\\\":{\\\\\"enable_thinking\\\\\":true}}\")",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\efso office\\\\Desktop\\\\Gemma4kids\\\\scripts\")",
+      "Bash(Select-Object Name)",
+      "Bash(grep \"^Samples/.*\\\\.html$\")",
+      "PowerShell($log = \"$env:APPDATA\\\\gemma4kids\\\\llama-cpp-runtime.log\"; if \\(Test-Path $log\\) { Get-Content $log | Select-Object -First 20 } else { \"Log not found\" })"
     ]
   },
   "hooks": {

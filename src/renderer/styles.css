@@ -1617,8 +1617,8 @@ body {
 }
 
 .welcome-logo {
-  width: 180px;
-  height: 180px;
+  width: clamp(200px, 28vmin, 340px);
+  height: clamp(200px, 28vmin, 340px);
   object-fit: contain;
 }
 

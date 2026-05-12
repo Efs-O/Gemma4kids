@@ -239,7 +239,7 @@ $script:refocusTimer.Add_Tick({
     $form.BringToFront()
     $form.Activate()
     [Win32Focus]::SetForegroundWindow($form.Handle) | Out-Null
-    Focus-List
+    Set-ListFocus
 })
 
 function Show-Status([string]$msg, [string]$color = "255,120,80") {
@@ -249,7 +249,7 @@ function Show-Status([string]$msg, [string]$color = "255,120,80") {
     $statusTimer.Stop(); $statusTimer.Start()
 }
 
-function Focus-List {
+function Set-ListFocus {
     if ($listBox.Items.Count -gt 0) {
         $splitContainer.Panel1.Select() | Out-Null
         $listBox.Select()
@@ -260,7 +260,7 @@ function Focus-List {
     }
 }
 
-function Load-Preview([bool]$showStatus = $false) {
+function Show-Preview([bool]$showStatus = $false) {
     if ($AllItems.Count -eq 0) {
         if ($script:UseWebView2) {
             $previewBrowser.Source = [System.Uri]::new("about:blank")
@@ -311,11 +311,11 @@ function Update-Display {
     $listBox.SelectedIndex = $script:Idx
     $listBox.TopIndex = [Math]::Max(0, $script:Idx - 5)
     $script:IsSyncingListSelection = $false
-    Load-Preview
+    Show-Preview
 }
 
 # -- Actions -----------------------------------------------------------------
-function Refresh-Items {
+function Update-Items {
     $previousHtmlPath = $null
     if ($AllItems.Count -gt 0 -and $script:Idx -ge 0 -and $script:Idx -lt $AllItems.Count) {
         $previousHtmlPath = $AllItems[$script:Idx].HtmlPath
@@ -355,7 +355,7 @@ function Refresh-Items {
     $script:IsSyncingListSelection = $false
     Update-Display
     Show-Status "Refreshed file list" "90,200,90"
-    Focus-List
+    Set-ListFocus
 }
 
 function Open-Current {
@@ -368,10 +368,10 @@ function Open-Current {
     $script:refocusTimer.Start()
 }
 
-function Preview-Current {
+function Show-CurrentPreview {
     if ($AllItems.Count -eq 0) { return }
-    Load-Preview $true
-    Focus-List
+    Show-Preview $true
+    Set-ListFocus
 }
 
 function Remove-Current {
@@ -405,7 +405,7 @@ function Remove-Current {
 
     Show-Status "Recycled: $deleted"
     Update-Display
-    Focus-List
+    Set-ListFocus
 }
 
 function Move-Next {
@@ -413,7 +413,7 @@ function Move-Next {
         $script:Idx++
         Update-Display
     }
-    Focus-List
+    Set-ListFocus
 }
 
 function Move-Prev {
@@ -421,15 +421,15 @@ function Move-Prev {
         $script:Idx--
         Update-Display
     }
-    Focus-List
+    Set-ListFocus
 }
 
-function Handle-KeyPress {
+function Invoke-KeyPressAction {
     param($e)
 
     switch ($e.KeyCode) {
         "Return" {
-            Preview-Current
+            Show-CurrentPreview
             $e.Handled = $true
             $e.SuppressKeyPress = $true
         }
@@ -444,7 +444,7 @@ function Handle-KeyPress {
             $e.SuppressKeyPress = $true
         }
         "F5" {
-            Refresh-Items
+            Update-Items
             $e.Handled = $true
             $e.SuppressKeyPress = $true
         }
@@ -487,7 +487,7 @@ $listBox.Add_DoubleClick({ Open-Current })
 foreach ($control in @($form, $listBox, $panelRight, $btnPreview, $btnOpen, $btnDelete, $btnRefresh, $btnNext, $btnPrev)) {
     $control.Add_KeyDown({
         param($s, $e)
-        Handle-KeyPress $e
+        Invoke-KeyPressAction $e
     })
 }
 
@@ -500,18 +500,18 @@ foreach ($control in @($listBox, $btnPreview, $btnOpen, $btnDelete, $btnRefresh,
     })
 }
 
-$btnPreview.Add_Click({ Preview-Current; Focus-List })
-$btnOpen.Add_Click({   Open-Current; Focus-List })
-$btnDelete.Add_Click({ Remove-Current; Focus-List })
-$btnRefresh.Add_Click({ Refresh-Items; Focus-List })
-$btnNext.Add_Click({   Move-Next; Focus-List })
-$btnPrev.Add_Click({   Move-Prev; Focus-List })
+$btnPreview.Add_Click({ Show-CurrentPreview; Set-ListFocus })
+$btnOpen.Add_Click({   Open-Current; Set-ListFocus })
+$btnDelete.Add_Click({ Remove-Current; Set-ListFocus })
+$btnRefresh.Add_Click({ Update-Items; Set-ListFocus })
+$btnNext.Add_Click({   Move-Next; Set-ListFocus })
+$btnPrev.Add_Click({   Move-Prev; Set-ListFocus })
 
-$form.Add_Click({ $form.Activate(); Focus-List })
-$panelRight.Add_Click({ $form.Activate(); Focus-List })
+$form.Add_Click({ $form.Activate(); Set-ListFocus })
+$panelRight.Add_Click({ $form.Activate(); Set-ListFocus })
 $form.Add_Activated({
     $null = $form.BeginInvoke([System.Action]{
-        Focus-List
+        Set-ListFocus
     })
 })
 
@@ -529,5 +529,5 @@ $splitContainer.Panel1.Controls.Add($listBox)
 $splitContainer.Panel2.Controls.Add($panelRight)
 $form.Controls.Add($splitContainer)
 Update-Display
-Focus-List
+Set-ListFocus
 $form.ShowDialog() | Out-Null

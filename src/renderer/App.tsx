@@ -60,7 +60,7 @@ export default function App() {
     reasoningEnabled: chatThinkEnabled,
   }), [activeLlamaModel, chatThinkEnabled, llamaMmprojSearchPaths, llamaSetup]);
 
-  const { runtime: runtimeInUse, adapter: runtimeAdapter, status: runtimeStatus, models, errorMsg: runtimeErrorMsg, llamaMmprojPath, recheck } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
+  const { runtime: runtimeInUse, adapter: runtimeAdapter, status: runtimeStatus, models, errorMsg: runtimeErrorMsg, llamaMmprojPath, llamaSttMmprojPath, recheck } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
 
   const autoOllamaModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
@@ -101,12 +101,12 @@ export default function App() {
       const labelText = misconfiguredMmprojTabs.join(', ');
       return `${labelText} ${misconfiguredMmprojTabs.length === 1 ? 'is' : 'are'} pointing to an mmproj file instead of a model .gguf. Fix ${misconfiguredMmprojTabs.length === 1 ? 'that tab' : 'those tabs'} first.`;
     }
-    if (runtimeStatus !== 'ready' || llamaMmprojPath) return '';
-    if (activeLlamaRuntimeConfig.sttModelPath.trim()) {
-      return 'No mmproj file found next to your model — voice is unavailable. Put the mmproj .gguf in the same folder as your model file.';
+    if (runtimeStatus !== 'ready') return '';
+    if (activeLlamaRuntimeConfig.sttModelPath.trim() && !llamaSttMmprojPath) {
+      return 'No mmproj file found next to your voice model (E2B/E4B) — voice is unavailable. Put the mmproj-F16.gguf in the same folder as your E2B/E4B model file.';
     }
     return '';
-  }, [activeLlamaRuntimeConfig.sttModelPath, llamaMmprojPath, misconfiguredMmprojTabs, runtimeInUse, runtimeStatus]);
+  }, [activeLlamaRuntimeConfig.sttModelPath, llamaSttMmprojPath, misconfiguredMmprojTabs, runtimeInUse, runtimeStatus]);
 
   const customRuntimeLimits = useMemo(
     () => runtimeInUse === 'llama_cpp' ? { numCtx: llamaSetup.numCtx, numPredict: llamaSetup.numPredict } : undefined,

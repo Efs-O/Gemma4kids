@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import {
   findMmprojForConfig,
+  resolveGgufPath,
   runtimeConfigKey,
   broadcastToWindows,
   buildHealthResult,
@@ -92,8 +93,10 @@ async function unloadOllamaModels(models: string[]): Promise<void> {
 }
 
 async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCppHealthResult> {
-  const invalid = validateLlamaConfig(config);
+  const resolvedConfig: LlamaCppConfig = { ...config, modelPath: resolveGgufPath(config.modelPath) };
+  const invalid = validateLlamaConfig(resolvedConfig);
   if (invalid) return invalid;
+  config = resolvedConfig;
 
   const configKey = runtimeConfigKey(config);
   if (managedLlamaStartup?.configKey === configKey) {
@@ -111,7 +114,11 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     const startupTimeoutMs = getLlamaStartupTimeoutMs(config.modelPath);
     if (managedLlamaServer && managedLlamaServer.configKey === configKey) {
       if (managedLlamaServer.process.exitCode === null && await canReachLlamaServer(config.port, 1500)) {
-        return { ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'), mmprojPath: findMmprojForConfig(config.modelPath, config.mmprojSearchPaths) ?? undefined };
+        return {
+          ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'),
+          mmprojPath: findMmprojForConfig(config.modelPath, config.mmprojSearchPaths) ?? undefined,
+          sttMmprojPath: config.sttModelPath?.trim() ? findMmprojForConfig(config.sttModelPath.trim(), config.mmprojSearchPaths) ?? undefined : undefined,
+        };
       }
       await stopManagedLlamaServer();
     } else if (managedLlamaServer) {
@@ -208,8 +215,9 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       }
 
       if (await canReachLlamaServer(config.port, 1500)) {
-        appendLlamaRuntimeLog(logPath, `[ready] /v1/models responded successfully mmproj=${detectedMmproj ?? 'none'}`);
-        return { ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'), mmprojPath: detectedMmproj ?? undefined };
+        const sttMmproj = config.sttModelPath?.trim() ? findMmprojForConfig(config.sttModelPath.trim(), config.mmprojSearchPaths) : null;
+        appendLlamaRuntimeLog(logPath, `[ready] /v1/models responded successfully mmproj=${detectedMmproj ?? 'none'} stt_mmproj=${sttMmproj ?? 'none'}`);
+        return { ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'), mmprojPath: detectedMmproj ?? undefined, sttMmprojPath: sttMmproj ?? undefined };
       }
 
       await new Promise((resolve) => setTimeout(resolve, 500));

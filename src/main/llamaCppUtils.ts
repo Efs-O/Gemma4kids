@@ -36,6 +36,13 @@ function resolveMmprojSearchDirs(primaryModelPath: string, extraModelPaths: stri
         seenDirs.add(dir);
         dirs.push({ dir, family: extractGemmaFamilyToken(trimmed) ?? extractGemmaFamilyToken(dir) });
       }
+      // Also check one level up (parent dir) as a fallback — handles the case where
+      // mmproj files live in the root folder and model files are in per-model subdirs.
+      const parentDir = path.dirname(dir);
+      if (parentDir !== dir && !seenDirs.has(parentDir)) {
+        seenDirs.add(parentDir);
+        dirs.push({ dir: parentDir, family: null });
+      }
     } catch {
       // Ignore invalid search candidates and continue with the rest.
     }
@@ -137,6 +144,22 @@ export function summarizeChatRequest(request: Record<string, unknown>): string {
     stream: request.stream === true,
     lastRoles,
   });
+}
+
+export function resolveGgufPath(inputPath: string): string {
+  const trimmed = inputPath.trim();
+  if (!trimmed) return trimmed;
+  try {
+    if (!fs.existsSync(trimmed)) return trimmed;
+    if (!fs.statSync(trimmed).isDirectory()) return trimmed;
+    const files = fs.readdirSync(trimmed).filter(
+      (f) => f.toLowerCase().endsWith('.gguf') && !f.toLowerCase().includes('mmproj'),
+    );
+    if (files.length === 1) return path.join(trimmed, files[0]);
+  } catch {
+    // fall through and let validation surface the error
+  }
+  return trimmed;
 }
 
 export function validateLlamaConfig(config: LlamaCppConfig): LlamaCppHealthResult | null {

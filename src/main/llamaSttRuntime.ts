@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { resolveGgufPath } from './llamaCppUtils';
 
 const LLAMA_STT_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_STT_CTX_SIZE = 8192;
@@ -347,8 +348,10 @@ export async function stopManagedSttServer(): Promise<void> {
 }
 
 async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaCppHealthResult> {
-  const invalid = validateSttConfig(config);
+  const resolvedConfig: LlamaCppSttConfig = { ...config, sttModelPath: resolveGgufPath(config.sttModelPath) };
+  const invalid = validateSttConfig(resolvedConfig);
   if (invalid) return invalid;
+  config = resolvedConfig;
 
   const configKey = sttConfigKey(config);
 

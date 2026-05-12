@@ -17,6 +17,7 @@ export interface UseOllamaResult {
   models: string[];
   errorMsg: string;
   llamaMmprojPath: string | null;
+  llamaSttMmprojPath: string | null;
   recheck: () => void;
 }
 
@@ -34,6 +35,7 @@ export function useOllama(
   const [models, setModels] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
   const [llamaMmprojPath, setLlamaMmprojPath] = useState<string | null>(null);
+  const [llamaSttMmprojPath, setLlamaSttMmprojPath] = useState<string | null>(null);
 
   const check = useCallback(async () => {
     setStatus('checking');
@@ -44,7 +46,9 @@ export function useOllama(
         throw new Error(health.error ?? 'The selected runtime is not ready.');
       }
       if (runtime === 'llama_cpp') {
-        setLlamaMmprojPath((health as LlamaCppHealthResult).mmprojPath ?? null);
+        const llamaHealth = health as LlamaCppHealthResult;
+        setLlamaMmprojPath(llamaHealth.mmprojPath ?? null);
+        setLlamaSttMmprojPath(llamaHealth.sttMmprojPath ?? null);
       }
       const found = await adapter.listModels();
       const modelIds = found.map((model) => model.id);
@@ -54,6 +58,7 @@ export function useOllama(
     } catch (error) {
       setModels([]);
       setLlamaMmprojPath(null);
+      setLlamaSttMmprojPath(null);
       setStatus('offline');
       setErrorMsg(error instanceof Error ? error.message : String(error));
     }
@@ -61,5 +66,5 @@ export function useOllama(
 
   useEffect(() => { check(); }, [check]);
 
-  return { runtime, adapter, status, models, errorMsg, llamaMmprojPath, recheck: check };
+  return { runtime, adapter, status, models, errorMsg, llamaMmprojPath, llamaSttMmprojPath, recheck: check };
 }
