@@ -16,7 +16,11 @@
       "Bash(Get-ChildItem \"C:\\\\Users\\\\efso office\\\\Desktop\\\\Gemma4kids\\\\scripts\")",
       "Bash(Select-Object Name)",
       "Bash(grep \"^Samples/.*\\\\.html$\")",
-      "PowerShell($log = \"$env:APPDATA\\\\gemma4kids\\\\llama-cpp-runtime.log\"; if \\(Test-Path $log\\) { Get-Content $log | Select-Object -First 20 } else { \"Log not found\" })"
+      "PowerShell($log = \"$env:APPDATA\\\\gemma4kids\\\\llama-cpp-runtime.log\"; if \\(Test-Path $log\\) { Get-Content $log | Select-Object -First 20 } else { \"Log not found\" })",
+      "Bash(gh api *)",
+      "Bash(gh release *)",
+      "Bash(gh run *)",
+      "Bash(gh repo *)"
     ]
   },
   "hooks": {
