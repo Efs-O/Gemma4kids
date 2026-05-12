@@ -54,7 +54,7 @@ dmg:
   title: "Gemma4kids ${version}"
 
 linux:
-  icon: icon.png
+  icon: icons
   category: Education
   extraResources:
     - from: piper/linux/x64/piper
