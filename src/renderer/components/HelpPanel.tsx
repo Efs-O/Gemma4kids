@@ -47,7 +47,7 @@ export function HelpPanel({ onClose, onOpenSetupAssistant }: Props) {
 
           <section className="help-section">
             <h3>Model selector</h3>
-            <p>Choose which Gemma model answers you. <strong>gemma4:31b</strong> and <strong>gemma4:26b</strong> make the richest animations (need a powerful computer). <strong>gemma4:e4b</strong> is faster and smaller. <strong>gemma4:e2b</strong> works on older computers with less memory.</p>
+            <p>Choose which Gemma model answers you. <strong>gemma4:31b</strong> and <strong>gemma4:26b</strong> make the richest animations (need a powerful computer). <strong>gemma4:latest</strong> is the current Ollama E4B-sized model for smaller machines. <strong>gemma4:e2b</strong> works on older computers with less memory.</p>
           </section>
 
           <section className="help-section">

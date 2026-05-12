@@ -5,10 +5,17 @@ export function normalizeOllamaModelRef(name: string): string {
   return slash >= 0 ? t.slice(slash + 1) : t;
 }
 
-/** True for Gemma 4 edge E4B tags (gemma4:e4b, gemma4:e4b-it-...). */
+const OLLAMA_STT_E4B_CANDIDATES = [
+  'gemma4:latest',
+  'gemma4gr:e4b',
+  'gemma4:e4b',
+  'gemma4gr-e4b:latest',
+];
+
+/** True for Gemma 4 edge E4B tags (gemma4:latest, gemma4:e4b, gemma4:e4b-it-...). */
 export function isGemma4EdgeE4b(name: string): boolean {
   const n = normalizeOllamaModelRef(name);
-  return /^gemma4:e4b(?:$|[-.])/i.test(n);
+  return /^gemma4:e4b(?:$|[-.])/i.test(n) || /^gemma4:latest$/i.test(n);
 }
 
 /** True for Gemma 4 edge E2B tags (gemma4:e2b, gemma4:e2b-it-...). Lightest option for older GPUs. */
@@ -32,6 +39,20 @@ export function isGemma426b(name: string): boolean {
 export function isGemma431b(name: string): boolean {
   const n = normalizeOllamaModelRef(name);
   return /^gemma4:31b(?:$|[-.])/i.test(n);
+}
+
+function findFirstMatchingModel(models: string[], candidates: string[]): string | undefined {
+  const normalizedModels = models.map((model) => ({
+    original: model,
+    normalized: normalizeOllamaModelRef(model).toLowerCase(),
+  }));
+
+  for (const candidate of candidates) {
+    const match = normalizedModels.find((model) => model.normalized === candidate);
+    if (match) return match.original;
+  }
+
+  return undefined;
 }
 
 /** Sort key for Gemma 4 coding tags: smallest (E2B) → largest (31B). */
@@ -83,20 +104,14 @@ export function getModelTier(name: string): ModelTier {
 
 /** Exact Ollama name for STT, or default string if none pulled yet. */
 export function pickTranscribeModel(models: string[]): string {
-  const e4b = models.find(isGemma4EdgeE4b);
-  const e2b = models.find(isGemma4EdgeE2b);
-  return e4b ?? e2b ?? 'gemma4:e4b';
+  const e4b = findFirstMatchingModel(models, OLLAMA_STT_E4B_CANDIDATES);
+  return e4b ?? OLLAMA_STT_E4B_CANDIDATES[0];
 }
 
-/**
- * Greek STT fallback: prefer E2B when available.
- * Current local tests show E4B is stronger for German/English, but Greek audio
- * is less unstable on E2B. Keep this helper isolated so we can remove it if a
- * future Gemma/Ollama update fixes Greek ASR quality on E4B.
- */
 export function pickGreekTranscribeModel(models: string[]): string | null {
-  const e2b = models.find(isGemma4EdgeE2b);
-  if (e2b) return e2b;
-  const e4b = models.find(isGemma4EdgeE4b);
-  return e4b ?? null;
+  return findFirstMatchingModel(models, OLLAMA_STT_E4B_CANDIDATES) ?? null;
+}
+
+export function hasSupportedOllamaTranscribeModel(models: string[]): boolean {
+  return findFirstMatchingModel(models, OLLAMA_STT_E4B_CANDIDATES) !== undefined;
 }

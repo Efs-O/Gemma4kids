@@ -225,7 +225,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
     return (
       <button
         className="btn-mic btn-mic-disabled"
-        title={disabledReason ?? 'Voice unavailable: install gemma4:e4b or gemma4:e2b in Ollama, or place the mmproj .gguf next to your model when using llama.cpp'}
+        title={disabledReason ?? 'Voice unavailable: install gemma4:latest or gemma4:e4b in Ollama, or place the mmproj .gguf next to your model when using llama.cpp'}
         disabled
       >
         🎤

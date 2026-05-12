@@ -241,7 +241,7 @@ export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
 
 export async function transcribeAudioBlob(
   blob: Blob,
-  model: string = 'gemma4:e4b',
+  model: string = 'gemma4:latest',
   keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<{ text: string; durationSeconds: number }> {
@@ -256,7 +256,7 @@ export async function transcribeAudioBlob(
 export async function transcribeAudioBlobWithRuntime(
   adapter: LLMRuntimeAdapter,
   blob: Blob,
-  model: string = 'gemma4:e4b',
+  model: string = 'gemma4:latest',
   keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<{ text: string; durationSeconds: number }> {
@@ -272,14 +272,14 @@ export async function transcribeAudioBlobWithRuntime(
 }
 
 /**
- * Transcribe audio via Gemma 4 E4B.
+ * Transcribe audio via the selected Ollama STT model.
  * audioBase64 must be a base64-encoded 16kHz mono WAV (use audioBlobToWav16kBase64).
  * Workaround per https://github.com/ollama/ollama/issues/15333:
  *   - images field before text prompt, num_ctx capped at 8192.
  */
 export async function transcribe(
   audioBase64: string,
-  model: string = 'gemma4:e4b',
+  model: string = 'gemma4:latest',
   keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<string> {

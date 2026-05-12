@@ -12,7 +12,7 @@ import { useChat } from './hooks/useChat';
 import { useOllama } from './hooks/useOllama';
 import type { LlamaCppRuntimeConfig, RuntimeKind } from './services/OllamaService';
 import { DEFAULT_LLAMA_CACHE_TYPE, getConfiguredLlamaPathForModel, LLAMA_CACHE_TYPE_K_KEY, LLAMA_CACHE_TYPE_V_KEY, LLAMA_GPU_LAYERS_KEY, LLAMA_MODEL_PRESETS, LLAMA_NUM_CTX_KEY, LLAMA_NUM_PREDICT_KEY, LLAMA_PORT_KEY, LLAMA_SERVER_PATH_KEY, LLAMA_STT_PORT_KEY, persistLlamaModelPaths, readLlamaCppSetupConfig, readSelectedRuntime, RUNTIME_SELECTED_KEY, type LlamaCppSetupConfig, type LlamaModelPresetId } from './config/llamaSetup';
-import { isGemma4EdgeE4b, isGemma4EdgeE2b, isGemma426b, isGemma431b, isPlainGemma4E2b, pickCodingModel, pickGreekTranscribeModel, pickTranscribeModel, sortGemma4CodingModelsSmallestFirst, getModelTier } from './utils/pickCodingModel';
+import { hasSupportedOllamaTranscribeModel, isGemma426b, isGemma431b, isPlainGemma4E2b, pickCodingModel, pickGreekTranscribeModel, pickTranscribeModel, sortGemma4CodingModelsSmallestFirst, getModelTier } from './utils/pickCodingModel';
 import { auditHtml } from './htmlAudit';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import type { AppLanguage } from './components/WelcomeScreen';
@@ -88,7 +88,7 @@ export default function App() {
   const greekTranscribeModel = useMemo(() => pickGreekTranscribeModel(models), [models]);
   const voiceInputAvailable = useMemo(() => {
     if (runtimeInUse === 'llama_cpp') return activeLlamaRuntimeConfig.sttModelPath.trim() !== '';
-    return models.some(isGemma4EdgeE4b) || models.some(isGemma4EdgeE2b);
+    return hasSupportedOllamaTranscribeModel(models);
   }, [activeLlamaRuntimeConfig.sttModelPath, models, runtimeInUse]);
 
   const supportsVisualAttachments = runtimeAdapter.capabilities.supportsMultimodal;

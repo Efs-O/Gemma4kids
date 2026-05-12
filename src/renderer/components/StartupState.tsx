@@ -57,8 +57,8 @@ export function StartupNoModels({ onRecheck }: NoModelsProps) {
       <div style={{ fontSize: 64 }}>📥</div>
       <div className="startup-title">Gemma needs a download!</div>
       <div className="startup-msg">Ask a grown-up to open a terminal and type:</div>
-      <div className="startup-code">ollama pull gemma4:31b</div>
-      <div className="startup-msg" style={{ fontSize: '0.9rem', marginTop: 4 }}>(Or <code style={{ fontSize: '0.85em' }}>ollama pull gemma4:26b</code> · Optional voice: <code style={{ fontSize: '0.85em' }}>ollama pull gemma4:e4b</code>)</div>
+      <div className="startup-code">ollama pull gemma4:e2b</div>
+      <div className="startup-msg" style={{ fontSize: '0.9rem', marginTop: 4 }}>(Optional voice: <code style={{ fontSize: '0.85em' }}>ollama pull gemma4:latest</code>)</div>
       <button className="btn-recheck" onClick={onRecheck}>Check Again</button>
     </div>
   );
