@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gemma4kids Judge Quickstart</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --text: #151515;
+      --muted: #4d4d4d;
+      --rule: #d8d8d8;
+      --accent: #0d6b5d;
+      --bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.45 "Segoe UI", Arial, sans-serif;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 36px 44px 48px;
+    }
+
+    h1, h2 {
+      margin: 0 0 10px;
+      line-height: 1.15;
+    }
+
+    h1 {
+      font-size: 30px;
+    }
+
+    h2 {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid var(--rule);
+      font-size: 19px;
+    }
+
+    p {
+      margin: 0 0 10px;
+    }
+
+    ul, ol {
+      margin: 8px 0 12px 22px;
+      padding: 0;
+    }
+
+    li {
+      margin: 0 0 6px;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.95em;
+    }
+
+    pre {
+      margin: 10px 0 14px;
+      padding: 12px 14px;
+      background: #f6f8fa;
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    .lede {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .note {
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: #f4fbf9;
+      margin: 12px 0 14px;
+    }
+
+    .links li {
+      word-break: break-word;
+    }
+
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      main {
+        padding: 20px 26px 28px;
+      }
+
+      h2 {
+        break-after: avoid;
+      }
+
+      ul, ol, p, pre {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Gemma4kids Judge Quickstart</h1>
+    <p class="lede">Gemma4kids is an offline AI learning companion for children aged 6-11 built with Gemma 4. A child can ask questions, speak into the mic, attach an image or short video, or ask Gemma to create an editable HTML animation from a simple prompt such as "make fireworks explode."</p>
+    <p>This guide is written for hackathon judges who want the fastest path to running and understanding the app.</p>
+
+    <h2>Fastest Way To Evaluate It</h2>
+    <p>Recommended path: use the released desktop build plus Ollama.</p>
+    <p>You need:</p>
+    <ul>
+      <li>A Windows, macOS, or Linux machine</li>
+      <li>Ollama installed</li>
+      <li>At least one Gemma 4 model pulled locally</li>
+      <li>Internet only for initial setup and model download; normal use is local/offline</li>
+    </ul>
+    <p>Recommended model setup:</p>
+    <pre><code>ollama pull gemma4:e4b
+ollama pull gemma4:26b</code></pre>
+    <p>Why these two:</p>
+    <ul>
+      <li><code>gemma4:26b</code> gives the strongest coding and teaching experience</li>
+      <li><code>gemma4:e4b</code> enables voice transcription through the mic button</li>
+    </ul>
+
+    <h2>Install And Run</h2>
+    <ol>
+      <li>Install Ollama from <code>https://ollama.com/download</code></li>
+      <li>Pull the models above</li>
+      <li>Download Gemma4kids from <code>https://github.com/Efs-O/Gemma4kids/releases</code></li>
+      <li>Launch Gemma4kids</li>
+      <li>Pick a language on the welcome screen</li>
+      <li>Choose <code>Ollama</code> on the runtime screen</li>
+      <li>Wait for the app to detect your local Gemma models</li>
+    </ol>
+    <div class="note">
+      <strong>Unsigned hackathon builds:</strong> Windows: <code>More info</code> -&gt; <code>Run anyway</code>. macOS: right-click the app -&gt; <code>Open</code>.
+    </div>
+
+    <h2>60-Second Demo Path</h2>
+    <p>Use this exact flow if you want to evaluate the product quickly.</p>
+    <ol>
+      <li>Open the app and choose your language</li>
+      <li>Confirm the coding model is <code>gemma4:26b</code> if available</li>
+      <li>Type: <code>make fireworks explode</code></li>
+      <li>Wait for HTML to stream into the editor</li>
+      <li>Press <code>Save</code></li>
+      <li>Press <code>Open in Browser</code></li>
+      <li>Go back and type: <code>make them blue</code></li>
+      <li>Save again and open in browser again</li>
+    </ol>
+    <p>If voice is available:</p>
+    <ol>
+      <li>Press the mic button</li>
+      <li>Say: <code>make a bouncing ball</code></li>
+      <li>Wait for transcription and generation</li>
+    </ol>
+
+    <h2>What The Main Controls Do</h2>
+    <ul>
+      <li><code>Language picker</code>: chooses the session language before model loading begins</li>
+      <li><code>Runtime selector</code>: switches between <code>Ollama</code> and <code>llama.cpp</code></li>
+      <li><code>Coding model selector</code>: picks which local Gemma 4 model generates answers and code</li>
+      <li><code>Think On/Off</code>: enables or disables extra reasoning for the coding model</li>
+      <li><code>Show Thoughts</code>: shows the model's reasoning text in the chat when available</li>
+      <li><code>?</code>: opens the in-app help panel</li>
+      <li><code>Mic button</code>: records speech and converts it to text using a local Gemma speech workflow</li>
+      <li><code>Paperclip</code>: attaches an image or short video to the next message</li>
+      <li><code>Send</code>: sends the current prompt</li>
+      <li><code>New Chat</code>: clears the current conversation and starts fresh</li>
+      <li><code>Save</code>: saves the current HTML project to <code>Documents/KidAnimations/</code></li>
+      <li><code>Open in Browser</code>: opens the saved animation in the system browser</li>
+      <li><code>Read</code>: reads a Gemma reply aloud using local Piper TTS when that optional setup is installed</li>
+      <li><code>Gemma's version</code>: restores the editor back to the last AI-generated version</li>
+      <li><code>Left sidebar</code>: shows saved projects; clicking one loads it back into the editor</li>
+    </ul>
+
+    <h2>How The App Works</h2>
+    <p>Gemma4kids combines a child-friendly chat interface with a live code editor.</p>
+    <p>Typical flow:</p>
+    <ul>
+      <li>A child types or speaks a prompt</li>
+      <li>Gemma answers directly for learning questions, stories, jokes, or explanations</li>
+      <li>If the child wants to make something, Gemma generates a full HTML/CSS/JavaScript animation</li>
+      <li>The code streams into the editor so the child can see and change it</li>
+      <li>The child saves the file and opens it in the browser</li>
+    </ul>
+    <p>Important product behaviors:</p>
+    <ul>
+      <li>The app is local-first and offline-first</li>
+      <li>The renderer is restricted to local model endpoints only</li>
+      <li>AI-generated HTML is not rendered inside Electron; it opens in the user's browser</li>
+      <li>Saved projects persist under <code>Documents/KidAnimations/</code></li>
+      <li>If a filename already exists with different content, the app creates <code>-2</code>, <code>-3</code>, and so on instead of silently overwriting</li>
+    </ul>
+
+    <h2>Features Worth Testing</h2>
+    <ul>
+      <li>Ask a general learning question: <code>explain fractions like I am 8</code></li>
+      <li>Ask for an animation: <code>make a butterfly animation</code></li>
+      <li>Ask for an edit after generation: <code>make it faster</code> or <code>change the background to night</code></li>
+      <li>Attach an image and ask Gemma to describe it or turn it into an animation</li>
+      <li>Load a saved project from the sidebar and ask Gemma to modify it</li>
+    </ul>
+
+    <h2>Optional Features</h2>
+    <ul>
+      <li><code>llama.cpp</code> runtime support for fully local GGUF-based deployment. Judges can run Gemma4kids without Ollama by pointing the app at local GGUF model files; the app manages <code>llama-server</code> automatically for both coding and speech workloads. In the setup menu, judges can also change <code>llama.cpp</code> runtime parameters such as model paths and advanced inference settings.</li>
+      <li>Image and short-video attachment workflow. The paperclip button lets the child attach an image or a short video clip so Gemma can describe it, answer questions about it, or turn it into a live animation.</li>
+      <li>Local Piper text-to-speech for the <code>Read</code> button. When Piper voices are installed, each assistant message can be read aloud locally with no cloud dependency.</li>
+      <li>Code Runner mini-game during streaming on larger models. While <code>gemma4:26b</code> or <code>gemma4:31b</code> is generating, the app can show a side-scroller mini-game where the child presses Space to jump and dodge bugs.</li>
+    </ul>
+
+    <h2>Links</h2>
+    <ul class="links">
+      <li>Source code: <code>https://github.com/Efs-O/Gemma4kids</code></li>
+      <li>Releases: <code>https://github.com/Efs-O/Gemma4kids/releases</code></li>
+      <li>Setup guide: <code>https://github.com/Efs-O/Gemma4kids/blob/master/SETUP.md</code></li>
+      <li>Project overview: <code>https://github.com/Efs-O/Gemma4kids/blob/master/README.md</code></li>
+    </ul>
+
+    <h2>Why This Submission Matters</h2>
+    <p>Gemma4kids is built for the Future of Education track, with a strong Digital Equity and Inclusivity angle. It is designed for children, works locally, supports multiple languages, and does not depend on cloud subscriptions or constant internet access. The project treats Gemma 4 as a real educational product component, not just a model demo.</p>
+  </main>
+</body>
+</html>
