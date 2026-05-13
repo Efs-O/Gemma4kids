@@ -147,8 +147,15 @@ export interface EncodedAudioPayload {
   durationSeconds: number;
 }
 
+export interface AudioEncodeOptions {
+  gainMultiplier?: number;
+}
+
 function buildTranscribePrompt(languageHint?: string): string {
   const hint = (languageHint ?? '').trim().toLowerCase();
+  if (hint.startsWith('el') && hint.includes('strict')) {
+    return 'The spoken language is Greek (el-GR). Transcribe exactly what is spoken. Output only Greek script, spaces, digits, and normal punctuation. Never translate. Never transliterate. Never output Arabic script, Cyrillic script, or Latin transliteration unless a foreign word is unmistakably spoken. If unsure, prefer the most plausible Greek-script transcription. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
   if (hint.startsWith('el')) {
     return 'The spoken language is most likely Greek (el-GR). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is Greek, return only Greek script. If a short foreign word is clearly spoken, keep that word exactly as spoken. Output only the transcription text, with no newlines. Write numbers as digits.';
   }
@@ -188,21 +195,93 @@ function previewText(text: string, max = 140): string {
   return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
 }
 
+function countMatches(text: string, pattern: RegExp): number {
+  const matches = text.match(pattern);
+  return matches ? matches.length : 0;
+}
+
+function looksWrongForGreekTranscript(text: string, languageHint?: string): boolean {
+  const hint = (languageHint ?? '').trim().toLowerCase();
+  if (!hint.startsWith('el')) return false;
+
+  const greek = countMatches(text, /[\u0370-\u03FF\u1F00-\u1FFF]/g);
+  const latin = countMatches(text, /[A-Za-z\u00C0-\u024F]/g);
+  const cyrillic = countMatches(text, /[\u0400-\u04FF]/g);
+  const arabic = countMatches(text, /[\u0600-\u06FF]/g);
+  const letters = greek + latin + cyrillic + arabic;
+
+  if (letters < 4) return false;
+  if (greek === 0 && (latin > 0 || cyrillic > 0 || arabic > 0)) return true;
+  if (arabic + cyrillic >= greek) return true;
+  return greek / letters < 0.55;
+}
+
+function strictRetryLanguageHint(languageHint?: string): string | null {
+  const hint = (languageHint ?? '').trim().toLowerCase();
+  if (hint.startsWith('el')) return 'el-strict';
+  return null;
+}
+
+async function transcribeWithLanguageGuard(
+  request: (languageHint?: string) => Promise<string>,
+  languageHint?: string,
+): Promise<string> {
+  const first = await request(languageHint);
+  if (!looksWrongForGreekTranscript(first, languageHint)) {
+    return first;
+  }
+
+  const retryHint = strictRetryLanguageHint(languageHint);
+  console.warn('[transcribe:script-mismatch]', {
+    languageHint: languageHint ?? '',
+    retryHint: retryHint ?? '',
+    firstPreview: previewText(first),
+  });
+  if (!retryHint) {
+    return first;
+  }
+
+  const second = await request(retryHint);
+  if (!looksWrongForGreekTranscript(second, languageHint)) {
+    console.info('[transcribe:retry-success]', {
+      languageHint: languageHint ?? '',
+      retryHint,
+      textPreview: previewText(second),
+    });
+    return second;
+  }
+
+  console.warn('[transcribe:retry-failed]', {
+    languageHint: languageHint ?? '',
+    retryHint,
+    secondPreview: previewText(second),
+  });
+  throw new Error('I heard the wrong language. Please try again slowly in Greek.');
+}
+
 /**
  * Convert any browser audio blob (WebM/Ogg/etc.) to a 16kHz mono WAV with a
  * proper RIFF header — required by Ollama's Gemma4 audio workaround.
  */
-export async function audioBlobToWav16k(blob: Blob): Promise<EncodedAudioPayload> {
+export async function audioBlobToWav16k(blob: Blob, options?: AudioEncodeOptions): Promise<EncodedAudioPayload> {
   const arrayBuf = await blob.arrayBuffer();
   const audioCtx = new AudioContext();
   const decoded = await audioCtx.decodeAudioData(arrayBuf);
   audioCtx.close();
 
   const TARGET_SR = 16000;
+  const gainMultiplier = options?.gainMultiplier ?? 1;
   const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * TARGET_SR), TARGET_SR);
   const src = offline.createBufferSource();
   src.buffer = decoded;
-  src.connect(offline.destination);
+  if (gainMultiplier !== 1) {
+    const gainNode = offline.createGain();
+    gainNode.gain.value = gainMultiplier;
+    src.connect(gainNode);
+    gainNode.connect(offline.destination);
+  } else {
+    src.connect(offline.destination);
+  }
   src.start(0);
   const rendered = await offline.startRendering();
 
@@ -246,7 +325,10 @@ export async function transcribeAudioBlob(
   languageHint?: string,
 ): Promise<{ text: string; durationSeconds: number }> {
   const encoded = await audioBlobToWav16k(blob);
-  const text = await transcribe(encoded.audioBase64, model, keepAlive, languageHint);
+  const text = await transcribeWithLanguageGuard(
+    (attemptHint) => transcribe(encoded.audioBase64, model, keepAlive, attemptHint),
+    languageHint,
+  );
   return {
     text,
     durationSeconds: encoded.durationSeconds,
@@ -335,7 +417,11 @@ export const ollamaAdapter: LLMRuntimeAdapter = {
   warmupCodingModel,
   streamChat: (params, handlers, signal, onContextUsage) =>
     streamOllamaNativeChat(OLLAMA_BASE, params, handlers, signal, onContextUsage),
-  transcribe,
+  transcribe: (audioBase64, model, keepAlive, languageHint) =>
+    transcribeWithLanguageGuard(
+      (attemptHint) => transcribe(audioBase64, model, keepAlive, attemptHint),
+      languageHint,
+    ),
 };
 
 function mapLlamaToolCall(raw: {
@@ -470,10 +556,11 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
         });
       });
     },
-    transcribe: async (audioBase64: string, _model?: string, _keepAlive?: 0 | string, languageHint?: string) => {
-      const result = await window.electronAPI.llamaCppTranscribe(sttConfig, audioBase64, languageHint);
-      if (!result.success) throw new Error(result.error ?? 'Transcription failed');
-      return result.text ?? '';
-    },
+    transcribe: (audioBase64: string, _model?: string, _keepAlive?: 0 | string, languageHint?: string) =>
+      transcribeWithLanguageGuard(async (attemptHint) => {
+        const result = await window.electronAPI.llamaCppTranscribe(sttConfig, audioBase64, attemptHint);
+        if (!result.success) throw new Error(result.error ?? 'Transcription failed');
+        return result.text ?? '';
+      }, languageHint),
   };
 }

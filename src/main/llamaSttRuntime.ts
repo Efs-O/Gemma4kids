@@ -70,7 +70,7 @@ function buildHealthResult(
   return { ok, state, message, error, details };
 }
 
-// Duplicated from llamaRuntime.ts intentionally — keeps the two files decoupled.
+// Duplicated from llamaRuntime.ts intentionally - keeps the two files decoupled.
 function resolveMmprojSearchDirs(primaryModelPath: string, extraModelPaths: string[]): Array<{ dir: string; family: string | null }> {
   const orderedPaths = [primaryModelPath, ...extraModelPaths];
   const seenDirs = new Set<string>();
@@ -226,6 +226,23 @@ function shouldFallbackToMtmdCli(body: string, status: number): boolean {
     normalized.includes('unsupported content part type') ||
     normalized.includes('input_audio')
   );
+}
+
+function buildTranscribePrompt(languageHint?: string): string {
+  const hint = (languageHint ?? '').trim().toLowerCase();
+  if (hint.startsWith('el') && hint.includes('strict')) {
+    return 'The spoken language is Greek (el-GR). Transcribe exactly what is spoken. Output only Greek script, spaces, digits, and normal punctuation. Never translate. Never transliterate. Never output Arabic script, Cyrillic script, or Latin transliteration unless a foreign word is unmistakably spoken. If unsure, prefer the most plausible Greek-script transcription. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
+  if (hint.startsWith('el')) {
+    return 'The spoken language is most likely Greek (el-GR). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is Greek, return only Greek script. If a short foreign word is clearly spoken, keep that word exactly as spoken. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
+  if (hint.startsWith('de')) {
+    return 'The spoken language is most likely German (de-DE). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is German, return only German text with normal German spelling. If the speaker switches briefly to another language, keep those exact spoken words only where they were actually said. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
+  if (hint.startsWith('en')) {
+    return 'The spoken language is most likely English (en). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is English, return only English text. If the speaker switches briefly to another language, keep those exact spoken words only where they were actually said. Output only the transcription text, with no newlines. Write numbers as digits.';
+  }
+  return 'Transcribe exactly what is spoken in the audio. First infer whether the speech is Greek, German, English, or another language. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages unless the speaker actually switches languages. If the speech is Greek, return Greek script. If the speech is German, return German spelling. If the speech is English, return English text. Output only the transcription text, with no newlines. Write numbers as digits.';
 }
 
 async function transcribeWithMtmdCli(
@@ -502,12 +519,7 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
     }
 
     const modelName = path.basename(sttConfig.sttModelPath, path.extname(sttConfig.sttModelPath));
-    const hint = (languageHint ?? '').toLowerCase();
-    const prompt = hint.startsWith('el')
-      ? 'Γράψε ακριβώς τα λόγια που άκουσες. Μόνο το κείμενο, χωρίς επεξήγηση.'
-      : hint.startsWith('de')
-      ? 'Transkribiere genau das Gesprochene. Gib nur den Text aus, ohne Erklärung.'
-      : 'Transcribe the audio exactly. Output only the transcription, nothing else.';
+    const prompt = buildTranscribePrompt(languageHint);
 
     const logPath = managedSttServer?.logPath ?? getSttRuntimeLogPath();
     appendSttRuntimeLog(logPath, `[transcribe:start] model=${modelName} lang=${languageHint ?? ''}`);

@@ -78,7 +78,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceStateSafe('transcribing');
     try {
-      const encoded = await audioBlobToWav16k(blob);
+      const encoded = await audioBlobToWav16k(blob, { gainMultiplier: 1.1 });
       const activeTranscribeModel =
         appLanguage === 'el' && greekTranscribeModel
           ? greekTranscribeModel
