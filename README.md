@@ -25,7 +25,7 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026) — targeting
 | **Runtime** | Choose **Ollama** (easy, guided) or **llama.cpp** (advanced, GGUF paths + GPU layers) at the startup screen. Gemma4kids auto-starts the local server for both. Switch runtimes any time without restarting. |
 | **Models** | Header dropdown lists all pulled Gemma 4 variants, sorted smallest→largest. **Auto-selects the lightest available** at startup (E2B → E4B → 26B → 31B) so the app is immediately usable; upgrade via the dropdown any time. **E2B and E4B** use simplified prompts and an intent classifier (simple tier). **26B and 31B** use the full CREATE/EDIT prompt suite (full tier). |
 | **Context window** | Edge models (E2B/E4B): 65 k token context. Workstation models (26B/31B): 122 k token context. A **"New Chat" button** sits in the input row next to Send — its background fill shows remaining capacity (green → orange → red, pulsing when critical). Click it at any time to clear the conversation and start fresh. |
-| **Voice→text** | Mic button → WAV → STT model via Ollama (`keep_alive: 0`) or a **dedicated llama.cpp STT server** (port 8081, separate from the coding model). E4B handles English and German; **E2B is preferred for Greek** audio (better ASR stability). Disabled when no STT model is configured. |
+| **Voice→text** | Mic button → WAV → STT model via Ollama (`keep_alive: 0`) or a **dedicated llama.cpp STT server** (port 8081, separate from the coding model). The E4B-family transcribe path handles English, German, and Greek audio; Greek also uses stricter prompting and script-mismatch retry logic to keep transcripts in Greek script. Disabled when no STT model is configured. |
 | **Vision & video** | Paperclip button attaches an **image** or a short **video clip** (≤ 30 s). Images go to the model directly. Videos are preprocessed by **ffmpeg**: 3–6 frames sampled at up to 640 px, plus an optional audio WAV extract — all sent as a multimodal payload. Gemma can describe the content, answer questions, or turn a drawing into a live animation. |
 | **Video frame tool** | When a video is attached, Gemma can call **`save_video_frame`** to capture JPEG stills at specified timestamps and save them to `Documents/KidAnimations/video-frames/`. |
 | **Smart routing** | An intent classifier runs on every turn and decides: **art** (full agentic HTML loop with tools), **motion** (simpler animation via SIMPLE prompt), or **chat** (plain conversation, no tools). On simple-tier models, a `__TOOBIG__` signal escalates complex requests to the big model automatically. |
@@ -122,7 +122,7 @@ Electron shell
     ├── chatRouting.ts — intent classifier: art / motion / chat → right system prompt
     │   └── 5 system prompts: CREATE · EDIT · SIMPLE · KID_CHAT · INTENT_CLASSIFIER
     ├── chatTools.ts — tool dispatch, HTML audit integration
-    ├── VoiceInput — MediaRecorder WAV → STT (Ollama or llama.cpp); Greek → E2B
+    ├── VoiceInput — MediaRecorder WAV → STT (Ollama or llama.cpp); language-aware prompts with Greek-script retry guard
     ├── MediaAttachmentService — frame extraction + audio WAV from video (ffmpeg)
     ├── AttachmentPreview — thumbnail strip for image / video before send
     ├── InputRow — textarea + mic button + paperclip attach
@@ -135,7 +135,7 @@ Electron shell
 
 **Typical pipelines**
 
-- Speech: Mic → WAV → STT model (E4B for EN/DE, E2B for Greek) → text → coding model.
+- Speech: Mic → WAV → STT model (E4B-family path with language-aware prompts and Greek-script retry guard) → text → coding model.
 - Vision: Paperclip → image → base64 → multimodal payload → coding model.
 - Video: Paperclip → ffmpeg → 3–6 frames + audio WAV → base64 → multimodal payload. Model may call `save_video_frame` to capture stills.
 - Coding: Intent classifier → CREATE or EDIT system prompt → `streamOllamaNativeChat` / llama.cpp stream → tool loop → htmlAudit → editor.
@@ -167,8 +167,8 @@ All benchmark scripts and results live under [`scripts/`](scripts/) and [`gemma_
 
 ## Why Gemma 4
 
-- **gemma4:e2b** — lightest model in the family; runs on older or low-VRAM GPUs; default at startup. Used as the preferred STT model for Greek audio.
-- **gemma4:e4b** — natively multimodal (audio-in); serves as the STT engine for English and German, and can also run the full agent loop on its own on smaller GPUs.
+- **gemma4:e2b** — lightest model in the family; runs on older or low-VRAM GPUs; default at startup.
+- **gemma4:e4b** — natively multimodal (audio-in); serves as the STT engine for English, German, and Greek, with stricter Greek prompting and retry logic to keep transcripts in Greek script. It can also run the full agent loop on its own on smaller GPUs.
 - **gemma4:26b** — text-only workstation model, 98 k context. **Gains full voice I/O** through the pipeline: E4B/E2B transcribes speech → text → 26B, and Piper TTS speaks 26B's replies back to the child. `keep_alive: 0` on the STT call forces immediate VRAM unload so 26B can load cleanly.
 - **gemma4:31b** — text-only, highest quality, 64 k context. Same voice pipeline as 26B — STT handles input, Piper handles output — giving it capabilities it does not natively possess.
 - **Ollama** — local native `/api/chat` for tool calling and thinking; painless model pulls; aligned with competition requirements.
