@@ -13,8 +13,7 @@ directories:
   output: release
 
 win:
-  icon: icon.png
-  signAndEditExecutable: false
+  icon: icon.ico
   extraResources:
     - from: piper/win
       to: piper

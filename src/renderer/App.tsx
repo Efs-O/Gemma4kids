@@ -19,7 +19,7 @@ import type { AppLanguage } from './components/WelcomeScreen';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
 const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
-const MUSIC_TRACK_SRC = './Awakening.mp3';
+const MUSIC_TRACK_SRC = './Glassroom Pulse.mp3';
 const MUSIC_VOLUME_NORMAL = 0.35;
 const MUSIC_VOLUME_DUCKED = 0.12;
 
@@ -205,14 +205,15 @@ export default function App() {
 
     const handleError = () => {
       setMusicEnabled(false);
-      setUiError('I could not play the background music yet. Make sure "Awakening.mp3" is in the app bundle and try again.');
+      setUiError('I could not play the background music yet. Make sure "Glassroom Pulse.mp3" is in the app bundle and try again.');
     };
 
     audio.addEventListener('error', handleError);
     const playPromise = audio.play();
     if (playPromise) {
       void playPromise.catch(() => {
-        handleError();
+        // Autoplay can be blocked before the user interacts with the app.
+        // Keep the toggle enabled so a manual retry can still succeed.
       });
     }
 

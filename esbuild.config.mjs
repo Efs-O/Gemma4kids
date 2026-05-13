@@ -20,8 +20,8 @@ const buildRenderer = () => {
   copyFileSync('src/renderer/styles.css', 'dist/renderer/styles.css');
   copyFileSync('ollama logo.jpg', 'dist/renderer/ollama logo.jpg');
   copyFileSync('llama server.jpg', 'dist/renderer/llama server.jpg');
-  if (existsSync('Awakening.mp3')) {
-    copyFileSync('Awakening.mp3', 'dist/renderer/Awakening.mp3');
+  if (existsSync('Glassroom Pulse.mp3')) {
+    copyFileSync('Glassroom Pulse.mp3', 'dist/renderer/Glassroom Pulse.mp3');
   }
   return esbuild.build({
     entryPoints: ['src/renderer/index.tsx'],
