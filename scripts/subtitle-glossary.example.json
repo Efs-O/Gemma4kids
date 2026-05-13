@@ -1,0 +1,17 @@
+[
+  {
+    "from": "Demos",
+    "to": "Gemma",
+    "mode": "word"
+  },
+  {
+    "from": "Emma",
+    "to": "Gemma",
+    "mode": "word"
+  },
+  {
+    "from": "Christus",
+    "to": "Christos",
+    "mode": "word"
+  }
+]

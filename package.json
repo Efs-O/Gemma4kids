@@ -9,6 +9,8 @@
     "build": "node esbuild.config.mjs",
     "dev": "npm run build && electron .",
     "typecheck": "tsc --noEmit",
+    "subtitles": "node scripts/generate-subtitles.mjs",
+    "subtitles:ui": "powershell -ExecutionPolicy Bypass -File scripts\\subtitle-tool-ui.ps1",
     "download-voices": "node scripts/download-voices.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "dist": "npm run build && electron-builder",

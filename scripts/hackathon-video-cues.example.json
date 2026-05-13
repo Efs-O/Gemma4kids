@@ -1,0 +1,26 @@
+[
+  {
+    "id": "intro-mom-de-01",
+    "start": "00:00:03.200",
+    "end": "00:00:11.800",
+    "speaker": "mom",
+    "sourceLanguage": "de",
+    "notes": "Replace with exact timings from the edited video."
+  },
+  {
+    "id": "voice-demo-el-01",
+    "start": "00:01:38.000",
+    "end": "00:01:48.500",
+    "speaker": "christos",
+    "sourceLanguage": "el",
+    "notes": "Greek voice request segment."
+  },
+  {
+    "id": "english-voiceover-01",
+    "start": "00:02:22.000",
+    "end": "00:02:34.000",
+    "speaker": "narrator",
+    "sourceLanguage": "en",
+    "notes": "English technical explanation."
+  }
+]
