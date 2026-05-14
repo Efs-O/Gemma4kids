@@ -16,7 +16,10 @@ interface Props {
   llamaSetup: LlamaCppSetupConfig;
   runtimeStatus: 'checking' | 'offline' | 'ready';
   runtimeError: string;
+  runtimeMessage: string;
+  runtimeDetails: string[];
   mmprojWarning?: string;
+  portWarning?: string;
   onRuntimeChange: (runtime: RuntimeKind) => void;
   onLlamaSetupChange: (patch: Partial<LlamaCppSetupConfig>) => void;
   onLlamaModelPathChange: (id: LlamaModelPresetId, modelPath: string) => void;
@@ -28,7 +31,10 @@ export function SetupAssistant({
   llamaSetup,
   runtimeStatus,
   runtimeError,
+  runtimeMessage,
+  runtimeDetails,
   mmprojWarning,
+  portWarning,
   onRuntimeChange,
   onLlamaSetupChange,
   onLlamaModelPathChange,
@@ -70,13 +76,25 @@ export function SetupAssistant({
         <div className="setup-status">
           <strong>Current runtime check:</strong>{' '}
           {runtimeStatus === 'checking' && `Checking ${selectedRuntime === 'ollama' ? 'Ollama' : 'llama.cpp'}...`}
-          {runtimeStatus === 'ready' && `${selectedRuntime === 'ollama' ? 'Ollama' : 'llama.cpp'} is ready.`}
+          {runtimeStatus === 'ready' && (runtimeMessage || `${selectedRuntime === 'ollama' ? 'Ollama' : 'llama.cpp'} is ready.`)}
           {runtimeStatus === 'offline' && runtimeError}
         </div>
+
+        {runtimeDetails.length > 0 && (
+          <div className="setup-status">
+            {runtimeDetails.join(' ')}
+          </div>
+        )}
 
         {mmprojWarning && (
           <div className="setup-status" style={{ color: '#e6a817' }}>
             ⚠️ {mmprojWarning}
+          </div>
+        )}
+
+        {portWarning && (
+          <div className="setup-status" style={{ color: '#e6a817' }}>
+            {portWarning}
           </div>
         )}
 

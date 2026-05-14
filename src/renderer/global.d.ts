@@ -6,6 +6,7 @@ declare global {
     modelPath: string;
     mmprojSearchPaths: string[];
     port: number;
+    sttPort?: number;
     gpuLayers: number;
     numCtx: number;
     numPredict: number;
@@ -19,6 +20,8 @@ declare global {
     serverPath: string;
     sttModelPath: string;
     mmprojSearchPaths: string[];
+    mainModelPath?: string;
+    mainPort?: number;
     sttPort: number;
     gpuLayers: number;
   }
@@ -31,6 +34,8 @@ declare global {
     details?: string[];
     mmprojPath?: string;
     sttMmprojPath?: string;
+    preferredPort?: number;
+    resolvedPort?: number;
   }
 
   interface LlamaCppModelInfo {

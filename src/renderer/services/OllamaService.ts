@@ -450,6 +450,8 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
     serverPath: config.serverPath,
     sttModelPath: config.sttModelPath,
     mmprojSearchPaths: config.mmprojSearchPaths,
+    mainModelPath: config.modelPath,
+    mainPort: config.port,
     sttPort: config.sttPort,
     gpuLayers: config.gpuLayers,
   };

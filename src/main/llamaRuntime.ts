@@ -1,5 +1,5 @@
 import { type IpcMain } from 'electron';
-import { stopManagedSttServer } from './llamaSttRuntime';
+import { getManagedSttResolvedPort, stopManagedSttServer } from './llamaSttRuntime';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -7,16 +7,15 @@ import {
   findMmprojForConfig,
   resolveGgufPath,
   runtimeConfigKey,
-  broadcastToWindows,
   buildHealthResult,
   getLlamaRuntimeLogPath,
   resetLlamaRuntimeLog,
   appendLlamaRuntimeLog,
-  summarizeChatRequest,
   validateLlamaConfig,
   getLlamaStartupTimeoutMs,
   resolveLlamaServerCommand,
   canReachLlamaServer,
+  resolveLocalServerPort,
 } from './llamaCppUtils';
 import { streamLlamaChat } from './llamaCppStream';
 
@@ -25,8 +24,9 @@ const LLAMA_DEFAULT_BATCH_SIZE = 512;
 export interface ManagedLlamaServer {
   configKey: string;
   config: LlamaCppConfig;
-  process: ChildProcess;
+  process: ChildProcess | null;
   logPath: string;
+  resolvedPort: number;
 }
 
 interface OllamaCleanupState {
@@ -39,29 +39,37 @@ export let managedLlamaServer: ManagedLlamaServer | null = null;
 let managedLlamaStartup: { configKey: string; promise: Promise<LlamaCppHealthResult> } | null = null;
 let ollamaCleanupState: OllamaCleanupState = { runtime: 'ollama', models: [] };
 
+export function getManagedLlamaResolvedPort(): number | null {
+  return managedLlamaServer?.resolvedPort ?? null;
+}
+
 async function stopManagedLlamaServer(): Promise<void> {
   const current = managedLlamaServer;
   if (!current) return;
 
   managedLlamaServer = null;
-  if (current.process.exitCode !== null || current.process.killed) {
+  const proc = current.process;
+  if (!proc) {
+    return;
+  }
+  if (proc.exitCode !== null || proc.killed) {
     return;
   }
 
   await new Promise<void>((resolve) => {
     const timer = setTimeout(() => {
-      if (current.process.exitCode === null && !current.process.killed) {
-        current.process.kill();
+      if (proc.exitCode === null && !proc.killed) {
+        proc.kill();
       }
       resolve();
     }, 3000);
 
-    current.process.once('exit', () => {
+    proc.once('exit', () => {
       clearTimeout(timer);
       resolve();
     });
 
-    current.process.kill();
+    proc.kill();
   });
 }
 
@@ -113,11 +121,16 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
   const startupPromise = (async (): Promise<LlamaCppHealthResult> => {
     const startupTimeoutMs = getLlamaStartupTimeoutMs(config.modelPath);
     if (managedLlamaServer && managedLlamaServer.configKey === configKey) {
-      if (managedLlamaServer.process.exitCode === null && await canReachLlamaServer(config.port, 1500)) {
+      if (
+        (!managedLlamaServer.process || managedLlamaServer.process.exitCode === null) &&
+        await canReachLlamaServer(managedLlamaServer.resolvedPort, 1500)
+      ) {
         return {
-          ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'),
+          ...buildHealthResult(true, 'ready', `llama.cpp is ready on port ${String(managedLlamaServer.resolvedPort)}.`),
           mmprojPath: findMmprojForConfig(config.modelPath, config.mmprojSearchPaths) ?? undefined,
           sttMmprojPath: config.sttModelPath?.trim() ? findMmprojForConfig(config.sttModelPath.trim(), config.mmprojSearchPaths) ?? undefined : undefined,
+          preferredPort: config.port,
+          resolvedPort: managedLlamaServer.resolvedPort,
         };
       }
       await stopManagedLlamaServer();
@@ -125,9 +138,29 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       await stopManagedLlamaServer();
     }
 
-    if (await canReachLlamaServer(config.port, 1500)) {
-      return buildHealthResult(false, 'port_conflict', 'That llama.cpp port is already in use.', `Another process is already responding on port ${String(config.port)}.`);
+    const logPath = resetLlamaRuntimeLog();
+    const reservedPorts = new Set<number>();
+    if (Number.isInteger(config.sttPort) && config.sttPort !== config.port) {
+      reservedPorts.add(config.sttPort as number);
     }
+    const activeSttPort = getManagedSttResolvedPort();
+    if (activeSttPort != null && activeSttPort !== config.port) {
+      reservedPorts.add(activeSttPort);
+    }
+    const portResolution = await resolveLocalServerPort({
+      preferredPort: config.port,
+      expectedModelPath: config.modelPath,
+      roleLabel: 'Main llama.cpp server',
+      excludedPorts: [...reservedPorts],
+      log: (line) => appendLlamaRuntimeLog(logPath, line),
+    });
+    if (!portResolution.ok || portResolution.resolvedPort == null) {
+      return {
+        ...buildHealthResult(false, 'port_conflict', portResolution.reason, portResolution.reason, portResolution.details),
+        preferredPort: config.port,
+      };
+    }
+    const resolvedPort = portResolution.resolvedPort;
 
     let commandInfo: { command: string; args: string[] };
     try {
@@ -142,12 +175,24 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     const cacheTypeK = config.cacheTypeK.trim();
     const cacheTypeV = config.cacheTypeV.trim();
     const detectedMmproj = findMmprojForConfig(config.modelPath, config.mmprojSearchPaths);
+    const sttMmproj = config.sttModelPath?.trim() ? findMmprojForConfig(config.sttModelPath.trim(), config.mmprojSearchPaths) : null;
+    if (portResolution.reusedExisting) {
+      managedLlamaServer = { configKey, config, process: null, logPath, resolvedPort };
+      appendLlamaRuntimeLog(logPath, `[ready] reused-existing-server port=${String(resolvedPort)} mmproj=${detectedMmproj ?? 'none'} stt_mmproj=${sttMmproj ?? 'none'}`);
+      return {
+        ...buildHealthResult(true, 'ready', portResolution.reason, undefined, portResolution.details),
+        mmprojPath: detectedMmproj ?? undefined,
+        sttMmprojPath: sttMmproj ?? undefined,
+        preferredPort: config.port,
+        resolvedPort,
+      };
+    }
     const spawnArgs = [
       ...commandInfo.args,
       '-m', config.modelPath,
       ...(detectedMmproj ? ['--mmproj', detectedMmproj] : []),
       '--host', '127.0.0.1',
-      '--port', String(config.port),
+      '--port', String(resolvedPort),
       '--jinja',
       '--ctx-size', String(ctxSize),
       '--batch-size', String(LLAMA_DEFAULT_BATCH_SIZE),
@@ -157,7 +202,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       '--flash-attn', 'on',
       '--n-gpu-layers', gpuLayers,
     ];
-    const logPath = resetLlamaRuntimeLog();
+    appendLlamaRuntimeLog(logPath, `[port-resolution] preferred=${String(config.port)} resolved=${String(resolvedPort)} stt_reserved=${String(config.sttPort ?? 'none')}`);
     appendLlamaRuntimeLog(logPath, `[spawn:config] ctx_size=${String(ctxSize)} startup_timeout_s=${String(Math.round(startupTimeoutMs / 1000))}`);
     appendLlamaRuntimeLog(logPath, `[spawn] ${commandInfo.command} ${spawnArgs.join(' ')}`);
     const proc = spawn(commandInfo.command, spawnArgs, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
@@ -186,7 +231,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       appendLlamaRuntimeLog(logPath, `[exit] code=${String(code)} signal=${String(signal)}`);
     });
 
-    managedLlamaServer = { configKey, config, process: proc, logPath };
+    managedLlamaServer = { configKey, config, process: proc, logPath, resolvedPort };
 
     const startedAt = Date.now();
     while (Date.now() - startedAt < startupTimeoutMs) {
@@ -214,10 +259,15 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
         );
       }
 
-      if (await canReachLlamaServer(config.port, 1500)) {
-        const sttMmproj = config.sttModelPath?.trim() ? findMmprojForConfig(config.sttModelPath.trim(), config.mmprojSearchPaths) : null;
-        appendLlamaRuntimeLog(logPath, `[ready] /v1/models responded successfully mmproj=${detectedMmproj ?? 'none'} stt_mmproj=${sttMmproj ?? 'none'}`);
-        return { ...buildHealthResult(true, 'ready', 'llama.cpp is ready.'), mmprojPath: detectedMmproj ?? undefined, sttMmprojPath: sttMmproj ?? undefined };
+      if (await canReachLlamaServer(resolvedPort, 1500)) {
+        appendLlamaRuntimeLog(logPath, `[ready] /v1/models responded successfully port=${String(resolvedPort)} mmproj=${detectedMmproj ?? 'none'} stt_mmproj=${sttMmproj ?? 'none'}`);
+        return {
+          ...buildHealthResult(true, 'ready', portResolution.reason, undefined, portResolution.details),
+          mmprojPath: detectedMmproj ?? undefined,
+          sttMmprojPath: sttMmproj ?? undefined,
+          preferredPort: config.port,
+          resolvedPort,
+        };
       }
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -254,8 +304,9 @@ async function fetchLlamaModels(config: LlamaCppConfig): Promise<{ success: bool
     return { success: false, models: [], error: health.error ?? health.message ?? 'llama.cpp is not ready.' };
   }
 
+  const resolvedPort = health.resolvedPort ?? config.port;
   try {
-    const res = await fetch(`http://127.0.0.1:${config.port}/v1/models`, {
+    const res = await fetch(`http://127.0.0.1:${resolvedPort}/v1/models`, {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) {
@@ -288,7 +339,13 @@ async function streamLlamaChatWithHealth(
   if (!health.ok) {
     return { success: false, error: health.error ?? health.message ?? 'llama.cpp is not ready.' };
   }
-  return streamLlamaChat(requestId, config, request, managedAbortControllers, () => managedLlamaServer?.logPath ?? null);
+  return streamLlamaChat(
+    requestId,
+    { ...config, port: health.resolvedPort ?? config.port },
+    request,
+    managedAbortControllers,
+    () => managedLlamaServer?.logPath ?? null,
+  );
 }
 
 export function registerLlamaRuntimeIpcHandlers(ipcMain: IpcMain): void {

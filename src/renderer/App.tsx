@@ -81,7 +81,18 @@ export default function App() {
     reasoningEnabled: chatThinkEnabled,
   }), [activeLlamaModel, chatThinkEnabled, llamaMmprojSearchPaths, llamaSetup]);
 
-  const { runtime: runtimeInUse, adapter: runtimeAdapter, status: runtimeStatus, models, errorMsg: runtimeErrorMsg, llamaMmprojPath, llamaSttMmprojPath, recheck } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
+  const {
+    runtime: runtimeInUse,
+    adapter: runtimeAdapter,
+    status: runtimeStatus,
+    models,
+    errorMsg: runtimeErrorMsg,
+    runtimeMessage,
+    runtimeDetails,
+    llamaMmprojPath,
+    llamaSttMmprojPath,
+    recheck,
+  } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
 
   const autoOllamaModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
@@ -105,6 +116,15 @@ export default function App() {
     if (userModel && models.includes(userModel)) return userModel;
     return autoOllamaModel;
   }, [activeLlamaModel, autoOllamaModel, models, runtimeInUse, userModel]);
+  const missingGemmaModels = useMemo(
+    () => selectedRuntime === 'ollama' && !models.some((m) => m.toLowerCase().includes('gemma')),
+    [models, selectedRuntime],
+  );
+  const mainEditorVisible = Boolean(appLanguage)
+    && !showSetupAssistant
+    && runtimeStatus !== 'checking'
+    && runtimeStatus !== 'offline'
+    && !missingGemmaModels;
   const ollamaCleanupModels = useMemo(() => {
     const collected = [codingModel, transcribeModel, greekTranscribeModel ?? ''];
     return [...new Set(collected.map((model) => model.trim()).filter(Boolean))];
@@ -132,6 +152,13 @@ export default function App() {
     }
     return '';
   }, [activeLlamaRuntimeConfig.sttModelPath, llamaSttMmprojPath, misconfiguredMmprojTabs, runtimeInUse, runtimeStatus]);
+  const llamaPortWarning = useMemo(() => {
+    if (selectedRuntime !== 'llama_cpp') return '';
+    if (llamaSetup.port === llamaSetup.sttPort) {
+      return `Main and STT are both configured for port ${String(llamaSetup.port)}. Gemma4kids will keep main on ${String(llamaSetup.port)} and move STT to the next safe port.`;
+    }
+    return '';
+  }, [llamaSetup.port, llamaSetup.sttPort, selectedRuntime]);
 
   const customRuntimeLimits = useMemo(
     () => runtimeInUse === 'llama_cpp' ? { numCtx: llamaSetup.numCtx, numPredict: llamaSetup.numPredict } : undefined,
@@ -171,6 +198,7 @@ export default function App() {
   const streamStartSaved = useRef<string | null>(null);
   const filenameRef = useRef(filename);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const musicRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { filenameRef.current = filename; }, [filename]);
   useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
@@ -190,7 +218,11 @@ export default function App() {
     void window.electronAPI.setOllamaCleanupTargets(runtimeInUse, modelsForCleanup);
   }, [ollamaCleanupModels, runtimeInUse]);
   useEffect(() => {
-    if (!musicEnabled) {
+    if (musicRetryTimeoutRef.current) {
+      clearTimeout(musicRetryTimeoutRef.current);
+      musicRetryTimeoutRef.current = null;
+    }
+    if (!musicEnabled || !mainEditorVisible) {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -201,25 +233,56 @@ export default function App() {
     const audio = audioRef.current ?? new Audio(MUSIC_TRACK_SRC);
     audioRef.current = audio;
     audio.loop = true;
+    audio.preload = 'auto';
     audio.volume = voiceActive ? MUSIC_VOLUME_DUCKED : MUSIC_VOLUME_NORMAL;
 
+    let cancelled = false;
+
     const handleError = () => {
-      setMusicEnabled(false);
+      if (cancelled) return;
+      audio.pause();
+      audio.currentTime = 0;
       setUiError('I could not play the background music yet. Make sure "Glassroom Pulse.mp3" is in the app bundle and try again.');
     };
 
-    audio.addEventListener('error', handleError);
-    const playPromise = audio.play();
-    if (playPromise) {
-      void playPromise.catch(() => {
-        handleError();
+    const tryPlay = (attempt: number) => {
+      if (cancelled) return;
+      const playPromise = audio.play();
+      if (!playPromise) return;
+      void playPromise.then(() => {
+        if (cancelled) return;
+        setUiError('');
+      }).catch(() => {
+        if (cancelled) return;
+        if (attempt >= 4) {
+          handleError();
+          return;
+        }
+        musicRetryTimeoutRef.current = setTimeout(() => {
+          tryPlay(attempt + 1);
+        }, attempt === 0 ? 250 : 1000);
       });
-    }
+    };
+
+    const handleCanPlay = () => {
+      tryPlay(0);
+    };
+
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('canplaythrough', handleCanPlay);
+    audio.load();
+    tryPlay(0);
 
     return () => {
+      cancelled = true;
+      if (musicRetryTimeoutRef.current) {
+        clearTimeout(musicRetryTimeoutRef.current);
+        musicRetryTimeoutRef.current = null;
+      }
       audio.removeEventListener('error', handleError);
+      audio.removeEventListener('canplaythrough', handleCanPlay);
     };
-  }, [musicEnabled, voiceActive]);
+  }, [mainEditorVisible, musicEnabled]);
   useEffect(() => {
     if (!audioRef.current || !musicEnabled) return;
     audioRef.current.volume = voiceActive ? MUSIC_VOLUME_DUCKED : MUSIC_VOLUME_NORMAL;
@@ -390,13 +453,13 @@ export default function App() {
 
   if (!appLanguage) return <WelcomeScreen onSelect={setAppLanguage} />;
 
-  if (showSetupAssistant) return <SetupAssistant selectedRuntime={selectedRuntime} llamaSetup={llamaSetup} runtimeStatus={runtimeStatus} runtimeError={runtimeErrorMsg} mmprojWarning={llamaMmprojWarning} onRuntimeChange={handleRuntimeSelection} onLlamaSetupChange={handleLlamaSetupChange} onLlamaModelPathChange={handleLlamaModelPathChange} onClose={closeSetupAssistant} />;
+  if (showSetupAssistant) return <SetupAssistant selectedRuntime={selectedRuntime} llamaSetup={llamaSetup} runtimeStatus={runtimeStatus} runtimeError={runtimeErrorMsg} runtimeMessage={runtimeMessage} runtimeDetails={runtimeDetails} mmprojWarning={llamaMmprojWarning} portWarning={llamaPortWarning} onRuntimeChange={handleRuntimeSelection} onLlamaSetupChange={handleLlamaSetupChange} onLlamaModelPathChange={handleLlamaModelPathChange} onClose={closeSetupAssistant} />;
 
   if (runtimeStatus === 'checking') return <StartupChecking selectedRuntime={selectedRuntime} />;
   if (runtimeStatus === 'offline') {
     return <StartupOffline selectedRuntime={selectedRuntime} runtimeErrorMsg={runtimeErrorMsg} onRecheck={recheck} onOpenSetup={openSetupAssistant} />;
   }
-  if (selectedRuntime === 'ollama' && !models.some((m) => m.toLowerCase().includes('gemma'))) return <StartupNoModels onRecheck={recheck} />;
+  if (missingGemmaModels) return <StartupNoModels onRecheck={recheck} />;
 
   return (
     <ErrorBoundary>

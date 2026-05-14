@@ -1,10 +1,12 @@
 import { app, BrowserWindow } from 'electron';
 import fs from 'fs';
+import net from 'net';
 import path from 'path';
 
 const LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_LARGE_MODEL_STARTUP_TIMEOUT_MS = 240000;
 export const LLAMA_RUNTIME_LOG = 'llama-cpp-runtime.log';
+const PORT_PROBE_OFFSETS = [0, 1, 2, 3] as const;
 
 function isMmprojPath(filePath: string): boolean {
   return path.basename(filePath).toLowerCase().includes('mmproj');
@@ -75,6 +77,7 @@ export function runtimeConfigKey(config: LlamaCppConfig): string {
     modelPath: config.modelPath.trim(),
     mmprojSearchPaths: config.mmprojSearchPaths.map((value) => value.trim()),
     port: config.port,
+    sttPort: config.sttPort,
     gpuLayers: config.gpuLayers,
     numCtx: config.numCtx,
     numPredict: config.numPredict,
@@ -99,6 +102,174 @@ export function buildHealthResult(
   details?: string[],
 ): LlamaCppHealthResult {
   return { ok, state, message, error, details };
+}
+
+function expectedModelIdsForPath(modelPath: string): string[] {
+  const trimmed = modelPath.trim();
+  if (!trimmed) return [];
+  const basename = path.basename(trimmed, path.extname(trimmed)).toLowerCase();
+  return basename ? [basename] : [];
+}
+
+async function isTcpPortBindable(port: number): Promise<boolean> {
+  return await new Promise<boolean>((resolve) => {
+    const server = net.createServer();
+    server.unref();
+    server.once('error', (error: NodeJS.ErrnoException) => {
+      resolve(error.code !== 'EADDRINUSE');
+    });
+    server.listen(port, '127.0.0.1', () => {
+      server.close(() => resolve(true));
+    });
+  });
+}
+
+async function fetchServerModelIds(port: number, timeoutMs: number): Promise<string[] | null> {
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/v1/models`, {
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!res.ok) return null;
+    const json = await res.json() as { data?: Array<{ id?: string }> };
+    const ids = Array.isArray(json.data)
+      ? json.data.map((row) => row.id?.trim().toLowerCase()).filter((id): id is string => Boolean(id))
+      : [];
+    return ids;
+  } catch {
+    return null;
+  }
+}
+
+interface PortInspectionResult {
+  state: 'free' | 'matching_server' | 'other_llama_server' | 'occupied';
+  modelIds: string[];
+}
+
+export async function inspectPortOwner(
+  port: number,
+  expectedModelPath: string,
+  timeoutMs: number,
+): Promise<PortInspectionResult> {
+  const modelIds = await fetchServerModelIds(port, timeoutMs);
+  if (modelIds && modelIds.length > 0) {
+    const expectedIds = expectedModelIdsForPath(expectedModelPath);
+    const matchesExpected = expectedIds.some((expected) => modelIds.includes(expected));
+    return {
+      state: matchesExpected ? 'matching_server' : 'other_llama_server',
+      modelIds,
+    };
+  }
+
+  const bindable = await isTcpPortBindable(port);
+  return {
+    state: bindable ? 'free' : 'occupied',
+    modelIds: [],
+  };
+}
+
+export interface PortResolution {
+  ok: boolean;
+  preferredPort: number;
+  resolvedPort?: number;
+  reusedExisting: boolean;
+  reason: string;
+  details: string[];
+}
+
+interface ResolvePortOptions {
+  preferredPort: number;
+  expectedModelPath: string;
+  roleLabel: string;
+  excludedPorts?: number[];
+  log?: (line: string) => void;
+}
+
+export async function resolveLocalServerPort(options: ResolvePortOptions): Promise<PortResolution> {
+  const excluded = new Set(options.excludedPorts ?? []);
+
+  for (const offset of PORT_PROBE_OFFSETS) {
+    const port = options.preferredPort + offset;
+    if (port > 65535) break;
+
+    if (excluded.has(port)) {
+      const message = `[port-skip] role=${options.roleLabel} port=${String(port)} reason=reserved-for-other-app-role`;
+      options.log?.(message);
+      continue;
+    }
+
+    const inspection = await inspectPortOwner(port, options.expectedModelPath, 1500);
+    if (inspection.state === 'free') {
+      if (port === options.preferredPort) {
+        const reason = `${options.roleLabel} will use preferred port ${String(port)}.`;
+        options.log?.(`[port-select] role=${options.roleLabel} preferred=${String(options.preferredPort)} resolved=${String(port)} reason=free`);
+        return {
+          ok: true,
+          preferredPort: options.preferredPort,
+          resolvedPort: port,
+          reusedExisting: false,
+          reason,
+          details: [reason],
+        };
+      }
+      const reason = `${options.roleLabel} preferred port ${String(options.preferredPort)} was busy, so it will use ${String(port)}.`;
+      const details = [
+        `${options.roleLabel} preferred port ${String(options.preferredPort)} was occupied by something else.`,
+        `${options.roleLabel} is using fallback port ${String(port)}.`,
+      ];
+      options.log?.(`[port-select] role=${options.roleLabel} preferred=${String(options.preferredPort)} resolved=${String(port)} reason=fallback-free`);
+      return {
+        ok: true,
+        preferredPort: options.preferredPort,
+        resolvedPort: port,
+        reusedExisting: false,
+        reason,
+        details,
+      };
+    }
+
+    if (inspection.state === 'matching_server') {
+      const reason = port === options.preferredPort
+        ? `${options.roleLabel} found a matching server already running on preferred port ${String(port)} and will reuse it.`
+        : `${options.roleLabel} preferred port ${String(options.preferredPort)} was unavailable, but a matching server is already running on ${String(port)} and will be reused.`;
+      const details = [
+        reason,
+        ...(inspection.modelIds.length > 0 ? [`Models on reused server: ${inspection.modelIds.join(', ')}`] : []),
+      ];
+      options.log?.(`[port-select] role=${options.roleLabel} preferred=${String(options.preferredPort)} resolved=${String(port)} reason=reuse-matching-server`);
+      return {
+        ok: true,
+        preferredPort: options.preferredPort,
+        resolvedPort: port,
+        reusedExisting: true,
+        reason,
+        details,
+      };
+    }
+
+    if (inspection.state === 'other_llama_server') {
+      options.log?.(
+        `[port-busy] role=${options.roleLabel} port=${String(port)} reason=other-llama-server models=${inspection.modelIds.join(',')}`,
+      );
+      continue;
+    }
+
+    options.log?.(`[port-busy] role=${options.roleLabel} port=${String(port)} reason=occupied-by-other-process`);
+  }
+
+  const triedPorts = PORT_PROBE_OFFSETS
+    .map((offset) => options.preferredPort + offset)
+    .filter((port) => port <= 65535)
+    .filter((port) => !excluded.has(port));
+  return {
+    ok: false,
+    preferredPort: options.preferredPort,
+    reusedExisting: false,
+    reason: `${options.roleLabel} could not find a usable port near ${String(options.preferredPort)}.`,
+    details: [
+      `Tried ports: ${triedPorts.join(', ') || 'none'}.`,
+      'Each one was either occupied by another process or already serving a different llama.cpp role.',
+    ],
+  };
 }
 
 export function getLlamaRuntimeLogPath(): string {

@@ -69,8 +69,13 @@ export function AppHeader(props: Props) {
         <button className="btn-preview" onClick={onOpenBrowser} disabled={!currentProjectFilename || isStreaming}>Open in Browser</button>
         <button className="btn-setup" onClick={onOpenSetup} aria-label="Setup assistant" title="Open Setup Assistant">Setup</button>
         <button className="btn-help" onClick={onToggleHelp} aria-label="Help" title="How to use Gemma4kids">?</button>
-        <button className="btn-music" onClick={onToggleMusic} aria-label="Background music" title="Toggle background music">
-          {musicEnabled ? 'Music Off' : 'Music On'}
+        <button
+          className="btn-music"
+          onClick={onToggleMusic}
+          aria-label={musicEnabled ? 'Background music is on' : 'Background music is off'}
+          title={musicEnabled ? 'Background music is on' : 'Background music is off'}
+        >
+          {musicEnabled ? 'Music On' : 'Music Off'}
         </button>
       </div>
     </header>

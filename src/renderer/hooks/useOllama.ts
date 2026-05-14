@@ -16,6 +16,8 @@ export interface UseOllamaResult {
   status: OllamaStatus;
   models: string[];
   errorMsg: string;
+  runtimeMessage: string;
+  runtimeDetails: string[];
   llamaMmprojPath: string | null;
   llamaSttMmprojPath: string | null;
   recheck: () => void;
@@ -34,17 +36,25 @@ export function useOllama(
   const [status, setStatus] = useState<OllamaStatus>('checking');
   const [models, setModels] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const [runtimeMessage, setRuntimeMessage] = useState('');
+  const [runtimeDetails, setRuntimeDetails] = useState<string[]>([]);
   const [llamaMmprojPath, setLlamaMmprojPath] = useState<string | null>(null);
   const [llamaSttMmprojPath, setLlamaSttMmprojPath] = useState<string | null>(null);
 
   const check = useCallback(async () => {
     setStatus('checking');
     setErrorMsg('');
+    setRuntimeMessage('');
+    setRuntimeDetails([]);
     try {
       const health = await adapter.healthCheck();
       if (!health.ok) {
+        setRuntimeMessage(health.message ?? '');
+        setRuntimeDetails(health.details ?? []);
         throw new Error(health.error ?? 'The selected runtime is not ready.');
       }
+      setRuntimeMessage(health.message ?? '');
+      setRuntimeDetails(health.details ?? []);
       if (runtime === 'llama_cpp') {
         const llamaHealth = health as LlamaCppHealthResult;
         setLlamaMmprojPath(llamaHealth.mmprojPath ?? null);
@@ -61,10 +71,13 @@ export function useOllama(
       setLlamaSttMmprojPath(null);
       setStatus('offline');
       setErrorMsg(error instanceof Error ? error.message : String(error));
+      if (runtime === 'llama_cpp' && error instanceof Error) {
+        setRuntimeMessage(error.message);
+      }
     }
   }, [adapter, runtime]);
 
   useEffect(() => { check(); }, [check]);
 
-  return { runtime, adapter, status, models, errorMsg, llamaMmprojPath, llamaSttMmprojPath, recheck: check };
+  return { runtime, adapter, status, models, errorMsg, runtimeMessage, runtimeDetails, llamaMmprojPath, llamaSttMmprojPath, recheck: check };
 }

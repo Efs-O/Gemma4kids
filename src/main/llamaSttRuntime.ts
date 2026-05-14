@@ -3,7 +3,8 @@ import { spawn, type ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { resolveGgufPath } from './llamaCppUtils';
+import { resolveGgufPath, resolveLocalServerPort } from './llamaCppUtils';
+import { getManagedLlamaResolvedPort } from './llamaRuntime';
 
 const LLAMA_STT_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_STT_CTX_SIZE = 8192;
@@ -12,12 +13,17 @@ const LLAMA_STT_RUNTIME_LOG = 'llama-stt-runtime.log';
 
 interface ManagedSttServer {
   configKey: string;
-  process: ChildProcess;
+  process: ChildProcess | null;
   logPath: string;
+  resolvedPort: number;
 }
 
 let managedSttServer: ManagedSttServer | null = null;
 let managedSttStartup: { configKey: string; promise: Promise<LlamaCppHealthResult> } | null = null;
+
+export function getManagedSttResolvedPort(): number | null {
+  return managedSttServer?.resolvedPort ?? null;
+}
 
 function isMmprojPath(filePath: string): boolean {
   return path.basename(filePath).toLowerCase().includes('mmproj');
@@ -37,6 +43,7 @@ function sttConfigKey(config: LlamaCppSttConfig): string {
     serverPath: config.serverPath.trim(),
     sttModelPath: config.sttModelPath.trim(),
     mmprojSearchPaths: config.mmprojSearchPaths.map((value) => value.trim()),
+    mainPort: config.mainPort,
     sttPort: config.sttPort,
     gpuLayers: config.gpuLayers,
   });
@@ -345,22 +352,24 @@ export async function stopManagedSttServer(): Promise<void> {
   if (!current) return;
 
   managedSttServer = null;
-  if (current.process.exitCode !== null || current.process.killed) return;
+  const proc = current.process;
+  if (!proc) return;
+  if (proc.exitCode !== null || proc.killed) return;
 
   await new Promise<void>((resolve) => {
     const timer = setTimeout(() => {
-      if (current.process.exitCode === null && !current.process.killed) {
-        current.process.kill();
+      if (proc.exitCode === null && !proc.killed) {
+        proc.kill();
       }
       resolve();
     }, 3000);
 
-    current.process.once('exit', () => {
+    proc.once('exit', () => {
       clearTimeout(timer);
       resolve();
     });
 
-    current.process.kill();
+    proc.kill();
   });
 }
 
@@ -381,17 +390,44 @@ async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaC
 
   const startupPromise = (async (): Promise<LlamaCppHealthResult> => {
     if (managedSttServer && managedSttServer.configKey === configKey) {
-      if (managedSttServer.process.exitCode === null && await canReachSttServer(config.sttPort, 1500)) {
-        return buildHealthResult(true, 'ready', 'STT server is ready.');
+      if (
+        (!managedSttServer.process || managedSttServer.process.exitCode === null) &&
+        await canReachSttServer(managedSttServer.resolvedPort, 1500)
+      ) {
+        return {
+          ...buildHealthResult(true, 'ready', `STT server is ready on port ${String(managedSttServer.resolvedPort)}.`),
+          preferredPort: config.sttPort,
+          resolvedPort: managedSttServer.resolvedPort,
+        };
       }
       await stopManagedSttServer();
     } else if (managedSttServer) {
       await stopManagedSttServer();
     }
 
-    if (await canReachSttServer(config.sttPort, 1500)) {
-      return buildHealthResult(false, 'port_conflict', 'That STT port is already in use.', `Another process is already responding on port ${String(config.sttPort)}.`);
+    const logPath = resetSttRuntimeLog();
+    const reservedPorts = new Set<number>();
+    if (Number.isInteger(config.mainPort)) {
+      reservedPorts.add(config.mainPort as number);
     }
+    const activeMainPort = getManagedLlamaResolvedPort();
+    if (activeMainPort != null) {
+      reservedPorts.add(activeMainPort);
+    }
+    const portResolution = await resolveLocalServerPort({
+      preferredPort: config.sttPort,
+      expectedModelPath: config.sttModelPath,
+      roleLabel: 'STT llama.cpp server',
+      excludedPorts: [...reservedPorts],
+      log: (line) => appendSttRuntimeLog(logPath, line),
+    });
+    if (!portResolution.ok || portResolution.resolvedPort == null) {
+      return {
+        ...buildHealthResult(false, 'port_conflict', portResolution.reason, portResolution.reason, portResolution.details),
+        preferredPort: config.sttPort,
+      };
+    }
+    const resolvedPort = portResolution.resolvedPort;
 
     let commandInfo: { command: string; args: string[] };
     try {
@@ -403,12 +439,21 @@ async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaC
 
     const gpuLayers = config.gpuLayers === -1 ? 'all' : String(config.gpuLayers);
     const detectedMmproj = findMmprojForConfig(config.sttModelPath, config.mmprojSearchPaths);
+    if (portResolution.reusedExisting) {
+      managedSttServer = { configKey, process: null, logPath, resolvedPort };
+      appendSttRuntimeLog(logPath, `[ready] reused-existing-server port=${String(resolvedPort)} mmproj=${detectedMmproj ?? 'none'}`);
+      return {
+        ...buildHealthResult(true, 'ready', portResolution.reason, undefined, portResolution.details),
+        preferredPort: config.sttPort,
+        resolvedPort,
+      };
+    }
     const spawnArgs = [
       ...commandInfo.args,
       '-m', config.sttModelPath,
       ...(detectedMmproj ? ['--mmproj', detectedMmproj] : []),
       '--host', '127.0.0.1',
-      '--port', String(config.sttPort),
+      '--port', String(resolvedPort),
       '--jinja',
       '--ctx-size', String(LLAMA_STT_CTX_SIZE),
       '--batch-size', String(LLAMA_STT_BATCH_SIZE),
@@ -416,8 +461,7 @@ async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaC
       '--flash-attn', 'on',
       '--n-gpu-layers', gpuLayers,
     ];
-
-    const logPath = resetSttRuntimeLog();
+    appendSttRuntimeLog(logPath, `[port-resolution] preferred=${String(config.sttPort)} resolved=${String(resolvedPort)} main_reserved=${String(config.mainPort ?? 'none')}`);
     appendSttRuntimeLog(logPath, `[spawn] ${commandInfo.command} ${spawnArgs.join(' ')}`);
 
     const proc = spawn(commandInfo.command, spawnArgs, {
@@ -449,7 +493,7 @@ async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaC
       appendSttRuntimeLog(logPath, `[exit] code=${String(code)} signal=${String(signal)}`);
     });
 
-    managedSttServer = { configKey, process: proc, logPath };
+    managedSttServer = { configKey, process: proc, logPath, resolvedPort };
 
     const startedAt = Date.now();
     while (Date.now() - startedAt < LLAMA_STT_STARTUP_TIMEOUT_MS) {
@@ -476,9 +520,13 @@ async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaC
           ],
         );
       }
-      if (await canReachSttServer(config.sttPort, 1500)) {
-        appendSttRuntimeLog(logPath, `[ready] /v1/models responded mmproj=${detectedMmproj ?? 'none'}`);
-        return buildHealthResult(true, 'ready', 'STT server is ready.');
+      if (await canReachSttServer(resolvedPort, 1500)) {
+        appendSttRuntimeLog(logPath, `[ready] /v1/models responded port=${String(resolvedPort)} mmproj=${detectedMmproj ?? 'none'}`);
+        return {
+          ...buildHealthResult(true, 'ready', portResolution.reason, undefined, portResolution.details),
+          preferredPort: config.sttPort,
+          resolvedPort,
+        };
       }
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
@@ -525,7 +573,7 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
     appendSttRuntimeLog(logPath, `[transcribe:start] model=${modelName} lang=${languageHint ?? ''}`);
 
     try {
-      const res = await fetch(`http://127.0.0.1:${sttConfig.sttPort}/v1/chat/completions`, {
+      const res = await fetch(`http://127.0.0.1:${health.resolvedPort ?? sttConfig.sttPort}/v1/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
