@@ -82,6 +82,20 @@ export default function App() {
   const [voiceActive, setVoiceActive] = useState(false);
   const [hasEnteredWorkspace, setHasEnteredWorkspace] = useState(false);
 
+  // If llama_cpp was saved on a different machine the server path won't exist
+  // here — fall back to Ollama silently so voice isn't disabled.
+  useEffect(() => {
+    if (selectedRuntime !== 'llama_cpp') return;
+    const serverPath = llamaSetup.serverPath.trim();
+    if (!serverPath) { setSelectedRuntime('ollama'); return; }
+    void window.electronAPI.checkPathExists(serverPath).then((exists) => {
+      if (!exists) {
+        localStorage.setItem(RUNTIME_SELECTED_KEY, 'ollama');
+        setSelectedRuntime('ollama');
+      }
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const llamaCodingModels = useMemo(() => sortGemma4CodingModelsSmallestFirst(LLAMA_MODEL_PRESETS.map((preset) => preset.modelTag)), []);
   const activeLlamaModel = useMemo(
     () => (userModel && llamaCodingModels.includes(userModel)) ? userModel : pickDefaultLlamaCppCodingModel(llamaCodingModels),

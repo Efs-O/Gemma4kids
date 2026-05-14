@@ -87,6 +87,7 @@ declare global {
       deleteAnimation(filename: string): Promise<{ success: boolean; error?: string }>;
       openInBrowser(filename: string): Promise<{ success: boolean; error?: string }>;
       setOllamaCleanupTargets(runtime: 'ollama' | 'llama_cpp', models: string[]): Promise<{ success: boolean }>;
+      checkPathExists(filePath: string): Promise<boolean>;
       ttsSpeak(text: string, lang?: string): Promise<Uint8Array>;
       ttsListVoices(): Promise<{ name: string; lang: string; sampleRate: number }[]>;
       llamaCppHealthCheck(config: LlamaCppConfig): Promise<LlamaCppHealthResult>;

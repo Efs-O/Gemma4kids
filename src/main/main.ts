@@ -111,6 +111,8 @@ app.on('before-quit', (event) => {
   });
 });
 
+ipcMain.handle('check-path-exists', (_event, filePath: string) => fs.existsSync(filePath));
+
 registerAnimationIpcHandlers(ipcMain);
 registerLlamaRuntimeIpcHandlers(ipcMain);
 registerLlamaSttIpcHandlers(ipcMain);
