@@ -124,7 +124,12 @@ function migrateLegacyModelPaths(legacyModelPath: string): LlamaModelPaths {
 
 export function readSelectedRuntime(): RuntimeKind {
   const stored = localStorage.getItem(RUNTIME_SELECTED_KEY);
-  return stored === 'llama_cpp' ? 'llama_cpp' : 'ollama';
+  if (stored !== 'llama_cpp') return 'ollama';
+  // Only honour the saved llama_cpp choice if the server path was also configured
+  // on this machine; otherwise fall back to Ollama so a fresh install or a machine
+  // that never ran llama.cpp doesn't silently disable voice.
+  const serverPath = localStorage.getItem(LLAMA_SERVER_PATH_KEY)?.trim() ?? '';
+  return serverPath ? 'llama_cpp' : 'ollama';
 }
 
 export function readStoredNumber(key: string, fallback: number): number {

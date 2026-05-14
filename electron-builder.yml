@@ -7,13 +7,14 @@ files:
   - "!dist/**/*.map"
   - package.json
   - assets/icon.png
+  - assets/icon.ico
 
 directories:
   buildResources: assets
   output: release
 
 win:
-  icon: icon.png
+  icon: icon.ico
   signAndEditExecutable: false
   extraResources:
     - from: piper/win
