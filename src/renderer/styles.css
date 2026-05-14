@@ -246,6 +246,14 @@ body {
 .save-dot--unsaved { color: #ef4444; }
 .save-dot--saved   { color: #22c55e; }
 
+.editor-reminder {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #dc2626;
+  letter-spacing: 0.1px;
+  text-transform: none;
+}
+
 .audit-badge {
   font-size: 0.72rem;
   font-weight: 600;

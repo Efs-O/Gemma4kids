@@ -22,6 +22,8 @@ const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
 const MUSIC_TRACK_SRC = './Glassroom Pulse.mp3';
 const MUSIC_VOLUME_NORMAL = 0.35;
 const MUSIC_VOLUME_DUCKED = 0.12;
+const ACTIVE_DRAFT_FILENAME = '__active_draft';
+const DRAFT_AUTOSAVE_DELAY_MS = 700;
 
 function titleToFilename(html: string, fallback: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -31,6 +33,25 @@ function titleToFilename(html: string, fallback: string): string {
 
 function pointsToMmproj(filePath: string): boolean {
   return /mmproj/i.test(filePath.split(/[\\/]/).pop() ?? '');
+}
+
+function getInputText(input: string | { text: string }): string {
+  return typeof input === 'string' ? input : input.text;
+}
+
+function shouldUseDraftForMessage(text: string): boolean {
+  const lower = text.toLowerCase();
+  return [
+    'fix', 'broken', 'bug', 'review', 'debug', 'check', 'edit', 'change', 'update',
+    'continue', 'improve', 'make it', 'add', 'remove', 'color', 'colour',
+    'faster', 'slower', 'bigger', 'smaller', 'wrong',
+  ].some((term) => lower.includes(term));
+}
+
+function pickDefaultLlamaCppCodingModel(models: string[]): string {
+  const e4b = models.find((model) => model.toLowerCase() === 'gemma4:e4b');
+  if (e4b) return e4b;
+  return pickCodingModel(models);
 }
 
 export default function App() {
@@ -59,9 +80,13 @@ export default function App() {
     }
   });
   const [voiceActive, setVoiceActive] = useState(false);
+  const [hasEnteredWorkspace, setHasEnteredWorkspace] = useState(false);
 
   const llamaCodingModels = useMemo(() => sortGemma4CodingModelsSmallestFirst(LLAMA_MODEL_PRESETS.map((preset) => preset.modelTag)), []);
-  const activeLlamaModel = useMemo(() => (userModel && llamaCodingModels.includes(userModel)) ? userModel : pickCodingModel(llamaCodingModels), [llamaCodingModels, userModel]);
+  const activeLlamaModel = useMemo(
+    () => (userModel && llamaCodingModels.includes(userModel)) ? userModel : pickDefaultLlamaCppCodingModel(llamaCodingModels),
+    [llamaCodingModels, userModel],
+  );
   const llamaMmprojSearchPaths = useMemo(
     () => LLAMA_MODEL_PRESETS.map((preset) => llamaSetup.modelPaths[preset.id]),
     [llamaSetup.modelPaths],
@@ -120,10 +145,8 @@ export default function App() {
     () => selectedRuntime === 'ollama' && !models.some((m) => m.toLowerCase().includes('gemma')),
     [models, selectedRuntime],
   );
-  const mainEditorVisible = Boolean(appLanguage)
+  const workspaceScreenVisible = Boolean(appLanguage)
     && !showSetupAssistant
-    && runtimeStatus !== 'checking'
-    && runtimeStatus !== 'offline'
     && !missingGemmaModels;
   const ollamaCleanupModels = useMemo(() => {
     const collected = [codingModel, transcribeModel, greekTranscribeModel ?? ''];
@@ -194,6 +217,7 @@ export default function App() {
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
   const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftAutosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSave = useRef(false);
   const streamStartSaved = useRef<string | null>(null);
   const filenameRef = useRef(filename);
@@ -207,6 +231,28 @@ export default function App() {
   useEffect(() => { localStorage.setItem('g4k-chat-width', String(chatWidth)); }, [chatWidth]);
   useEffect(() => { localStorage.setItem(MUSIC_ENABLED_KEY, String(musicEnabled)); }, [musicEnabled]);
   useEffect(() => { localStorage.setItem(THINKING_DISABLED_MODELS_KEY, JSON.stringify(thinkingDisabledModels)); }, [thinkingDisabledModels]);
+  useEffect(() => {
+    if (workspaceScreenVisible && runtimeStatus === 'ready') {
+      setHasEnteredWorkspace(true);
+    }
+  }, [runtimeStatus, workspaceScreenVisible]);
+  useEffect(() => {
+    if (draftAutosaveTimerRef.current) {
+      clearTimeout(draftAutosaveTimerRef.current);
+      draftAutosaveTimerRef.current = null;
+    }
+    const trimmed = displayCode.trim();
+    if (!trimmed) return;
+    draftAutosaveTimerRef.current = setTimeout(() => {
+      void window.electronAPI.saveAnimation(ACTIVE_DRAFT_FILENAME, trimmed, 'draft');
+    }, DRAFT_AUTOSAVE_DELAY_MS);
+    return () => {
+      if (draftAutosaveTimerRef.current) {
+        clearTimeout(draftAutosaveTimerRef.current);
+        draftAutosaveTimerRef.current = null;
+      }
+    };
+  }, [displayCode]);
   useEffect(() => {
     if (!thinkingAvailable && chatThinkEnabled) {
       setChatThinkEnabled(false);
@@ -222,7 +268,8 @@ export default function App() {
       clearTimeout(musicRetryTimeoutRef.current);
       musicRetryTimeoutRef.current = null;
     }
-    if (!musicEnabled || !mainEditorVisible) {
+    const shouldHoldMusic = workspaceScreenVisible && hasEnteredWorkspace;
+    if (!musicEnabled || !shouldHoldMusic) {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -282,12 +329,16 @@ export default function App() {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplaythrough', handleCanPlay);
     };
-  }, [mainEditorVisible, musicEnabled]);
+  }, [hasEnteredWorkspace, musicEnabled, workspaceScreenVisible]);
   useEffect(() => {
     if (!audioRef.current || !musicEnabled) return;
     audioRef.current.volume = voiceActive ? MUSIC_VOLUME_DUCKED : MUSIC_VOLUME_NORMAL;
   }, [musicEnabled, voiceActive]);
   useEffect(() => () => {
+    if (draftAutosaveTimerRef.current) {
+      clearTimeout(draftAutosaveTimerRef.current);
+      draftAutosaveTimerRef.current = null;
+    }
     if (!audioRef.current) return;
     audioRef.current.pause();
     audioRef.current.currentTime = 0;
@@ -360,6 +411,14 @@ export default function App() {
     setShowThinking(enabled);
     localStorage.setItem('g4k-show-thinking', String(enabled));
   }, []);
+  const handleSendMessage = useCallback((input: string | { text: string; images?: string[]; videos?: string[]; hasAttachment?: boolean; contextNote?: string }) => {
+    const text = getInputText(input).trim();
+    const hasUnsavedEditorChanges = displayCode.trim().length > 0 && displayCode !== savedCode;
+    if (hasUnsavedEditorChanges && text && shouldUseDraftForMessage(text)) {
+      injectContext(`[Context: the code in the editor has newer unsaved child changes. Before you review, debug, fix, or change the current code, call read_animation("${ACTIVE_DRAFT_FILENAME}") first and use that draft as the source of truth.]`);
+    }
+    sendMessage(input);
+  }, [displayCode, injectContext, savedCode, sendMessage]);
   const handleToggleMusic = useCallback(() => {
     setUiError('');
     setMusicEnabled((current) => !current);
@@ -504,7 +563,7 @@ export default function App() {
               status={status}
               errorMsg={errorMsg}
               hasCode={!!displayCode}
-              onSend={sendMessage}
+              onSend={handleSendMessage}
               onCancel={cancel}
               onRetry={retry}
               onVoiceActivityChange={handleVoiceActivityChange}

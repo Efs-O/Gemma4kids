@@ -64,7 +64,7 @@ declare global {
 
   interface Window {
     electronAPI: {
-      saveAnimation(filename: string, html_content: string, source?: 'gemma' | 'kid'): Promise<{ success: boolean; filename: string; path: string; error?: string }>;
+      saveAnimation(filename: string, html_content: string, source?: 'gemma' | 'kid' | 'draft'): Promise<{ success: boolean; filename: string; path: string; error?: string }>;
       saveVideoFrame(filename: string, jpeg_base64: string, source?: 'gemma' | 'kid'): Promise<{ success: boolean; filename: string; path: string; error?: string }>;
       inspectVideoAttachment(videoPath: string): Promise<{
         success: boolean;

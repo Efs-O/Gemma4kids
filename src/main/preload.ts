@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  saveAnimation: (filename: string, html_content: string, source?: 'gemma' | 'kid') =>
+  saveAnimation: (filename: string, html_content: string, source?: 'gemma' | 'kid' | 'draft') =>
     ipcRenderer.invoke('save-animation', { filename, html_content, source }),
   saveVideoFrame: (filename: string, jpeg_base64: string, source?: 'gemma' | 'kid') =>
     ipcRenderer.invoke('save-video-frame', { filename, jpeg_base64, source }),

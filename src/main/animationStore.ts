@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 
+const INTERNAL_ANIMATION_PREFIX = '__';
+
 function getAnimationsDir(): string {
   return path.join(app.getPath('documents'), 'KidAnimations');
 }
@@ -91,12 +93,20 @@ function sanitizeHtmlForSave(input: string): string {
   return html;
 }
 
+function isInternalAnimationFilename(filename: string): boolean {
+  return filename.startsWith(INTERNAL_ANIMATION_PREFIX);
+}
+
 export function registerAnimationIpcHandlers(ipcMain: IpcMain): void {
-  ipcMain.handle('save-animation', async (_event, { filename, html_content, source }: { filename: string; html_content: string; source?: 'gemma' | 'kid' }) => {
+  ipcMain.handle('save-animation', async (_event, { filename, html_content, source }: { filename: string; html_content: string; source?: 'gemma' | 'kid' | 'draft' }) => {
     try {
       ensureAnimationsDir();
       const sanitizedHtml = sanitizeHtmlForSave(html_content);
       let { filename: target, fullPath } = resolveAnimationPath(filename);
+      if (source === 'draft') {
+        fs.writeFileSync(fullPath, sanitizedHtml, 'utf-8');
+        return { success: true, filename: target, path: fullPath };
+      }
       if (fs.existsSync(fullPath)) {
         const existing = fs.readFileSync(fullPath, 'utf-8');
         if (existing !== sanitizedHtml) {
@@ -175,7 +185,7 @@ export function registerAnimationIpcHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('list-animations', async () => {
     try {
       ensureAnimationsDir();
-      const files = fs.readdirSync(getAnimationsDir()).filter((f) => f.endsWith('.html'));
+      const files = fs.readdirSync(getAnimationsDir()).filter((f) => f.endsWith('.html') && !isInternalAnimationFilename(f));
       return { success: true, files };
     } catch (err) {
       return { success: false, files: [], error: String(err) };
