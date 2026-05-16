@@ -21,6 +21,7 @@ export interface UseOllamaResult {
   llamaMmprojPath: string | null;
   llamaSttMmprojPath: string | null;
   recheck: () => void;
+  warmup: () => void;
 }
 
 export function useOllama(
@@ -64,7 +65,6 @@ export function useOllama(
       const modelIds = found.map((model) => model.id);
       setModels(modelIds);
       setStatus('ready');
-      adapter.warmupCodingModel(pickCodingModel(modelIds));
     } catch (error) {
       setModels([]);
       setLlamaMmprojPath(null);
@@ -79,5 +79,9 @@ export function useOllama(
 
   useEffect(() => { check(); }, [check]);
 
-  return { runtime, adapter, status, models, errorMsg, runtimeMessage, runtimeDetails, llamaMmprojPath, llamaSttMmprojPath, recheck: check };
+  const warmup = useCallback(() => {
+    adapter.warmupCodingModel(pickCodingModel(models));
+  }, [adapter, models]);
+
+  return { runtime, adapter, status, models, errorMsg, runtimeMessage, runtimeDetails, llamaMmprojPath, llamaSttMmprojPath, recheck: check, warmup };
 }

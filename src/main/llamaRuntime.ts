@@ -43,6 +43,10 @@ export function getManagedLlamaResolvedPort(): number | null {
   return managedLlamaServer?.resolvedPort ?? null;
 }
 
+export function getManagedLlamaModelPath(): string | null {
+  return managedLlamaServer?.config.modelPath ?? null;
+}
+
 async function stopManagedLlamaServer(): Promise<void> {
   const current = managedLlamaServer;
   if (!current) return;

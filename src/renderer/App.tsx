@@ -131,6 +131,7 @@ export default function App() {
     llamaMmprojPath,
     llamaSttMmprojPath,
     recheck,
+    warmup,
   } = useOllama(selectedRuntime, activeLlamaRuntimeConfig);
 
   const autoOllamaModel = useMemo(() => pickCodingModel(models), [models]);
@@ -466,7 +467,10 @@ export default function App() {
     setHelpOpen(false);
     setShowSetupAssistant(true);
   }, []);
-  const closeSetupAssistant = useCallback(() => setShowSetupAssistant(false), []);
+  const closeSetupAssistant = useCallback(() => {
+    setShowSetupAssistant(false);
+    warmup();
+  }, [warmup]);
   const onSidebarDividerMouseDown = useCallback((event: React.MouseEvent) => {
     draggingTarget.current = 'sidebar';
     dragStartX.current = event.clientX;

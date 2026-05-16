@@ -3,13 +3,10 @@ import type { LLMRuntimeAdapter } from '../services/OllamaService';
 import { audioBlobToWav16k } from '../services/OllamaService';
 import type { AppLanguage } from './WelcomeScreen';
 import { detectLang } from '../services/PiperTTS';
+import { isGemma4EdgeE4b } from '../utils/pickCodingModel';
 
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
 
-function estimateWarmKeepAlive(durationSeconds: number): string {
-  const seconds = Math.max(15, Math.min(45, Math.ceil(durationSeconds * 2 + 5)));
-  return `${seconds}s`;
-}
 
 function previewText(text: string, max = 140): string {
   const normalized = text.replace(/\s+/g, ' ').trim();
@@ -83,8 +80,8 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         appLanguage === 'el' && greekTranscribeModel
           ? greekTranscribeModel
           : transcribeModel;
-      const keepAlive = activeTranscribeModel === codingModel
-        ? estimateWarmKeepAlive(encoded.durationSeconds)
+      const keepAlive: 0 | string = activeTranscribeModel === codingModel && isGemma4EdgeE4b(activeTranscribeModel)
+        ? '-1'
         : 0;
       const languageHintForSTT = appLanguage;
       console.info('[voice:transcribe:selected-model]', {

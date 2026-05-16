@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { resolveGgufPath, resolveLocalServerPort } from './llamaCppUtils';
-import { getManagedLlamaResolvedPort } from './llamaRuntime';
+import { getManagedLlamaResolvedPort, getManagedLlamaModelPath } from './llamaRuntime';
 
 const LLAMA_STT_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_STT_CTX_SIZE = 8192;
@@ -561,19 +561,39 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('llama-cpp-transcribe', async (_event, { sttConfig, audioBase64, languageHint }: { sttConfig: LlamaCppSttConfig; audioBase64: string; languageHint?: string }) => {
-    const health = await ensureManagedSttServer(sttConfig);
-    if (!health.ok) {
-      return { success: false, error: health.error ?? health.message ?? 'STT server is not ready.' };
+    // If the STT model is the same file as the active coding model, reuse the
+    // main server — no separate process needed and the model never leaves VRAM.
+    const resolvedSttPath = resolveGgufPath(sttConfig.sttModelPath.trim());
+    const codingModelPath = getManagedLlamaModelPath();
+    const mainPort = getManagedLlamaResolvedPort();
+    const reuseMainServer =
+      codingModelPath !== null &&
+      mainPort !== null &&
+      path.normalize(resolvedSttPath).toLowerCase() === path.normalize(codingModelPath).toLowerCase();
+
+    let transcribePort: number;
+    let logPath: string;
+
+    if (reuseMainServer) {
+      transcribePort = mainPort;
+      logPath = getSttRuntimeLogPath();
+      appendSttRuntimeLog(logPath, `[transcribe:route] STT model matches coding model — reusing main server port=${String(transcribePort)}`);
+    } else {
+      const health = await ensureManagedSttServer(sttConfig);
+      if (!health.ok) {
+        return { success: false, error: health.error ?? health.message ?? 'STT server is not ready.' };
+      }
+      transcribePort = health.resolvedPort ?? sttConfig.sttPort;
+      logPath = managedSttServer?.logPath ?? getSttRuntimeLogPath();
     }
 
     const modelName = path.basename(sttConfig.sttModelPath, path.extname(sttConfig.sttModelPath));
     const prompt = buildTranscribePrompt(languageHint);
-
-    const logPath = managedSttServer?.logPath ?? getSttRuntimeLogPath();
     appendSttRuntimeLog(logPath, `[transcribe:start] model=${modelName} lang=${languageHint ?? ''}`);
 
+    let result: { success: boolean; text?: string; error?: string };
     try {
-      const res = await fetch(`http://127.0.0.1:${health.resolvedPort ?? sttConfig.sttPort}/v1/chat/completions`, {
+      const res = await fetch(`http://127.0.0.1:${String(transcribePort)}/v1/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -596,20 +616,26 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
         appendSttRuntimeLog(logPath, `[transcribe:http-error] status=${String(res.status)} body=${body.slice(0, 500)}`);
         if (shouldFallbackToMtmdCli(body, res.status)) {
           appendSttRuntimeLog(logPath, '[transcribe:fallback] server audio unsupported, trying llama-mtmd-cli');
-          return transcribeWithMtmdCli(sttConfig, audioBase64, prompt, logPath);
+          result = await transcribeWithMtmdCli(sttConfig, audioBase64, prompt, logPath);
+        } else {
+          result = { success: false, error: `HTTP ${res.status}: ${body.slice(0, 200)}` };
         }
-        return { success: false, error: `HTTP ${res.status}: ${body.slice(0, 200)}` };
+      } else {
+        const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
+        const text = (data.choices?.[0]?.message?.content ?? '').trim();
+        appendSttRuntimeLog(logPath, `[transcribe:done] textLen=${String(text.length)}`);
+        result = text ? { success: true, text } : { success: false, error: 'Empty transcription returned' };
       }
-
-      const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-      const text = (data.choices?.[0]?.message?.content ?? '').trim();
-      appendSttRuntimeLog(logPath, `[transcribe:done] textLen=${String(text.length)}`);
-      if (!text) return { success: false, error: 'Empty transcription returned' };
-      return { success: true, text };
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       appendSttRuntimeLog(logPath, `[transcribe:error] ${msg}`);
-      return { success: false, error: msg };
+      result = { success: false, error: msg };
     }
+
+    // Only stop the dedicated STT server if we used one — never touch the main coding server.
+    if (!reuseMainServer) {
+      void stopManagedSttServer();
+    }
+    return result;
   });
 }
