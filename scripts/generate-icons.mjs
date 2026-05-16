@@ -138,6 +138,48 @@ function renderPng(size) {
   ]);
 }
 
+// Windows ICO sizes — must include 16, 32, 48 so taskbar picks the right frame.
+// 256 is embedded as PNG-in-ICO (Vista+ standard).
+const WIN_ICO_SIZES = [16, 32, 48, 256];
+
+/**
+ * Pack an array of PNG Buffers into a .ico file.
+ * Each PNG is stored raw inside the ICO container (PNG-in-ICO, supported Vista+).
+ */
+function buildIco(pngBuffers) {
+  const count = pngBuffers.length;
+  const headerSize = 6;
+  const dirEntrySize = 16;
+  const dirSize = count * dirEntrySize;
+  let dataOffset = headerSize + dirSize;
+
+  const header = Buffer.alloc(headerSize);
+  header.writeUInt16LE(0, 0);   // reserved
+  header.writeUInt16LE(1, 2);   // type: ICO
+  header.writeUInt16LE(count, 4);
+
+  const dirEntries = [];
+  for (let i = 0; i < count; i++) {
+    const png = pngBuffers[i];
+    // Read actual dimensions from the PNG IHDR chunk (bytes 16-23)
+    const w = png.readUInt32BE(16);
+    const h = png.readUInt32BE(20);
+    const entry = Buffer.alloc(dirEntrySize);
+    entry[0] = w >= 256 ? 0 : w;   // 0 = 256 in ICO spec
+    entry[1] = h >= 256 ? 0 : h;
+    entry[2] = 0;                   // colorCount (0 = true color)
+    entry[3] = 0;                   // reserved
+    entry.writeUInt16LE(1, 4);      // planes
+    entry.writeUInt16LE(32, 6);     // bit count
+    entry.writeUInt32LE(png.length, 8);
+    entry.writeUInt32LE(dataOffset, 12);
+    dataOffset += png.length;
+    dirEntries.push(entry);
+  }
+
+  return Buffer.concat([header, ...dirEntries, ...pngBuffers]);
+}
+
 const assetsDir = path.join(ROOT, 'assets');
 const linuxIconsDir = path.join(assetsDir, 'icons');
 if (!existsSync(assetsDir)) {
@@ -156,3 +198,18 @@ for (const size of LINUX_ICON_SIZES) {
   writeFileSync(path.join(linuxIconsDir, `${size}x${size}.png`), png);
   console.log(`Wrote assets/icons/${size}x${size}.png (${(png.length / 1024).toFixed(1)} KB)`);
 }
+
+// Build multi-size ICO for Windows installer + taskbar
+console.log('\nBuilding Windows ICO...');
+const icoPngs = WIN_ICO_SIZES.map(size => {
+  const png = renderPng(size);
+  console.log(`  Rendered ${size}x${size} for ICO`);
+  return png;
+});
+const icoBuffer = buildIco(icoPngs);
+writeFileSync(path.join(assetsDir, 'icon.ico'), icoBuffer);
+console.log(`Wrote assets/icon.ico (${(icoBuffer.length / 1024).toFixed(0)} KB, ${WIN_ICO_SIZES.length} frames: ${WIN_ICO_SIZES.join(', ')}px)`);
+
+// Verify frame count
+const frameCount = icoBuffer.readUInt16LE(4);
+console.log(`ICO verification: ${frameCount} embedded frames ✓`);

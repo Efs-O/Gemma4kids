@@ -57,7 +57,7 @@ export function SetupAssistant({
           >
             <img className="runtime-card-logo" src={OLLAMA_LOGO_SRC} alt="Ollama logo" />
             <span className="runtime-card-title">Ollama Server</span>
-            <span className="runtime-card-tag">Recommended</span>
+            <span className="runtime-card-tag">Simple</span>
             <span className="runtime-card-copy">Easy setup, guided checks, and the current live runtime for Gemma4kids.</span>
           </button>
 
