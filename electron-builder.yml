@@ -15,7 +15,7 @@ directories:
 
 win:
   icon: icon.ico
-  signAndEditExecutable: false
+  signAndEditExecutable: true
   extraResources:
     - from: piper/win
       to: piper
@@ -39,12 +39,9 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   hardenedRuntime: false
-  # Package the x64 Piper payload for now. The upstream piper_macos_aarch64
-  # archive may be mislabeled or otherwise not reliably arm64, so x64 is the
-  # safer default until that artifact is verified.
   extraResources:
-    - from: piper/mac/x64/piper
-      to: piper
+    - from: piper/mac
+      to: piper/mac
     - from: voices
       to: voices
   target:
@@ -58,8 +55,8 @@ linux:
   icon: icons
   category: Education
   extraResources:
-    - from: piper/linux/x64/piper
-      to: piper
+    - from: piper/linux
+      to: piper/linux
     - from: voices
       to: voices
   target:
