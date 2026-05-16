@@ -531,6 +531,7 @@ export function useChat(
     resetPendingStreamUi();
     historyRef.current = [];
     setMessages([]);
+    void runtimeAdapter.clearKvCache?.();
     setStreamingText('');
     setStreamingThinking('');
     setLatestCode(null);

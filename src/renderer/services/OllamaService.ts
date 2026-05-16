@@ -54,6 +54,7 @@ export interface LLMRuntimeAdapter {
     onContextUsage?: (promptTokens: number, evalTokens: number) => void,
   ): Promise<void>;
   transcribe?(audioBase64: string, model?: string, keepAlive?: -1 | 0 | string, languageHint?: string): Promise<string>;
+  clearKvCache?(): Promise<void>;
 }
 
 export interface LlamaCppRuntimeConfig {
@@ -504,6 +505,9 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
     },
     warmupCodingModel: () => {
       // The main-process manager keeps llama-server warm once started.
+    },
+    clearKvCache: async () => {
+      await window.electronAPI.llamaCppClearKv(config.port);
     },
     streamChat: async (params, handlers, signal, onContextUsage) => {
       const requestId = `llama_${crypto.randomUUID()}`;

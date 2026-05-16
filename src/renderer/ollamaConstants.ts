@@ -34,14 +34,14 @@ export const OLLAMA_SAMPLING: OllamaSamplingProfile = {
  */
 export const OLLAMA_CHAT_PROFILE: OllamaChatProfile = {
   think: true,
-  numCtx: 65536,
-  numPredict: 32768,
+  numCtx: 32768,
+  numPredict: 8192,
   ...OLLAMA_SAMPLING,
 };
 
 /** 26B / 31B only: wider ctx + reply cap (more KV-cache VRAM than edge models). */
-export const OLLAMA_CHAT_WORKSTATION_CTX = 122880;
-export const OLLAMA_CHAT_WORKSTATION_PREDICT = 65536;
+export const OLLAMA_CHAT_WORKSTATION_CTX = 65536;
+export const OLLAMA_CHAT_WORKSTATION_PREDICT = 16384;
 
 /**
  * Audio transcription profile for Gemma 4 E4B.

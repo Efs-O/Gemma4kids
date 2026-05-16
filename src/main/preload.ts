@@ -35,6 +35,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('llama-cpp-start-stream', { requestId, config, request }),
   llamaCppAbortStream: (requestId: string) =>
     ipcRenderer.invoke('llama-cpp-abort-stream', { requestId }),
+  llamaCppClearKv: (port: number) =>
+    ipcRenderer.invoke('llama-cpp-clear-kv', { port }),
   llamaCppSttHealthCheck: (sttConfig: LlamaCppSttConfig) =>
     ipcRenderer.invoke('llama-cpp-stt-health-check', sttConfig),
   llamaCppTranscribe: (sttConfig: LlamaCppSttConfig, audioBase64: string, languageHint?: string) =>

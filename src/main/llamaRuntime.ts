@@ -205,6 +205,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       '--cache-type-v', cacheTypeV,
       '--flash-attn', 'on',
       '--n-gpu-layers', gpuLayers,
+      '-cram', '0',
     ];
     appendLlamaRuntimeLog(logPath, `[port-resolution] preferred=${String(config.port)} resolved=${String(resolvedPort)} stt_reserved=${String(config.sttPort ?? 'none')}`);
     appendLlamaRuntimeLog(logPath, `[spawn:config] ctx_size=${String(ctxSize)} startup_timeout_s=${String(Math.round(startupTimeoutMs / 1000))}`);
@@ -386,6 +387,16 @@ export function registerLlamaRuntimeIpcHandlers(ipcMain: IpcMain): void {
     managedAbortControllers.get(requestId)?.abort();
     managedAbortControllers.delete(requestId);
     return { success: true };
+  });
+
+  ipcMain.handle('llama-cpp-clear-kv', async (_event, { port }: { port: number }) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/slots/0?action=erase`, { method: 'POST' });
+      if (!res.ok) return { success: false, error: `HTTP ${res.status}` };
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: String(e) };
+    }
   });
 }
 

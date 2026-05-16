@@ -98,6 +98,7 @@ declare global {
         request: Record<string, unknown>,
       ): Promise<{ success: boolean; error?: string }>;
       llamaCppAbortStream(requestId: string): Promise<{ success: boolean }>;
+      llamaCppClearKv(port: number): Promise<{ success: boolean; error?: string }>;
       llamaCppSttHealthCheck(sttConfig: LlamaCppSttConfig): Promise<LlamaCppHealthResult>;
       llamaCppTranscribe(sttConfig: LlamaCppSttConfig, audioBase64: string, languageHint?: string): Promise<{ success: boolean; text?: string; error?: string }>;
       onLlamaCppStreamEvent(listener: (event: LlamaCppStreamEvent) => void): () => void;
