@@ -205,7 +205,6 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       '--cache-type-v', cacheTypeV,
       '--flash-attn', 'on',
       '--n-gpu-layers', gpuLayers,
-      '-cram', '0',
     ];
     appendLlamaRuntimeLog(logPath, `[port-resolution] preferred=${String(config.port)} resolved=${String(resolvedPort)} stt_reserved=${String(config.sttPort ?? 'none')}`);
     appendLlamaRuntimeLog(logPath, `[spawn:config] ctx_size=${String(ctxSize)} startup_timeout_s=${String(Math.round(startupTimeoutMs / 1000))}`);
