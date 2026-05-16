@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type MutableRefObject } from 'react';
+import { useState, useCallback, useRef, startTransition, type MutableRefObject } from 'react';
 import { CancellationToken } from '../llm/cancellation';
 import type { ChatMessage, ToolCall } from '../llm/types';
 import { KIDS_TOOLS } from '../tools';
@@ -163,6 +163,45 @@ export function useChat(
   const historyRef = useRef<ChatMessage[]>([]);
   const cancelRef = useRef<CancellationToken | null>(null);
   const clearIdRef = useRef(0);
+  const streamFrameRef = useRef<number | null>(null);
+  const pendingStreamingTextRef = useRef('');
+  const pendingStreamingThinkingRef = useRef('');
+  const pendingLatestCodeRef = useRef<string | null>(null);
+
+  const cancelPendingStreamFrame = useCallback(() => {
+    if (streamFrameRef.current != null) {
+      cancelAnimationFrame(streamFrameRef.current);
+      streamFrameRef.current = null;
+    }
+  }, []);
+
+  const flushPendingStreamUi = useCallback(() => {
+    streamFrameRef.current = null;
+    const nextText = pendingStreamingTextRef.current;
+    const nextThinking = pendingStreamingThinkingRef.current;
+    const nextCode = pendingLatestCodeRef.current;
+    startTransition(() => {
+      setStreamingText(nextText);
+      setStreamingThinking(nextThinking);
+      if (nextCode) {
+        setLatestCode(nextCode);
+      }
+    });
+  }, []);
+
+  const scheduleStreamUiFlush = useCallback(() => {
+    if (streamFrameRef.current != null) return;
+    streamFrameRef.current = requestAnimationFrame(() => {
+      flushPendingStreamUi();
+    });
+  }, [flushPendingStreamUi]);
+
+  const resetPendingStreamUi = useCallback(() => {
+    cancelPendingStreamFrame();
+    pendingStreamingTextRef.current = '';
+    pendingStreamingThinkingRef.current = '';
+    pendingLatestCodeRef.current = null;
+  }, [cancelPendingStreamFrame]);
 
   function normalizeMessageInput(input: SendMessageInput): {
     text: string;
@@ -253,13 +292,15 @@ export function useChat(
           {
             onToken: (t) => {
               assembled += t;
-              setStreamingText(assembled);
+              pendingStreamingTextRef.current = assembled;
               const partial = extractPartialHtml(assembled);
-              if (partial) setLatestCode(partial);
+              if (partial) pendingLatestCodeRef.current = partial;
+              scheduleStreamUiFlush();
             },
             onThinkingToken: (t) => {
               thinking += t;
-              setStreamingThinking(thinking);
+              pendingStreamingThinkingRef.current = thinking;
+              scheduleStreamUiFlush();
             },
             onToolCalls: (calls) => { firedToolCalls = calls; },
             onDone: () => resolve(),
@@ -275,6 +316,7 @@ export function useChat(
       });
 
       if (token.signal.aborted) {
+        flushPendingStreamUi();
         if (clearIdRef.current === myClearId && (assembled || thinking)) {
           const msg: ChatMessage = {
             role: 'assistant',
@@ -291,7 +333,8 @@ export function useChat(
         return;
       }
 
-      if (loopError) {
+        if (loopError) {
+        flushPendingStreamUi();
         const normalizedError = loopError instanceof Error ? loopError : new Error(String(loopError));
         const errorMessage = normalizedError.message;
         const shouldRetryWithoutThinking =
@@ -323,6 +366,7 @@ export function useChat(
       }
 
       if (firedToolCalls) {
+        flushPendingStreamUi();
         const calls = firedToolCalls;
         const assistantMsg: ChatMessage = {
           role: 'assistant',
@@ -371,6 +415,7 @@ export function useChat(
       }
 
       let finalContent = assembled || null;
+      flushPendingStreamUi();
       if (modelTier === 'simple' && assembled.trim() === '__TOOBIG__') {
         finalContent = SISTER_MESSAGE[detectLang(getLatestUserText(history))];
       }
@@ -398,7 +443,7 @@ export function useChat(
       setStatus('idle');
       return;
     }
-  }, [model, onThinkingUnsupported, thinkEnabled, thinkingAvailable, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
+  }, [flushPendingStreamUi, model, onThinkingUnsupported, scheduleStreamUiFlush, thinkEnabled, thinkingAvailable, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
 
   const sendMessage = useCallback((input: SendMessageInput) => {
     const { text, images, videos, hasAttachment, contextNote } = normalizeMessageInput(input);
@@ -420,6 +465,7 @@ export function useChat(
 
     const token = new CancellationToken();
     cancelRef.current = token;
+    resetPendingStreamUi();
     setStatus('streaming');
     setErrorMsg('');
     setStreamingText('');
@@ -453,7 +499,7 @@ export function useChat(
     historyRef.current = updated;
     setMessages(stripHeavyMultimodalForUi(updated));
     void runLoop(updated, token);
-  }, [model, modelTier, runLoop, videoAttachmentFileRef]);
+  }, [model, modelTier, resetPendingStreamUi, runLoop, videoAttachmentFileRef]);
 
   const cancel = useCallback(() => {
     cancelRef.current?.cancel();
@@ -465,16 +511,18 @@ export function useChat(
     if (historyRef.current.length === 0) return;
     const token = new CancellationToken();
     cancelRef.current = token;
+    resetPendingStreamUi();
     setStatus('streaming');
     setErrorMsg('');
     setStreamingText('');
     setStreamingThinking('');
     void runLoop(historyRef.current, token);
-  }, [runLoop]);
+  }, [resetPendingStreamUi, runLoop]);
 
   const clearContext = useCallback(() => {
     ++clearIdRef.current;
     cancelRef.current?.cancel();
+    resetPendingStreamUi();
     historyRef.current = [];
     setMessages([]);
     setStreamingText('');

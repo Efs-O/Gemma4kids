@@ -6,13 +6,13 @@ export function normalizeOllamaModelRef(name: string): string {
 }
 
 const OLLAMA_STT_E4B_CANDIDATES = [
-  'gemma4:latest',
-  'gemma4gr:e4b',
   'gemma4:e4b',
+  'gemma4gr:e4b',
   'gemma4gr-e4b:latest',
+  'gemma4:latest',
 ];
 
-/** True for Gemma 4 edge E4B tags (gemma4:latest, gemma4:e4b, gemma4:e4b-it-...). */
+/** True for Gemma 4 edge E4B tags (gemma4:e4b, gemma4:latest, gemma4:e4b-it-...). */
 export function isGemma4EdgeE4b(name: string): boolean {
   const n = normalizeOllamaModelRef(name);
   return /^gemma4:e4b(?:$|[-.])/i.test(n) || /^gemma4:latest$/i.test(n);

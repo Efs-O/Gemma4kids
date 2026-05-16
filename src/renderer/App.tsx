@@ -54,6 +54,13 @@ function pickDefaultLlamaCppCodingModel(models: string[]): string {
   return pickCodingModel(models);
 }
 
+function modelPathLabel(modelPath: string): string {
+  const trimmed = modelPath.trim();
+  if (!trimmed) return '';
+  const parts = trimmed.split(/[\\/]/);
+  return parts[parts.length - 1] ?? trimmed;
+}
+
 export default function App() {
   const [appLanguage, setAppLanguage] = useState<AppLanguage | null>(null);
   const [selectedRuntime, setSelectedRuntime] = useState<RuntimeKind>(() => readSelectedRuntime());
@@ -137,6 +144,12 @@ export default function App() {
   const autoOllamaModel = useMemo(() => pickCodingModel(models), [models]);
   const transcribeModel = useMemo(() => pickTranscribeModel(models), [models]);
   const greekTranscribeModel = useMemo(() => pickGreekTranscribeModel(models), [models]);
+  const voiceModelLabel = useMemo(
+    () => runtimeInUse === 'llama_cpp'
+      ? modelPathLabel(activeLlamaRuntimeConfig.sttModelPath)
+      : (appLanguage === 'el' && greekTranscribeModel ? greekTranscribeModel : transcribeModel),
+    [activeLlamaRuntimeConfig.sttModelPath, appLanguage, greekTranscribeModel, runtimeInUse, transcribeModel],
+  );
   const voiceInputAvailable = useMemo(() => {
     if (runtimeInUse === 'llama_cpp') return activeLlamaRuntimeConfig.sttModelPath.trim() !== '';
     return hasSupportedOllamaTranscribeModel(models);
@@ -441,10 +454,13 @@ export default function App() {
   const handleVoiceActivityChange = useCallback((active: boolean) => {
     setVoiceActive(active);
   }, []);
-  const handleRuntimeSelection = useCallback((runtime: RuntimeKind) => {
+  const handleRuntimeSelection = useCallback(async (runtime: RuntimeKind) => {
+    if (runtime === selectedRuntime) return;
+    const cleanupModels = runtime === 'llama_cpp' ? ollamaCleanupModels : [];
+    await window.electronAPI.setOllamaCleanupTargets(runtime, cleanupModels);
     setSelectedRuntime(runtime);
     localStorage.setItem(RUNTIME_SELECTED_KEY, runtime);
-  }, []);
+  }, [ollamaCleanupModels, selectedRuntime]);
   const handleLlamaSetupChange = useCallback((patch: Partial<LlamaCppSetupConfig>) => {
     setLlamaSetup((current) => {
       const next = { ...current, ...patch };
@@ -588,6 +604,7 @@ export default function App() {
               e4bAvailable={voiceInputAvailable}
               greekTranscribeModel={greekTranscribeModel}
               transcribeModel={transcribeModel}
+              voiceModelLabel={voiceModelLabel}
               codingModel={codingModel}
               runtimeAdapter={runtimeAdapter}
               showThinking={showThinking}

@@ -13,7 +13,7 @@ export interface OllamaChatProfile extends OllamaSamplingProfile {
 export interface OllamaTranscribeProfile {
   think: boolean;
   numCtx: number;
-  keepAlive: 0 | string;
+  keepAlive: -1 | 0 | string;
 }
 
 /**

@@ -53,7 +53,7 @@ export interface LLMRuntimeAdapter {
     signal?: AbortSignal,
     onContextUsage?: (promptTokens: number, evalTokens: number) => void,
   ): Promise<void>;
-  transcribe?(audioBase64: string, model?: string, keepAlive?: 0 | string, languageHint?: string): Promise<string>;
+  transcribe?(audioBase64: string, model?: string, keepAlive?: -1 | 0 | string, languageHint?: string): Promise<string>;
 }
 
 export interface LlamaCppRuntimeConfig {
@@ -190,6 +190,32 @@ function stripPromptEcho(text: string, languageHint?: string): string {
   return cleaned.trim();
 }
 
+function looksLikeTranscriptionRefusal(text: string): boolean {
+  const normalized = text.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!normalized) return false;
+
+  return [
+    'does not contain audible speech',
+    'cannot provide a transcription',
+    'i cannot provide a transcription',
+    'unable to provide a transcription',
+    'no audible speech',
+    'no speech detected',
+    'there is no speech',
+    'no spoken audio',
+    'cannot transcribe',
+    'unable to transcribe',
+  ].some((snippet) => normalized.includes(snippet));
+}
+
+function sanitizeTranscript(text: string, languageHint?: string): string {
+  const cleaned = stripPromptEcho(text, languageHint);
+  if (looksLikeTranscriptionRefusal(cleaned)) {
+    return '';
+  }
+  return cleaned;
+}
+
 function previewText(text: string, max = 140): string {
   const normalized = text.replace(/\s+/g, ' ').trim();
   return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
@@ -321,7 +347,7 @@ export async function audioBlobToWav16kBase64(blob: Blob): Promise<string> {
 export async function transcribeAudioBlob(
   blob: Blob,
   model: string = 'gemma4:latest',
-  keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+  keepAlive: -1 | 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<{ text: string; durationSeconds: number }> {
   const encoded = await audioBlobToWav16k(blob);
@@ -339,7 +365,7 @@ export async function transcribeAudioBlobWithRuntime(
   adapter: LLMRuntimeAdapter,
   blob: Blob,
   model: string = 'gemma4:latest',
-  keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+  keepAlive: -1 | 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<{ text: string; durationSeconds: number }> {
   if (!adapter.transcribe) {
@@ -362,7 +388,7 @@ export async function transcribeAudioBlobWithRuntime(
 export async function transcribe(
   audioBase64: string,
   model: string = 'gemma4:latest',
-  keepAlive: 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
+  keepAlive: -1 | 0 | string = OLLAMA_TRANSCRIBE_PROFILE.keepAlive,
   languageHint?: string,
 ): Promise<string> {
   console.info('[transcribe:start]', {
@@ -394,7 +420,7 @@ export async function transcribe(
 
   const data = await res.json() as { message?: { content?: string } };
   const rawText = (data.message?.content ?? '').trim();
-  const text = stripPromptEcho(rawText, languageHint);
+  const text = sanitizeTranscript(rawText, languageHint);
   if (!text) throw new Error('Empty transcription returned');
   console.info('[transcribe:done]', {
     model,
@@ -513,7 +539,7 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
             finished = true;
             finish();
             if (event.promptTokens != null || event.evalTokens != null) {
-              onContextUsage?.(event.promptTokens ?? 0, event.evalTokens ?? 0);
+    onContextUsage?.(event.promptTokens ?? 0, event.evalTokens ?? 0);
             }
             handlers.onDone(event.finishReason ?? null);
             resolve();
@@ -558,11 +584,11 @@ export function createLlamaCppAdapter(config: LlamaCppRuntimeConfig): LLMRuntime
         });
       });
     },
-    transcribe: (audioBase64: string, _model?: string, _keepAlive?: 0 | string, languageHint?: string) =>
+    transcribe: (audioBase64: string, _model?: string, _keepAlive?: -1 | 0 | string, languageHint?: string) =>
       transcribeWithLanguageGuard(async (attemptHint) => {
         const result = await window.electronAPI.llamaCppTranscribe(sttConfig, audioBase64, attemptHint);
         if (!result.success) throw new Error(result.error ?? 'Transcription failed');
-        return result.text ?? '';
+        return sanitizeTranscript(result.text ?? '', attemptHint);
       }, languageHint),
   };
 }

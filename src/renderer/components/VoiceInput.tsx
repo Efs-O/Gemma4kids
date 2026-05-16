@@ -3,7 +3,7 @@ import type { LLMRuntimeAdapter } from '../services/OllamaService';
 import { audioBlobToWav16k } from '../services/OllamaService';
 import type { AppLanguage } from './WelcomeScreen';
 import { detectLang } from '../services/PiperTTS';
-import { isGemma4EdgeE4b } from '../utils/pickCodingModel';
+import { normalizeOllamaModelRef } from '../utils/pickCodingModel';
 
 type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
 
@@ -11,6 +11,10 @@ type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
 function previewText(text: string, max = 140): string {
   const normalized = text.replace(/\s+/g, ' ').trim();
   return normalized.length <= max ? normalized : `${normalized.slice(0, max)}...`;
+}
+
+function isExactGemma4E4b(name: string): boolean {
+  return normalizeOllamaModelRef(name).toLowerCase() === 'gemma4:e4b';
 }
 
 const MISMATCH_HINTS: Partial<Record<AppLanguage, string>> = {
@@ -23,6 +27,7 @@ interface Props {
   e4bAvailable: boolean;
   greekTranscribeModel: string | null;
   transcribeModel: string;
+  voiceModelLabel: string;
   codingModel: string;
   runtimeAdapter: LLMRuntimeAdapter;
   onTranscription: (text: string) => void;
@@ -32,7 +37,7 @@ interface Props {
   appLanguage: AppLanguage;
 }
 
-export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, codingModel, runtimeAdapter, onTranscription, onVoiceActivityChange, disabled, disabledReason, appLanguage }: Props) {
+export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, voiceModelLabel, codingModel, runtimeAdapter, onTranscription, onVoiceActivityChange, disabled, disabledReason, appLanguage }: Props) {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [mismatchHint, setMismatchHint] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -80,14 +85,16 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         appLanguage === 'el' && greekTranscribeModel
           ? greekTranscribeModel
           : transcribeModel;
-      const keepAlive: 0 | string = activeTranscribeModel === codingModel && isGemma4EdgeE4b(activeTranscribeModel)
-        ? '-1'
+      const keepAlive: -1 | 0 | string = isExactGemma4E4b(activeTranscribeModel) && isExactGemma4E4b(codingModel)
+        ? -1
         : 0;
       const languageHintForSTT = appLanguage;
       console.info('[voice:transcribe:selected-model]', {
         attempt,
+        runtime: runtimeAdapter.runtime,
         appLanguage,
         languageHintForSTT,
+        activeVoiceModelLabel: voiceModelLabel,
         activeTranscribeModel,
         codingModel,
         keepAlive,
@@ -146,7 +153,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         }, 3000);
       }
     }
-  }, [clearTimer, codingModel, greekTranscribeModel, onTranscription, runtimeAdapter, setVoiceStateSafe, transcribeModel]);
+  }, [clearTimer, codingModel, greekTranscribeModel, onTranscription, runtimeAdapter, setVoiceStateSafe, transcribeModel, appLanguage, voiceModelLabel]);
 
   const startRecording = useCallback(async () => {
     try {

@@ -39,6 +39,7 @@ interface Props {
   e4bAvailable: boolean;
   greekTranscribeModel: string | null;
   transcribeModel: string;
+  voiceModelLabel: string;
   codingModel: string;
   runtimeAdapter: LLMRuntimeAdapter;
   ctxUsedPct?: number;
@@ -101,6 +102,7 @@ export function InputRow({
   e4bAvailable,
   greekTranscribeModel,
   transcribeModel,
+  voiceModelLabel,
   codingModel,
   runtimeAdapter,
   ctxUsedPct = 0,
@@ -464,6 +466,7 @@ export function InputRow({
             e4bAvailable={e4bAvailable}
             greekTranscribeModel={greekTranscribeModel}
             transcribeModel={transcribeModel}
+            voiceModelLabel={voiceModelLabel}
             codingModel={codingModel}
             runtimeAdapter={runtimeAdapter}
             onVoiceActivityChange={onVoiceActivityChange}

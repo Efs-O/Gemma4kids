@@ -85,6 +85,7 @@ interface Props {
   e4bAvailable: boolean;
   greekTranscribeModel: string | null;
   transcribeModel: string;
+  voiceModelLabel: string;
   codingModel: string;
   runtimeAdapter: LLMRuntimeAdapter;
   showThinking: boolean;
@@ -110,6 +111,7 @@ export function ChatPanel({
   e4bAvailable,
   greekTranscribeModel,
   transcribeModel,
+  voiceModelLabel,
   codingModel,
   runtimeAdapter,
   showThinking,
@@ -296,6 +298,7 @@ export function ChatPanel({
           e4bAvailable={e4bAvailable}
           greekTranscribeModel={greekTranscribeModel}
           transcribeModel={transcribeModel}
+          voiceModelLabel={voiceModelLabel}
           codingModel={codingModel}
           runtimeAdapter={runtimeAdapter}
           ctxUsedPct={ctxUsedPct}
