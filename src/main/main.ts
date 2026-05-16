@@ -50,6 +50,7 @@ function createWindow(): void {
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
 
   if (!app.isPackaged) {
+    win.webContents.openDevTools({ mode: 'detach' });
     win.webContents.on('before-input-event', (_event, input) => {
       if (input.type !== 'keyDown') return;
       const isF12 = input.key === 'F12';

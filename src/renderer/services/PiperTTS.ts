@@ -78,8 +78,9 @@ export class PiperTTS implements TTSService {
         };
         source.start();
       });
-    } catch {
+    } catch (error) {
       if (this._seq === seq) this._speaking = false;
+      throw error;
     }
   }
 }

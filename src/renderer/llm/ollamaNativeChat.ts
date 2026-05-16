@@ -1,6 +1,5 @@
 import type { ChatMessage, ToolCall, ToolDefinition } from './types';
 import type { StreamHandlers } from './OpenAIClient';
-import { normalizeOllamaModelRef } from '../utils/pickCodingModel';
 
 /**
  * Ollama native /api/chat expects `function.arguments` as a JSON object.
@@ -77,7 +76,6 @@ function messagesForOllamaApi(messages: ChatMessage[]): Record<string, unknown>[
 }
 
 interface NativeStreamEvent {
-  load_duration?: number;
   message?: {
     role?: string;
     content?: string;
@@ -93,10 +91,6 @@ interface NativeStreamEvent {
   error?: string;
   prompt_eval_count?: number;
   eval_count?: number;
-}
-
-function shouldKeepAliveForChat(model: string): boolean {
-  return normalizeOllamaModelRef(model).toLowerCase() === 'gemma4:e4b';
 }
 
 function toolCallsFromAccum(
@@ -154,7 +148,6 @@ export async function streamOllamaNativeChat(
     messages: messagesForOllamaApi(params.messages),
     stream: true,
     think: params.think,
-    keep_alive: shouldKeepAliveForChat(params.model) ? -1 : undefined,
     tools: params.tools,
     options: {
       num_ctx: params.numCtx,
@@ -234,15 +227,6 @@ export async function streamOllamaNativeChat(
     }
 
     if (evt.done) {
-      if (evt.load_duration != null) {
-        console.info('[ollama:chat:done]', {
-          model: params.model,
-          keepAlive: shouldKeepAliveForChat(params.model) ? -1 : undefined,
-          loadDurationNs: evt.load_duration,
-          promptEvalCount: evt.prompt_eval_count ?? 0,
-          evalCount: evt.eval_count ?? 0,
-        });
-      }
       onContextUsage?.(evt.prompt_eval_count ?? 0, evt.eval_count ?? 0);
 
       let calls: ToolCall[] | null = null;

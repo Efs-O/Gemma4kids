@@ -327,13 +327,14 @@ export function useChat(
           historyRef.current = history;
           setMessages(stripHeavyMultimodalForUi(history));
         }
+        resetPendingStreamUi();
         setStreamingText('');
         setStreamingThinking('');
         setStatus('idle');
         return;
       }
 
-        if (loopError) {
+      if (loopError) {
         flushPendingStreamUi();
         const normalizedError = loopError instanceof Error ? loopError : new Error(String(loopError));
         const errorMessage = normalizedError.message;
@@ -352,6 +353,7 @@ export function useChat(
 
         setStatus('error');
         setErrorMsg(formatRuntimeError(normalizedError, model));
+        resetPendingStreamUi();
         setStreamingText('');
         setStreamingThinking('');
         return;
@@ -377,6 +379,7 @@ export function useChat(
         history = [...history, assistantMsg];
         historyRef.current = history;
         setMessages(stripHeavyMultimodalForUi(history));
+        resetPendingStreamUi();
         setStreamingText('');
         setStreamingThinking('');
 
@@ -400,12 +403,14 @@ export function useChat(
         }
 
         if (assembled.trim()) {
+          resetPendingStreamUi();
           setStreamingText('');
           setStreamingThinking('');
           setStatus('idle');
           return;
         }
         if (token.signal.aborted) {
+          resetPendingStreamUi();
           setStreamingText('');
           setStreamingThinking('');
           setStatus('idle');
@@ -427,6 +432,7 @@ export function useChat(
       history = [...history, finalMsg];
       historyRef.current = history;
       setMessages(stripHeavyMultimodalForUi(history));
+      resetPendingStreamUi();
       setStreamingText('');
       setStreamingThinking('');
 
@@ -443,7 +449,7 @@ export function useChat(
       setStatus('idle');
       return;
     }
-  }, [flushPendingStreamUi, model, onThinkingUnsupported, scheduleStreamUiFlush, thinkEnabled, thinkingAvailable, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
+  }, [flushPendingStreamUi, model, onThinkingUnsupported, resetPendingStreamUi, scheduleStreamUiFlush, thinkEnabled, thinkingAvailable, modelTier, runtimeAdapter, runtimeLimits?.numCtx, runtimeLimits?.numPredict, videoAttachmentFileRef]);
 
   const sendMessage = useCallback((input: SendMessageInput) => {
     const { text, images, videos, hasAttachment, contextNote } = normalizeMessageInput(input);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   createLlamaCppAdapter,
   ollamaAdapter,
@@ -41,14 +41,17 @@ export function useOllama(
   const [runtimeDetails, setRuntimeDetails] = useState<string[]>([]);
   const [llamaMmprojPath, setLlamaMmprojPath] = useState<string | null>(null);
   const [llamaSttMmprojPath, setLlamaSttMmprojPath] = useState<string | null>(null);
+  const checkRunRef = useRef(0);
 
   const check = useCallback(async () => {
+    const runId = ++checkRunRef.current;
     setStatus('checking');
     setErrorMsg('');
     setRuntimeMessage('');
     setRuntimeDetails([]);
     try {
       const health = await adapter.healthCheck();
+      if (checkRunRef.current !== runId) return;
       if (!health.ok) {
         setRuntimeMessage(health.message ?? '');
         setRuntimeDetails(health.details ?? []);
@@ -62,10 +65,12 @@ export function useOllama(
         setLlamaSttMmprojPath(llamaHealth.sttMmprojPath ?? null);
       }
       const found = await adapter.listModels();
+      if (checkRunRef.current !== runId) return;
       const modelIds = found.map((model) => model.id);
       setModels(modelIds);
       setStatus('ready');
     } catch (error) {
+      if (checkRunRef.current !== runId) return;
       setModels([]);
       setLlamaMmprojPath(null);
       setLlamaSttMmprojPath(null);
@@ -78,6 +83,10 @@ export function useOllama(
   }, [adapter, runtime]);
 
   useEffect(() => { check(); }, [check]);
+
+  useEffect(() => () => {
+    ++checkRunRef.current;
+  }, [checkRunRef]);
 
   const warmup = useCallback(() => {
     adapter.warmupCodingModel(pickCodingModel(models));

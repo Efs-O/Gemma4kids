@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { resolveGgufPath, resolveLocalServerPort } from './llamaCppUtils';
-import { getManagedLlamaResolvedPort, getManagedLlamaModelPath } from './llamaRuntime';
+import { getManagedLlamaResolvedPort } from './llamaRuntime';
 
 const LLAMA_STT_STARTUP_TIMEOUT_MS = 120000;
 const LLAMA_STT_CTX_SIZE = 8192;
@@ -250,6 +250,18 @@ function buildTranscribePrompt(languageHint?: string): string {
     return 'The spoken language is most likely English (en). Transcribe exactly what is spoken. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages. If the speech is English, return only English text. If the speaker switches briefly to another language, keep those exact spoken words only where they were actually said. Output only the transcription text, with no newlines. Write numbers as digits.';
   }
   return 'Transcribe exactly what is spoken in the audio. First infer whether the speech is Greek, German, English, or another language. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages unless the speaker actually switches languages. If the speech is Greek, return Greek script. If the speech is German, return German spelling. If the speech is English, return English text. Output only the transcription text, with no newlines. Write numbers as digits.';
+}
+
+function sanitizeLlamaSttReply(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+
+  const withoutThinkBlocks = trimmed
+    .replace(/<think>[\s\S]*?<\/think>/gi, ' ')
+    .replace(/<\|startofthinking\|>[\s\S]*?<\|endofthinking\|>/gi, ' ')
+    .trim();
+
+  return withoutThinkBlocks;
 }
 
 async function transcribeWithMtmdCli(
@@ -561,32 +573,13 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('llama-cpp-transcribe', async (_event, { sttConfig, audioBase64, languageHint }: { sttConfig: LlamaCppSttConfig; audioBase64: string; languageHint?: string }) => {
-    // If the STT model is the same file as the active coding model, reuse the
-    // main server — no separate process needed and the model never leaves VRAM.
-    const resolvedSttPath = resolveGgufPath(sttConfig.sttModelPath.trim());
-    const codingModelPath = getManagedLlamaModelPath();
-    const mainPort = getManagedLlamaResolvedPort();
-    const reuseMainServer =
-      codingModelPath !== null &&
-      mainPort !== null &&
-      path.normalize(resolvedSttPath).toLowerCase() === path.normalize(codingModelPath).toLowerCase();
-
-    let transcribePort: number;
-    let logPath: string;
-
-    if (reuseMainServer) {
-      transcribePort = mainPort;
-      logPath = getSttRuntimeLogPath();
-      appendSttRuntimeLog(logPath, `[transcribe:route] STT model matches coding model — reusing main server port=${String(transcribePort)}`);
-    } else {
-      const health = await ensureManagedSttServer(sttConfig);
-      if (!health.ok) {
-        return { success: false, error: health.error ?? health.message ?? 'STT server is not ready.' };
-      }
-      transcribePort = health.resolvedPort ?? sttConfig.sttPort;
-      logPath = managedSttServer?.logPath ?? getSttRuntimeLogPath();
+    const health = await ensureManagedSttServer(sttConfig);
+    if (!health.ok) {
+      return { success: false, error: health.error ?? health.message ?? 'STT server is not ready.' };
     }
 
+    const transcribePort = health.resolvedPort ?? sttConfig.sttPort;
+    const logPath = managedSttServer?.logPath ?? getSttRuntimeLogPath();
     const modelName = path.basename(sttConfig.sttModelPath, path.extname(sttConfig.sttModelPath));
     const prompt = buildTranscribePrompt(languageHint);
     appendSttRuntimeLog(logPath, `[transcribe:start] model=${modelName} lang=${languageHint ?? ''}`);
@@ -621,9 +614,21 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
           result = { success: false, error: `HTTP ${res.status}: ${body.slice(0, 200)}` };
         }
       } else {
-        const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-        const text = (data.choices?.[0]?.message?.content ?? '').trim();
-        appendSttRuntimeLog(logPath, `[transcribe:done] textLen=${String(text.length)}`);
+        const data = await res.json() as {
+          choices?: Array<{
+            message?: {
+              content?: string;
+              reasoning_content?: string;
+            };
+          }>;
+        };
+        const rawContent = data.choices?.[0]?.message?.content ?? '';
+        const reasoning = data.choices?.[0]?.message?.reasoning_content ?? '';
+        const text = sanitizeLlamaSttReply(rawContent);
+        appendSttRuntimeLog(
+          logPath,
+          `[transcribe:done] contentLen=${String(rawContent.trim().length)} sanitizedLen=${String(text.length)} reasoningLen=${String(reasoning.trim().length)}`,
+        );
         result = text ? { success: true, text } : { success: false, error: 'Empty transcription returned' };
       }
     } catch (error) {
@@ -632,10 +637,8 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
       result = { success: false, error: msg };
     }
 
-    // Only stop the dedicated STT server if we used one — never touch the main coding server.
-    if (!reuseMainServer) {
-      void stopManagedSttServer();
-    }
+    // Release the dedicated STT server to free VRAM — coding server stays loaded.
+    void stopManagedSttServer();
     return result;
   });
 }

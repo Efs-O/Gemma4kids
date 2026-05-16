@@ -1,5 +1,5 @@
 import { app, type IpcMain } from 'electron';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -21,22 +21,24 @@ function preferredPiperArch(): 'x64' | 'aarch64' {
   return process.arch === 'arm64' ? 'aarch64' : 'x64';
 }
 
-function devPiperDirs(appRoot: string): string[] {
+function piperPlatformDirName(): 'win' | 'mac' | 'linux' {
+  if (process.platform === 'win32') return 'win';
+  if (process.platform === 'darwin') return 'mac';
+  return 'linux';
+}
+
+function platformPiperDirs(root: string): string[] {
   const arch = preferredPiperArch();
+  const platformDir = piperPlatformDirName();
   if (process.platform === 'win32') {
-    return [path.join(appRoot, 'piper', 'win'), path.join(appRoot, 'piper')];
-  }
-  if (process.platform === 'darwin') {
-    return [
-      path.join(appRoot, 'piper', 'mac', arch, 'piper'),
-      path.join(appRoot, 'piper', 'mac', 'x64', 'piper'),
-      path.join(appRoot, 'piper', 'mac', 'aarch64', 'piper'),
-    ];
+    return [path.join(root, 'piper', 'win'), path.join(root, 'piper')];
   }
   return [
-    path.join(appRoot, 'piper', 'linux', arch, 'piper'),
-    path.join(appRoot, 'piper', 'linux', 'x64', 'piper'),
-    path.join(appRoot, 'piper', 'linux', 'aarch64', 'piper'),
+    path.join(root, 'piper', platformDir, arch),
+    path.join(root, 'piper', platformDir, 'x64'),
+    path.join(root, 'piper', platformDir, 'aarch64'),
+    path.join(root, 'piper', platformDir),
+    path.join(root, 'piper'),
   ];
 }
 
@@ -45,16 +47,85 @@ function piperSearchDirs(): string[] {
   const userData = app.getPath('userData');
   const resourceRoot = process.resourcesPath;
   return [...new Set([
-    path.join(resourceRoot, 'piper'),
-    ...devPiperDirs(appRoot),
+    ...platformPiperDirs(resourceRoot),
+    ...platformPiperDirs(appRoot),
     path.join(userData, 'piper'),
   ])];
 }
 
+function recursiveFindBinary(startDir: string, binaryName: string, depth = 4): string | null {
+  if (depth < 0 || !fs.existsSync(startDir) || !fs.statSync(startDir).isDirectory()) return null;
+  const direct = path.join(startDir, binaryName);
+  if (fs.existsSync(direct)) return direct;
+
+  for (const entry of fs.readdirSync(startDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const found = recursiveFindBinary(path.join(startDir, entry.name), binaryName, depth - 1);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findPiperArchive(): string | null {
+  const patterns = process.platform === 'darwin'
+    ? [/^piper_macos_.*\.tar\.gz$/i]
+    : [/^piper_linux_.*\.tar\.gz$/i];
+  for (const dir of piperSearchDirs()) {
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) continue;
+    for (const file of fs.readdirSync(dir)) {
+      if (patterns.some((pattern) => pattern.test(file))) {
+        return path.join(dir, file);
+      }
+    }
+  }
+  return null;
+}
+
+function extractPiperArchive(archivePath: string): string | null {
+  const cacheRoot = path.join(app.getPath('userData'), 'piper', 'extracted');
+  const archiveName = path.basename(archivePath, '.tar.gz');
+  const targetDir = path.join(cacheRoot, archiveName);
+  const binaryName = process.platform === 'win32' ? 'piper.exe' : 'piper';
+  const cachedBinary = recursiveFindBinary(targetDir, binaryName, 5);
+  if (cachedBinary) return cachedBinary;
+
+  fs.mkdirSync(targetDir, { recursive: true });
+  const result = spawnSync('tar', ['-xzf', archivePath, '-C', targetDir], {
+    stdio: 'pipe',
+    windowsHide: true,
+  });
+  if (result.status !== 0) {
+    return null;
+  }
+
+  const extractedBinary = recursiveFindBinary(targetDir, binaryName, 5);
+  if (extractedBinary && process.platform !== 'win32') {
+    try {
+      fs.chmodSync(extractedBinary, 0o755);
+    } catch {
+      // best effort
+    }
+  }
+  return extractedBinary;
+}
+
 function findPiperBinary(): string | null {
   const ext = process.platform === 'win32' ? '.exe' : '';
-  const candidates = piperSearchDirs().map((dir) => path.join(dir, `piper${ext}`));
-  return candidates.find((p) => fs.existsSync(p)) ?? null;
+  const binaryName = `piper${ext}`;
+
+  for (const dir of piperSearchDirs()) {
+    const found = recursiveFindBinary(dir, binaryName, 5);
+    if (found) return found;
+  }
+
+  if (process.platform !== 'win32') {
+    const archive = findPiperArchive();
+    if (archive) {
+      return extractPiperArchive(archive);
+    }
+  }
+
+  return null;
 }
 
 function scanVoices(): VoiceInfo[] {
