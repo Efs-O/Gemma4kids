@@ -182,6 +182,16 @@ export function registerTtsIpcHandlers(ipcMain: IpcMain): void {
       voices.find((v) => v.lang.toLowerCase().startsWith('en')) ??
       voices[0];
 
+    if (process.platform !== 'win32') {
+      try {
+        const dir = path.dirname(binary);
+        for (const bin of ['piper', 'piper_phonemize', 'espeak-ng']) {
+          const p = path.join(dir, bin);
+          if (fs.existsSync(p)) fs.chmodSync(p, 0o755);
+        }
+      } catch { /* best effort */ }
+    }
+
     return new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = [];
       const proc = spawn(binary, ['--model', voice.model, '--output-raw']);
