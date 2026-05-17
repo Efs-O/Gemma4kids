@@ -89,6 +89,9 @@ if (!gotSingleInstanceLock) {
     session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
       callback(permission === 'media');
     });
+    session.defaultSession.setPermissionCheckHandler((_wc, permission) => {
+      return permission === 'media';
+    });
     createWindow();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();

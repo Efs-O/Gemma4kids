@@ -40,6 +40,8 @@ mac:
   entitlementsInherit: build/entitlements.mac.plist
   hardenedRuntime: false
   x64ArchFiles: "**/piper/**"
+  extendInfo:
+    NSMicrophoneUsageDescription: "Gemma4kids uses your microphone so kids can speak their prompts instead of typing."
   extraResources:
     - from: piper/mac
       to: piper/mac
