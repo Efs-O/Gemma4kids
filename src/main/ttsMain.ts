@@ -56,7 +56,7 @@ function piperSearchDirs(): string[] {
 function recursiveFindBinary(startDir: string, binaryName: string, depth = 4): string | null {
   if (depth < 0 || !fs.existsSync(startDir) || !fs.statSync(startDir).isDirectory()) return null;
   const direct = path.join(startDir, binaryName);
-  if (fs.existsSync(direct)) return direct;
+  if (fs.existsSync(direct) && fs.statSync(direct).isFile()) return direct;
 
   for (const entry of fs.readdirSync(startDir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
