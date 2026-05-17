@@ -78,6 +78,8 @@ Installer builds from Releases:
 **Releases:** [github.com/Efs-O/Gemma4kids/releases](https://github.com/Efs-O/Gemma4kids/releases)
 
 > Unsigned hackathon builds: Windows **More info → Run anyway**; macOS **right‑click → Open** the first time.
+>
+> **macOS — enable the reading voice:** double-click **`Install Gemma4kids.command`** (included in the DMG) immediately after dragging the app to Applications. This removes the macOS quarantine flag so Piper TTS can run. Full details in [INSTALL_MAC.md](INSTALL_MAC.md).
 
 Installer/runtime guarantees:
 

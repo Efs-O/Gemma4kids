@@ -15,10 +15,11 @@ assets/icon.png
 assets/icon.ico
 assets/icon.icns
 
-# Internal markdown — only README.md + SETUP.md belong on public remote
+# Internal markdown — only README.md + SETUP.md + INSTALL_MAC.md belong on public remote
 *.md
 !README.md
 !SETUP.md
+!INSTALL_MAC.md
 !voices/*.VOICE_CARD.md
 
 # Voice model backups — local only, never commit

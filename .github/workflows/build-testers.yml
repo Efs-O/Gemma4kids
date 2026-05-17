@@ -59,8 +59,9 @@ jobs:
       - run: npm ci
       - name: Verify bundled packaging assets
         run: |
-          test -f piper/mac/x64/piper_macos_x64.tar.gz || { echo "Missing piper/mac/x64/piper_macos_x64.tar.gz. Bundle Piper assets in the repo or fetch them before packaging."; exit 1; }
-          test -d voices || { echo "Missing voices/ directory. Bundle voice assets in the repo or fetch them before packaging."; exit 1; }
+          test -f piper/mac/x64/piper_macos_x64.tar.gz || { echo "Missing piper/mac/x64/piper_macos_x64.tar.gz."; exit 1; }
+          test -f piper/mac/aarch64/piper_macos_aarch64.tar.gz || { echo "Missing piper/mac/aarch64/piper_macos_aarch64.tar.gz."; exit 1; }
+          test -d voices || { echo "Missing voices/ directory."; exit 1; }
       - name: Prepare Piper mac x64 payload
         run: |
           rm -rf piper/mac/x64/piper
@@ -68,6 +69,13 @@ jobs:
           chmod +x piper/mac/x64/piper/piper
           chmod +x piper/mac/x64/piper/piper_phonemize
           chmod +x piper/mac/x64/piper/espeak-ng
+      - name: Prepare Piper mac aarch64 payload
+        run: |
+          rm -rf piper/mac/aarch64/piper
+          tar -xf piper/mac/aarch64/piper_macos_aarch64.tar.gz -C piper/mac/aarch64
+          chmod +x piper/mac/aarch64/piper/piper
+          chmod +x piper/mac/aarch64/piper/piper_phonemize
+          chmod +x piper/mac/aarch64/piper/espeak-ng
       - run: npm run build
       - run: npm run typecheck
       - run: npx electron-builder --mac --publish never

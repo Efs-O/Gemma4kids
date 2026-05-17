@@ -65,7 +65,8 @@ export function Message({ role, content, thinking = '', showThinking = false, st
       await tts.speak(speakableText || display);
     } catch (error) {
       console.error('[Message] Read aloud failed:', error);
-      setTtsHint("Reading voice isn't ready right now.");
+      const reason = error instanceof Error ? error.message : String(error);
+      setTtsHint(`Reading voice isn't ready right now. (${reason})`);
     } finally {
       setSpeaking(false);
     }

@@ -46,10 +46,22 @@ mac:
       to: voices
   target:
     - target: dmg
-      arch: [x64]
+      arch: [universal]
 
 dmg:
   title: "Gemma4kids ${version}"
+  contents:
+    - x: 130
+      y: 220
+      type: file
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+    - x: 270
+      y: 380
+      type: file
+      path: "Install Gemma4kids.command"
 
 linux:
   icon: icons
