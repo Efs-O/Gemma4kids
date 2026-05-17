@@ -39,6 +39,7 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   hardenedRuntime: false
+  x64ArchFiles: "**/piper/**"
   extraResources:
     - from: piper/mac
       to: piper/mac
