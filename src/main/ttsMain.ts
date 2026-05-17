@@ -168,8 +168,42 @@ function buildWavHeader(pcmLength: number, sampleRate: number): Buffer {
   return header;
 }
 
+function macSayVoice(lang: string | undefined): string {
+  const hint = (lang ?? 'en').slice(0, 2).toLowerCase();
+  if (hint === 'el') return 'Melina';
+  if (hint === 'de') return 'Anna';
+  return 'Samantha';
+}
+
+function speakWithSay(text: string, lang: string | undefined): Promise<Buffer> {
+  const voice = macSayVoice(lang);
+  const tmp = path.join(app.getPath('temp'), `g4k_tts_${Date.now()}.wav`);
+  return new Promise<Buffer>((resolve, reject) => {
+    const proc = spawn('say', ['-v', voice, '-o', tmp, '--', text]);
+    proc.on('error', reject);
+    proc.on('close', (code: number | null) => {
+      if (code !== 0) {
+        reject(new Error(`say exited with code ${String(code)}`));
+        return;
+      }
+      try {
+        const buf = fs.readFileSync(tmp);
+        try { fs.unlinkSync(tmp); } catch { /* best effort */ }
+        resolve(buf);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
 export function registerTtsIpcHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('tts-speak', async (_event, text: string, lang?: string): Promise<Buffer> => {
+    // macOS: use built-in `say` — Piper dylibs are not bundled and won't load
+    if (process.platform === 'darwin') {
+      return speakWithSay(text, lang);
+    }
+
     const binary = findPiperBinary();
     if (!binary) throw new Error('Piper binary not found. Put bundled Piper files in resources/piper or dev files under piper/win, piper/mac, or piper/linux.');
 
@@ -181,16 +215,6 @@ export function registerTtsIpcHandlers(ipcMain: IpcMain): void {
       voices.find((v) => v.lang.toLowerCase().startsWith(hint)) ??
       voices.find((v) => v.lang.toLowerCase().startsWith('en')) ??
       voices[0];
-
-    if (process.platform !== 'win32') {
-      try {
-        const dir = path.dirname(binary);
-        for (const bin of ['piper', 'piper_phonemize', 'espeak-ng']) {
-          const p = path.join(dir, bin);
-          if (fs.existsSync(p)) fs.chmodSync(p, 0o755);
-        }
-      } catch { /* best effort */ }
-    }
 
     return new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = [];
