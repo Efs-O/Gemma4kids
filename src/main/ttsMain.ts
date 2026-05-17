@@ -128,6 +128,16 @@ function findPiperBinary(): string | null {
   return null;
 }
 
+function assertUsablePiperBinary(binary: string): void {
+  const stat = fs.statSync(binary);
+  if (!stat.isFile()) {
+    throw new Error(`Piper path is not a file: ${binary}. Rebuild the app so it bundles the real Piper executable, not just the folder.`);
+  }
+  if (process.platform !== 'win32') {
+    fs.accessSync(binary, fs.constants.X_OK);
+  }
+}
+
 function scanVoices(): VoiceInfo[] {
   const dirs = ttsSearchRoots().map((root) => path.join(root, 'voices'));
   const found: VoiceInfo[] = [];
@@ -190,6 +200,13 @@ export function registerTtsIpcHandlers(ipcMain: IpcMain): void {
           if (fs.existsSync(p)) fs.chmodSync(p, 0o755);
         }
       } catch { /* best effort */ }
+    }
+
+    try {
+      assertUsablePiperBinary(binary);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new Error(`Piper is bundled but not executable. ${reason}`);
     }
 
     return new Promise<Buffer>((resolve, reject) => {

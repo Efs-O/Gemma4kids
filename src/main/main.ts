@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, session } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, session, systemPreferences } from 'electron';
 import type { BrowserWindowConstructorOptions } from 'electron';
 import path from 'path';
 import fs from 'fs';
@@ -9,6 +9,42 @@ import { registerVideoPreprocessIpcHandlers } from './videoPreprocess';
 import { registerTtsIpcHandlers } from './ttsMain';
 
 let isQuittingAfterCleanup = false;
+
+type MediaPermissionDetails = {
+  mediaType?: 'audio' | 'video' | 'unknown';
+  requestingUrl?: string;
+};
+
+function isTrustedMediaRequest(details: MediaPermissionDetails | undefined): boolean {
+  const url = details?.requestingUrl ?? '';
+  return url.startsWith('file://') || url.startsWith('devtools://');
+}
+
+function isAudioOnlyMediaPermission(permission: string, details: MediaPermissionDetails | undefined): boolean {
+  return permission === 'media'
+    && details?.mediaType === 'audio'
+    && isTrustedMediaRequest(details);
+}
+
+function hasMacMicrophoneAccess(): boolean {
+  if (process.platform !== 'darwin') return true;
+  return systemPreferences.getMediaAccessStatus('microphone') === 'granted';
+}
+
+async function requestMacMicrophoneAccess(): Promise<boolean> {
+  if (process.platform !== 'darwin') return true;
+  const status = systemPreferences.getMediaAccessStatus('microphone');
+  if (status === 'granted') return true;
+  if (status === 'denied' || status === 'restricted' || status === 'unknown') return false;
+  if (status === 'not-determined') {
+    try {
+      return await systemPreferences.askForMediaAccess('microphone');
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
 
 /** Window/taskbar icon: dev = repo assets/; packaged = assets bundled next to package.json (electron-builder.yml). */
 function resolveAppIconPath(): string | undefined {
@@ -86,11 +122,15 @@ if (!gotSingleInstanceLock) {
     }
     Menu.setApplicationMenu(null);
     ensureAnimationsDir();
-    session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
-      callback(permission === 'media');
+    session.defaultSession.setPermissionRequestHandler((_wc, permission, callback, details) => {
+      if (!isAudioOnlyMediaPermission(permission, details)) {
+        callback(false);
+        return;
+      }
+      void requestMacMicrophoneAccess().then(callback).catch(() => callback(false));
     });
-    session.defaultSession.setPermissionCheckHandler((_wc, permission) => {
-      return permission === 'media';
+    session.defaultSession.setPermissionCheckHandler((_wc, permission, _origin, details) => {
+      return isAudioOnlyMediaPermission(permission, details) && hasMacMicrophoneAccess();
     });
     createWindow();
     app.on('activate', () => {
