@@ -2,6 +2,8 @@
 
 Fully **offline-first**: after Ollama and models are installed, the app talks only to **`http://localhost:11434`** (and optional **local Piper** for read-aloud). No cloud subscriptions.
 
+> **macOS note:** read-aloud ("Read") is **not working on macOS** in this build (known issue, under active troubleshooting) and works on **Windows/Linux** only. The mic also prompts for permission repeatedly on macOS because the build is unsigned. See **[INSTALL_MAC.md](INSTALL_MAC.md)**.
+
 ---
 
 ## Requirements
@@ -144,6 +146,8 @@ Assistant bubbles can run **local neural TTS** if the **main** process finds:
 
 The repo **`.gitignore`** excludes large **`piper/`** and **`voices/`** drops; clone from source and add them locally, or use project scripts such as **`npm run download-voices`** / **`scripts/download-voices.mjs`** per your setup. Without Piper/ONNX, **Read** buttons no-op quietly.
 
+> **macOS:** read-aloud is **not working on macOS** in this build regardless of Piper/voice setup — a known issue under active troubleshooting (the bundled Piper engine cannot load on a clean Mac, and the macOS fallback is not working yet). Read-aloud works on **Windows/Linux**. See **[INSTALL_MAC.md](INSTALL_MAC.md)**.
+
 ---
 
 ## How it behaves
@@ -171,7 +175,9 @@ The repo **`.gitignore`** excludes large **`piper/`** and **`voices/`** drops; c
 | First voice attempt slow / VRAM churn | Expected: **e4b** unloads (`keep_alive: 0`) before the coding model loads; wait ~10–30 s and retry. |
 | Slow text on CPU | Switch to `gemma4:e2b` or `gemma4:e4b` — lighter models are much faster on CPU. `gemma4:26b` and `gemma4:31b` on CPU may take **tens of seconds** per turn. |
 | Out of memory / crash during generation | Switch to a lighter model (`gemma4:e2b` recommended for older machines), close other apps, and try again. |
-| **Read** missing or errors | Piper binary/voices absent or path wrong — see **Optional — Piper** above. |
+| **Read** missing or errors (Windows/Linux) | Piper binary/voices absent or path wrong — see **Optional — Piper** above. |
+| **Read** does nothing on **macOS** | Known macOS limitation in this build — read-aloud is not working on macOS yet (under troubleshooting). Use Windows/Linux for spoken replies. See **[INSTALL_MAC.md](INSTALL_MAC.md)**. |
+| macOS asks for **microphone permission repeatedly** | Expected on unsigned builds (macOS TCC re-asks unsigned apps). Allow it each time; voice input works once granted. A code-signed build would remove this. |
 | App can’t reach Ollama | Only **`127.0.0.1:11434`** is allowed from the renderer (CSP). No VPN/proxy blocking **localhost**. |
 
 ---

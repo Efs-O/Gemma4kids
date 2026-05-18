@@ -181,7 +181,7 @@ ollama pull gemma4:26b</code></pre>
       <li><code>New Chat</code>: clears the current conversation and starts fresh</li>
       <li><code>Save</code>: saves the current HTML project to <code>Documents/KidAnimations/</code></li>
       <li><code>Open in Browser</code>: opens the saved animation in the system browser</li>
-      <li><code>Read</code>: reads a Gemma reply aloud using local Piper TTS when that optional setup is installed</li>
+      <li><code>Read</code>: reads a Gemma reply aloud using local Piper TTS when that optional setup is installed (<strong>Windows/Linux</strong>; macOS read-aloud is a known issue under troubleshooting &mdash; see Known Limitations below)</li>
       <li><code>Gemma's version</code>: restores the editor back to the last AI-generated version</li>
       <li><code>Left sidebar</code>: shows saved projects; clicking one loads it back into the editor</li>
     </ul>
@@ -218,8 +218,16 @@ ollama pull gemma4:26b</code></pre>
     <ul>
       <li><code>llama.cpp</code> runtime support for fully local GGUF-based deployment. Judges can run Gemma4kids without Ollama by pointing the app at local GGUF model files; the app manages <code>llama-server</code> automatically for both coding and speech workloads. In the setup menu, judges can also change <code>llama.cpp</code> runtime parameters such as model paths and advanced inference settings.</li>
       <li>Image and short-video attachment workflow. The paperclip button lets the child attach an image or a short video clip so Gemma can describe it, answer questions about it, or turn it into a live animation.</li>
-      <li>Local Piper text-to-speech for the <code>Read</code> button. When Piper voices are installed, each assistant message can be read aloud locally with no cloud dependency.</li>
+      <li>Local Piper text-to-speech for the <code>Read</code> button. When Piper voices are installed, each assistant message can be read aloud locally with no cloud dependency. <strong>This works on Windows and Linux; read-aloud is currently not working on macOS</strong> (known issue, under active troubleshooting &mdash; see Known Limitations below).</li>
       <li>Code Runner mini-game during streaming on larger models. While <code>gemma4:26b</code> or <code>gemma4:31b</code> is generating, the app can show a side-scroller mini-game where the child presses Space to jump and dodge bugs.</li>
+    </ul>
+
+    <h2>Known Limitations</h2>
+    <p>We would rather state these plainly than have a judge hit them unexpectedly.</p>
+    <ul>
+      <li><strong>macOS read-aloud ("Read") does not work in this build.</strong> The bundled Piper voice engine cannot load on a clean Mac (it depends on a system audio library Apple does not ship), and the macOS fallback path is not working yet. This is under active troubleshooting. Read-aloud works correctly on <strong>Windows and Linux</strong>. All other macOS functionality &mdash; chat, code generation, editing, saving, browser preview, voice input &mdash; works normally.</li>
+      <li><strong>macOS asks for microphone permission repeatedly.</strong> Because the hackathon build is unsigned, macOS re-prompts for the mic on unsigned apps (a macOS TCC limitation, not an app bug). Allowing it each time works; voice input functions once granted. A code-signed build (paid Apple Developer account, out of scope for this submission) would remove the repeated prompt.</li>
+      <li><strong>For the smoothest evaluation, use Windows or Linux</strong>, where voice input and read-aloud both work without these caveats.</li>
     </ul>
 
     <h2>Links</h2>

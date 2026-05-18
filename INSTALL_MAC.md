@@ -1,50 +1,69 @@
 # Installing Gemma4kids on macOS
 
-## One-time setup (takes 30 seconds)
-
-Gemma4kids includes a built-in reading voice that speaks Gemma's replies aloud.
-Because the app is not yet distributed through the Mac App Store, macOS needs a
-one-time permission before the voice engine can run.
-
-**Do this immediately after installing, before you open the app for the first time.**
-
-### Step 1 — Install the app
+## Step 1 — Install the app
 
 Open the `.dmg` file you downloaded and drag **Gemma4kids** into your
 **Applications** folder.
 
-### Step 2 — Unlock the voice engine
+## Step 2 — Open it the first time
 
-1. Press **Cmd + Space**, type **Terminal**, press **Enter**.
-2. Copy and paste the line below into the Terminal window, then press **Enter**:
+Because this is an unsigned hackathon build, macOS Gatekeeper will not let you
+open it with a normal double-click the first time. Do this instead:
+
+1. In **Applications**, **right-click** (or Control-click) **Gemma4kids**.
+2. Choose **Open**.
+3. In the dialog that appears, click **Open** again.
+
+After this first time, you can open it normally.
+
+If you still see *"Gemma4kids can't be opened because Apple cannot check it for
+malicious software"*, open **Terminal** (Cmd + Space → type `Terminal` →
+Enter), paste the line below, press Enter, then try Step 2 again:
 
 ```
 xattr -dr com.apple.quarantine /Applications/Gemma4kids.app
 ```
 
-3. Close Terminal.
-
-### Step 3 — Open the app
-
-Double-click **Gemma4kids** in your Applications folder. The reading voice will
-work straight away.
+This only removes the internet-download quarantine flag so an unsigned app can
+launch. It does not change any system settings and is reversed by re-downloading
+the app.
 
 ---
 
-## Why is this step needed?
+## Known limitations on macOS
 
-macOS applies a "quarantine" flag to every app downloaded from the internet.
-For unsigned apps this flag also blocks child processes — including the
-offline voice engine bundled inside Gemma4kids. The command above removes
-that flag from the app bundle. It does not change any system settings and
-can be reversed by deleting and re-downloading the app.
+These are honest, current limitations of the macOS build. They do **not** affect
+Windows or Linux, where these features work normally. Both are under active
+troubleshooting and are not fixed in this submission build.
+
+### Reading voice ("Read" button) — currently not working on macOS
+
+The "Read aloud" feature does **not** work on macOS in this build. The bundled
+Piper voice engine cannot load on macOS (it depends on a system audio library
+that is not present on a clean Mac), and the macOS fallback path is also not
+working yet. We are still troubleshooting this.
+
+Read-aloud works as intended on **Windows and Linux**. On macOS, the rest of the
+app — chat, code generation, editing, saving, opening in the browser, voice
+input — works normally; only the spoken output of replies is affected.
+
+### Microphone — repeated permission prompts on macOS
+
+The microphone (voice input) works, but because this build is **unsigned**,
+macOS may ask for microphone permission **several times** on first use. This is
+a macOS limitation for unsigned apps (its privacy/TCC system re-asks for
+unsigned binaries), not a bug in the app. Allow the microphone each time it
+asks; once granted, voice input functions normally. A properly code-signed
+build would remove the repeated prompts — that requires a paid Apple Developer
+account and is out of scope for this submission.
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Fix |
+| Symptom | What to do |
 |---|---|
-| "Gemma4kids can't be opened because Apple cannot check it for malicious software" | Right-click the app → **Open** → **Open** in the dialog |
-| Reading voice silent after following steps above | Make sure you typed the command exactly and pressed Enter; then quit and relaunch the app |
-| Terminal says "No such file or directory" | The app may be in a different location — drag it to `/Applications` first |
+| "Gemma4kids can't be opened because Apple cannot check it for malicious software" | Right-click the app → **Open** → **Open**; if it persists, run the `xattr` command above |
+| Terminal says "No such file or directory" | The app isn't in `/Applications` — drag it there first, then re-run the command |
+| "Read" button does nothing / no spoken reply | Known macOS limitation (see above) — read-aloud is not working on macOS in this build; use Windows/Linux for spoken replies |
+| macOS asks for microphone permission repeatedly | Expected on unsigned builds — allow it each time; it works once granted |

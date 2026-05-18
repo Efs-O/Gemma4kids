@@ -10,7 +10,7 @@ No Internet. No subscription. No telemetry. Just a kid, local models, and a codi
 
 Gemma4kids is a **general learning companion for kids**, not only a coding teacher. A child can ask anything: "what do I do in an earthquake?", "tell me a joke in Greek", "explain fractions", "make up a story about a dragon" — Gemma answers in plain, age-appropriate language in the child's own language. When the child wants to **make something**, Gemma shifts into coding mode: a prompt ("make fireworks explode") produces a complete HTML animation that streams live into the **CodeMirror** editor so they see and edit the code. Kids **save**, **reload projects** from the sidebar, and **open animations in the default browser**.
 
-A child can also **attach an image or short video** — Gemma sees it, answers questions about it, and can turn a drawing into a live animation. Optional **"Read"** uses **local Piper speech** when configured — no cloud.
+A child can also **attach an image or short video** — Gemma sees it, answers questions about it, and can turn a drawing into a live animation. Optional **"Read"** uses **local Piper speech** when configured — no cloud (works on **Windows/Linux**; macOS read-aloud is a known issue under troubleshooting — see [INSTALL_MAC.md](INSTALL_MAC.md)).
 
 She does not just teach children what to think. She teaches them how to think.
 
@@ -35,7 +35,7 @@ Built for the **Google Gemma 4 Good Hackathon** (Kaggle, May 2026) — targeting
 | **Tools** | Native tool calls: **`save_animation`**, **`read_animation`**, **`list_animations`**, **`open_in_browser`**, **`save_video_frame`**. HTML is audited/fixed before persistence. |
 | **Editor & projects** | Resizable sidebar (**saved animations**) + chat widths. Files save to **`Documents/KidAnimations/`** with `-2`, `-3`… suffixes on name collisions. An **unsaved-changes dot** turns red when the editor has been modified and green on successful save. A **"Gemma's version"** button reverts manual edits back to the last AI-generated code. |
 | **Code Runner** | Side-scroller mini-game plays while Gemma streams (26B/31B only). Press **Space** to jump and dodge bugs. High score persists in localStorage. |
-| **TTS ("Read")** | **Piper** in main process: read-aloud speaker button on every assistant message when `piper` binary + voice ONNX bundles are installed. Detects language (EN/DE/EL) and routes to the matching voice — no cloud. See **[SETUP.md](SETUP.md)**. |
+| **TTS ("Read")** | **Piper** in main process: read-aloud speaker button on every assistant message when `piper` binary + voice ONNX bundles are installed. Detects language (EN/DE/EL) and routes to the matching voice — no cloud. **Windows/Linux only in this build**; macOS read-aloud is a known issue under active troubleshooting (see **[INSTALL_MAC.md](INSTALL_MAC.md)**). See **[SETUP.md](SETUP.md)**. |
 | **Multilingual** | A **language picker** (🇬🇧 EN / 🇩🇪 DE / 🇬🇷 EL) on the welcome screen sets the session language before anything loads. All system prompts instruct Gemma to reply in the chosen language. Motion keywords in Greek (κινούμενο, κίνηση, πέφτει…) and German (animiert, bewegt, fallen…) are recognised by the intent router. The STT pipeline uses the selected language directly — no browser-locale guessing. |
 
 ---
@@ -79,7 +79,7 @@ Installer builds from Releases:
 
 > Unsigned hackathon builds: Windows **More info → Run anyway**; macOS **right‑click → Open** the first time.
 >
-> **macOS — enable the reading voice:** double-click **`Install Gemma4kids.command`** (included in the DMG) immediately after dragging the app to Applications. This removes the macOS quarantine flag so Piper TTS can run. Full details in [INSTALL_MAC.md](INSTALL_MAC.md).
+> **macOS note:** read-aloud ("Read") is **not working on macOS** in this build and is under active troubleshooting; the mic prompts repeatedly because the build is unsigned. Everything else works. Full details and the macOS open steps are in [INSTALL_MAC.md](INSTALL_MAC.md).
 
 Installer/runtime guarantees:
 
@@ -101,7 +101,7 @@ GitHub Actions notes:
 3. Type a prompt or press the **mic** button to speak (STT model required). While voice is being transcribed the **Send** button shows **"Preparing…"** and locks until the text is ready.
 4. Use the **paperclip** to attach an image or video before sending.
 5. **Save** → **Open in Browser** to see the animation full-screen.
-6. **Read** aloud only appears when Piper voices are installed — see **[SETUP.md](SETUP.md)**.
+6. **Read** aloud only appears when Piper voices are installed — see **[SETUP.md](SETUP.md)**. **macOS:** read-aloud is a known issue in this build (not working yet) — see **[INSTALL_MAC.md](INSTALL_MAC.md)**.
 
 Developer clone and scripts: **[SETUP.md](SETUP.md)** · **Architecture** below.
 
