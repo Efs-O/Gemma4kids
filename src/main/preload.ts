@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('set-ollama-cleanup-targets', { runtime, models }),
   checkPathExists: (filePath: string) =>
     ipcRenderer.invoke('check-path-exists', filePath),
+  requestMicrophoneAccess: () =>
+    ipcRenderer.invoke('request-microphone-access'),
   ttsSpeak: (text: string, lang?: string) =>
     ipcRenderer.invoke('tts-speak', text, lang),
   ttsListVoices: () =>

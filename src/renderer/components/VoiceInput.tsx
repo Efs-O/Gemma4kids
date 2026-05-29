@@ -5,7 +5,7 @@ import type { AppLanguage } from './WelcomeScreen';
 import { detectLang } from '../services/PiperTTS';
 import { normalizeOllamaModelRef } from '../utils/pickCodingModel';
 
-type VoiceState = 'idle' | 'recording' | 'transcribing' | 'error';
+type VoiceState = 'idle' | 'requesting' | 'recording' | 'transcribing' | 'error';
 
 
 function previewText(text: string, max = 140): string {
@@ -48,6 +48,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const deliverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mismatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startInFlightRef = useRef(false);
   const ignoreStopRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -156,9 +157,19 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   }, [clearTimer, codingModel, greekTranscribeModel, onTranscription, runtimeAdapter, setVoiceStateSafe, transcribeModel, appLanguage, voiceModelLabel]);
 
   const startRecording = useCallback(async () => {
+    if (startInFlightRef.current || voiceState === 'recording' || voiceState === 'transcribing') {
+      return;
+    }
+
+    startInFlightRef.current = true;
     try {
       clearAllTimers();
       ignoreStopRef.current = false;
+      setVoiceStateSafe('requesting');
+      const micAccess = await window.electronAPI.requestMicrophoneAccess();
+      if (!micAccess.granted) {
+        throw new Error(`Microphone access ${micAccess.status}.`);
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       activeStreamRef.current = stream;
       const recorder = new MediaRecorder(stream);
@@ -193,8 +204,10 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         errorResetTimerRef.current = null;
         setVoiceStateSafe('idle');
       }, 3000);
+    } finally {
+      startInFlightRef.current = false;
     }
-  }, [clearAllTimers, clearTimer, doTranscribe, setVoiceStateSafe, stopActiveStream]);
+  }, [clearAllTimers, clearTimer, doTranscribe, setVoiceStateSafe, stopActiveStream, voiceState]);
 
   const stopRecording = useCallback(() => {
     clearTimer(maxRecordTimerRef);
@@ -211,6 +224,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
     return () => {
       mountedRef.current = false;
       ignoreStopRef.current = true;
+      startInFlightRef.current = false;
       clearAllTimers();
       const recorder = mediaRecorderRef.current;
       if (recorder && recorder.state !== 'inactive') {
@@ -241,6 +255,14 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
     return (
       <button className="btn-mic btn-mic-recording" onClick={stopRecording} title="Stop recording">
         ⏹
+      </button>
+    );
+  }
+
+  if (voiceState === 'requesting') {
+    return (
+      <button className="btn-mic btn-mic-transcribing" disabled title="Waiting for microphone access...">
+        β³
       </button>
     );
   }

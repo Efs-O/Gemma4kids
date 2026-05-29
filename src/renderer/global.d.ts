@@ -88,6 +88,7 @@ declare global {
       openInBrowser(filename: string): Promise<{ success: boolean; error?: string }>;
       setOllamaCleanupTargets(runtime: 'ollama' | 'llama_cpp', models: string[]): Promise<{ success: boolean }>;
       checkPathExists(filePath: string): Promise<boolean>;
+      requestMicrophoneAccess(): Promise<{ granted: boolean; status: string }>;
       ttsSpeak(text: string, lang?: string): Promise<Uint8Array>;
       ttsListVoices(): Promise<{ name: string; lang: string; sampleRate: number }[]>;
       llamaCppHealthCheck(config: LlamaCppConfig): Promise<LlamaCppHealthResult>;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, session } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, session, systemPreferences } from 'electron';
 import type { BrowserWindowConstructorOptions } from 'electron';
 import path from 'path';
 import fs from 'fs';
@@ -113,6 +113,20 @@ app.on('before-quit', (event) => {
 });
 
 ipcMain.handle('check-path-exists', (_event, filePath: string) => fs.existsSync(filePath));
+ipcMain.handle('request-microphone-access', async () => {
+  if (process.platform !== 'darwin') {
+    return { granted: true, status: 'granted' };
+  }
+
+  const currentStatus = systemPreferences.getMediaAccessStatus('microphone');
+  if (currentStatus === 'granted') {
+    return { granted: true, status: currentStatus };
+  }
+
+  const granted = await systemPreferences.askForMediaAccess('microphone');
+  const status = systemPreferences.getMediaAccessStatus('microphone');
+  return { granted, status };
+});
 
 registerAnimationIpcHandlers(ipcMain);
 registerLlamaRuntimeIpcHandlers(ipcMain);
