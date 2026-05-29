@@ -252,7 +252,47 @@ function buildTranscribePrompt(languageHint?: string): string {
   return 'Transcribe exactly what is spoken in the audio. First infer whether the speech is Greek, German, English, or another language. Keep the original language and script exactly as spoken. Reply with transcription only. Never translate. Never transliterate. Do not mix languages unless the speaker actually switches languages. If the speech is Greek, return Greek script. If the speech is German, return German spelling. If the speech is English, return English text. Output only the transcription text, with no newlines. Write numbers as digits.';
 }
 
-function sanitizeLlamaSttReply(text: string): string {
+function stripPromptEcho(text: string, languageHint?: string): string {
+  const prompts = [
+    buildTranscribePrompt(languageHint),
+    buildTranscribePrompt('en'),
+    buildTranscribePrompt('de'),
+    buildTranscribePrompt('el'),
+    buildTranscribePrompt(),
+  ];
+
+  let cleaned = text.trim();
+  for (const prompt of prompts) {
+    if (cleaned === prompt) {
+      return '';
+    }
+    if (cleaned.startsWith(prompt)) {
+      cleaned = cleaned.slice(prompt.length).trimStart();
+    }
+  }
+
+  return cleaned.trim();
+}
+
+function looksLikeTranscriptionRefusal(text: string): boolean {
+  const normalized = text.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!normalized) return false;
+
+  return [
+    'does not contain audible speech',
+    'cannot provide a transcription',
+    'i cannot provide a transcription',
+    'unable to provide a transcription',
+    'no audible speech',
+    'no speech detected',
+    'there is no speech',
+    'no spoken audio',
+    'cannot transcribe',
+    'unable to transcribe',
+  ].some((snippet) => normalized.includes(snippet));
+}
+
+function sanitizeLlamaSttReply(text: string, languageHint?: string): string {
   const trimmed = text.trim();
   if (!trimmed) return '';
 
@@ -261,7 +301,12 @@ function sanitizeLlamaSttReply(text: string): string {
     .replace(/<\|startofthinking\|>[\s\S]*?<\|endofthinking\|>/gi, ' ')
     .trim();
 
-  return withoutThinkBlocks;
+  const cleaned = stripPromptEcho(withoutThinkBlocks, languageHint);
+  if (looksLikeTranscriptionRefusal(cleaned)) {
+    return '';
+  }
+
+  return cleaned;
 }
 
 async function transcribeWithMtmdCli(
@@ -594,8 +639,8 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
           messages: [{
             role: 'user',
             content: [
-              { type: 'text', text: prompt },
               { type: 'input_audio', input_audio: { data: audioBase64, format: 'wav' } },
+              { type: 'text', text: prompt },
             ],
           }],
           stream: false,
@@ -624,7 +669,7 @@ export function registerLlamaSttIpcHandlers(ipcMain: IpcMain): void {
         };
         const rawContent = data.choices?.[0]?.message?.content ?? '';
         const reasoning = data.choices?.[0]?.message?.reasoning_content ?? '';
-        const text = sanitizeLlamaSttReply(rawContent);
+        const text = sanitizeLlamaSttReply(rawContent, languageHint);
         appendSttRuntimeLog(
           logPath,
           `[transcribe:done] contentLen=${String(rawContent.trim().length)} sanitizedLen=${String(text.length)} reasoningLen=${String(reasoning.trim().length)}`,
