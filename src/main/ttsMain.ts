@@ -175,23 +175,47 @@ function macSayVoice(lang: string | undefined): string {
   return 'Samantha';
 }
 
-function speakWithSay(text: string, lang: string | undefined): Promise<Buffer> {
-  const voice = macSayVoice(lang);
-  const tmp = path.join(app.getPath('temp'), `g4k_tts_${Date.now()}.aiff`);
-  return new Promise<Buffer>((resolve, reject) => {
-    const proc = spawn('say', ['-v', voice, '-o', tmp, '--', text]);
+function runMacAudioTool(command: string, args: string[]): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const proc = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const stderr: Buffer[] = [];
+    proc.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
     proc.on('error', reject);
     proc.on('close', (code: number | null) => {
-      if (code !== 0) {
-        reject(new Error(`say exited with code ${String(code)}`));
+      if (code === 0) {
+        resolve();
         return;
       }
+      const detail = Buffer.concat(stderr).toString('utf8').trim();
+      reject(new Error(`${command} exited with code ${String(code)}${detail ? `: ${detail}` : ''}`));
+    });
+  });
+}
+
+function speakWithSay(text: string, lang: string | undefined): Promise<Buffer> {
+  const voice = macSayVoice(lang);
+  const tempDir = app.getPath('temp');
+  const stamp = `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+  const aiffPath = path.join(tempDir, `g4k_tts_${stamp}.aiff`);
+  const wavPath = path.join(tempDir, `g4k_tts_${stamp}.wav`);
+  return new Promise<Buffer>((resolve, reject) => {
+    const proc = spawn('say', ['-v', voice, '-o', aiffPath, '--', text], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const stderr: Buffer[] = [];
+    proc.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
+    proc.on('error', reject);
+    proc.on('close', async (code: number | null) => {
       try {
-        const buf = fs.readFileSync(tmp);
-        try { fs.unlinkSync(tmp); } catch { /* best effort */ }
-        resolve(buf);
+        if (code !== 0) {
+          const detail = Buffer.concat(stderr).toString('utf8').trim();
+          throw new Error(`say exited with code ${String(code)}${detail ? `: ${detail}` : ''}`);
+        }
+        await runMacAudioTool('afconvert', ['-f', 'WAVE', '-d', 'LEI16', aiffPath, wavPath]);
+        resolve(fs.readFileSync(wavPath));
       } catch (err) {
         reject(err);
+      } finally {
+        try { fs.unlinkSync(aiffPath); } catch { /* best effort */ }
+        try { fs.unlinkSync(wavPath); } catch { /* best effort */ }
       }
     });
   });

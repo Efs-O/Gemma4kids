@@ -20,6 +20,9 @@ const buildRenderer = () => {
   copyFileSync('src/renderer/styles.css', 'dist/renderer/styles.css');
   copyFileSync('ollama logo.jpg', 'dist/renderer/ollama logo.jpg');
   copyFileSync('llama server.jpg', 'dist/renderer/llama server.jpg');
+  if (existsSync('GEMMA.png')) {
+    copyFileSync('GEMMA.png', 'dist/renderer/GEMMA.png');
+  }
   if (existsSync('Glassroom Pulse.mp3')) {
     copyFileSync('Glassroom Pulse.mp3', 'dist/renderer/Glassroom Pulse.mp3');
   }

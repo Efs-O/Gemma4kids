@@ -6,6 +6,7 @@ import { detectLang } from '../services/PiperTTS';
 import { normalizeOllamaModelRef } from '../utils/pickCodingModel';
 
 type VoiceState = 'idle' | 'requesting' | 'recording' | 'transcribing' | 'error';
+type VoiceHintTone = 'warning' | 'error';
 
 
 function previewText(text: string, max = 140): string {
@@ -21,6 +22,34 @@ function logVoice(scope: string, payload: unknown): void {
   void window.electronAPI.appendRendererDebugLog(`voice:${scope}`, payload).catch(() => {
     // Logging should never block voice input.
   });
+}
+
+function getVoiceHint(error: unknown): { message: string; tone: VoiceHintTone } | null {
+  if (!(error instanceof Error)) {
+    return {
+      message: "Voice needs another try right now.",
+      tone: 'error',
+    };
+  }
+
+  if (error.name === 'NotFoundError' || /requested device not found/i.test(error.message)) {
+    return {
+      message: "I can't find a microphone on this Mac right now.",
+      tone: 'warning',
+    };
+  }
+
+  if (/microphone access/i.test(error.message)) {
+    return {
+      message: 'Please allow the microphone, then tap the mic again.',
+      tone: 'warning',
+    };
+  }
+
+  return {
+    message: 'Voice needs another try right now.',
+    tone: 'error',
+  };
 }
 
 function pickRecorderMimeType(): string | undefined {
@@ -63,6 +92,8 @@ interface Props {
 export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel, voiceModelLabel, codingModel, runtimeAdapter, onTranscription, onVoiceActivityChange, disabled, disabledReason, appLanguage }: Props) {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [mismatchHint, setMismatchHint] = useState<string | null>(null);
+  const [voiceHint, setVoiceHint] = useState<string | null>(null);
+  const [voiceHintTone, setVoiceHintTone] = useState<VoiceHintTone>('error');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const activeStreamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -71,6 +102,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const deliverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const errorResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mismatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const voiceHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startInFlightRef = useRef(false);
   const ignoreStopRef = useRef(false);
   const mountedRef = useRef(true);
@@ -88,6 +120,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
     clearTimer(deliverTimerRef);
     clearTimer(errorResetTimerRef);
     clearTimer(mismatchTimerRef);
+    clearTimer(voiceHintTimerRef);
   }, [clearTimer]);
 
   const stopActiveStream = useCallback(() => {
@@ -214,6 +247,7 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
     startInFlightRef.current = true;
     try {
       clearAllTimers();
+      setVoiceHint(null);
       ignoreStopRef.current = false;
       setVoiceStateSafe('requesting');
       logVoice('start:requesting', {
@@ -321,6 +355,16 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         name: error.name,
         stack: error.stack ?? null,
       } : { error: String(error) });
+      const hint = getVoiceHint(error);
+      if (hint && mountedRef.current) {
+        setVoiceHint(hint.message);
+        setVoiceHintTone(hint.tone);
+        clearTimer(voiceHintTimerRef);
+        voiceHintTimerRef.current = setTimeout(() => {
+          voiceHintTimerRef.current = null;
+          setVoiceHint(null);
+        }, 5000);
+      }
       stopActiveStream();
       setVoiceStateSafe('error');
       clearTimer(errorResetTimerRef);
@@ -409,6 +453,14 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
 
   return (
     <>
+      {voiceHint && (
+        <div
+          className={`voice-status-hint voice-status-hint-${voiceHintTone}`}
+          role="status"
+        >
+          {voiceHint}
+        </div>
+      )}
       {mismatchHint && (
         <div className="voice-mismatch-hint" role="status">{mismatchHint}</div>
       )}
