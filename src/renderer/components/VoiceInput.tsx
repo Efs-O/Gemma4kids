@@ -17,6 +17,29 @@ function isExactGemma4E4b(name: string): boolean {
   return normalizeOllamaModelRef(name).toLowerCase() === 'gemma4:e4b';
 }
 
+function logVoice(scope: string, payload: unknown): void {
+  void window.electronAPI.appendRendererDebugLog(`voice:${scope}`, payload).catch(() => {
+    // Logging should never block voice input.
+  });
+}
+
+function pickRecorderMimeType(): string | undefined {
+  const options = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/ogg;codecs=opus',
+  ];
+
+  for (const option of options) {
+    if (MediaRecorder.isTypeSupported(option)) {
+      return option;
+    }
+  }
+
+  return undefined;
+}
+
 const MISMATCH_HINTS: Partial<Record<AppLanguage, string>> = {
   en: 'I heard English! 🇬🇧 Restart to change language.',
   de: 'Ich hörte Deutsch! 🇩🇪 Neustart zum Wechseln.',
@@ -81,6 +104,11 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
   const doTranscribe = useCallback(async (blob: Blob, attempt = 1) => {
     setVoiceStateSafe('transcribing');
     try {
+      logVoice('transcribe:start', {
+        attempt,
+        blobType: blob.type,
+        blobSize: blob.size,
+      });
       const encoded = await audioBlobToWav16k(blob, { gainMultiplier: 1.1 });
       const activeTranscribeModel =
         appLanguage === 'el' && greekTranscribeModel
@@ -101,11 +129,28 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
         keepAlive,
         durationSeconds: Number(encoded.durationSeconds.toFixed(2)),
       });
+      logVoice('transcribe:selected-model', {
+        attempt,
+        runtime: runtimeAdapter.runtime,
+        appLanguage,
+        languageHintForSTT,
+        activeVoiceModelLabel: voiceModelLabel,
+        activeTranscribeModel,
+        codingModel,
+        keepAlive,
+        durationSeconds: Number(encoded.durationSeconds.toFixed(2)),
+      });
       if (!runtimeAdapter.transcribe) {
         throw new Error('Voice input is not available for the selected runtime.');
       }
       const text = await runtimeAdapter.transcribe(encoded.audioBase64, activeTranscribeModel, keepAlive, languageHintForSTT);
       console.info('[voice:transcribe:deliver]', {
+        attempt,
+        languageHintForSTT,
+        activeTranscribeModel,
+        textPreview: previewText(text),
+      });
+      logVoice('transcribe:done', {
         attempt,
         languageHintForSTT,
         activeTranscribeModel,
@@ -136,6 +181,11 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
       }, 200);
     } catch (err) {
       console.error('[VoiceInput] transcription error (attempt', attempt, '):', err);
+      logVoice('transcribe:error', err instanceof Error ? {
+        attempt,
+        message: err.message,
+        stack: err.stack ?? null,
+      } : { attempt, error: String(err) });
       if (attempt < 2) {
         // GGML crash retry after 8s
         clearTimer(retryTimerRef);
@@ -166,15 +216,69 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
       clearAllTimers();
       ignoreStopRef.current = false;
       setVoiceStateSafe('requesting');
+      logVoice('start:requesting', {
+        runtime: runtimeAdapter.runtime,
+        appLanguage,
+      });
       const micAccess = await window.electronAPI.requestMicrophoneAccess();
+      logVoice('start:mic-access', micAccess);
       if (!micAccess.granted) {
         throw new Error(`Microphone access ${micAccess.status}.`);
       }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        logVoice('start:get-user-media-success', {
+          audioTrackCount: stream.getAudioTracks().length,
+        });
+      } catch (error) {
+        logVoice('start:get-user-media-error', error instanceof Error ? {
+          message: error.message,
+          name: error.name,
+          stack: error.stack ?? null,
+        } : { error: String(error) });
+        throw error;
+      }
       activeStreamRef.current = stream;
-      const recorder = new MediaRecorder(stream);
+      const mimeType = pickRecorderMimeType();
+      let recorder: MediaRecorder;
+      try {
+        recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
+        logVoice('start:media-recorder-success', {
+          requestedMimeType: mimeType ?? 'default',
+          recorderMimeType: recorder.mimeType || 'default',
+          state: recorder.state,
+        });
+      } catch (error) {
+        logVoice('start:media-recorder-error', error instanceof Error ? {
+          message: error.message,
+          name: error.name,
+          stack: error.stack ?? null,
+          requestedMimeType: mimeType ?? 'default',
+        } : { error: String(error), requestedMimeType: mimeType ?? 'default' });
+        throw error;
+      }
+      logVoice('start:stream-ready', {
+        mimeType: mimeType ?? 'default',
+        recorderMimeType: recorder.mimeType || 'default',
+        trackStates: stream.getAudioTracks().map((track) => ({
+          kind: track.kind,
+          label: track.label,
+          enabled: track.enabled,
+          muted: track.muted,
+          readyState: track.readyState,
+        })),
+      });
       chunksRef.current = [];
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onerror = (event) => {
+        logVoice('start:recorder-error', {
+          errorName: event.error?.name ?? 'unknown',
+          errorMessage: event.error?.message ?? 'unknown',
+        });
+      };
       recorder.onstop = () => {
         mediaRecorderRef.current = null;
         clearTimer(maxRecordTimerRef);
@@ -183,7 +287,22 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
           ignoreStopRef.current = false;
           return;
         }
-        const blob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        const chunkBytes = chunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0);
+        logVoice('stop:chunks-ready', {
+          chunkCount: chunksRef.current.length,
+          chunkBytes,
+          recorderMimeType: recorder.mimeType || 'default',
+        });
+        if (chunksRef.current.length === 0 || chunkBytes === 0) {
+          setVoiceStateSafe('error');
+          clearTimer(errorResetTimerRef);
+          errorResetTimerRef.current = setTimeout(() => {
+            errorResetTimerRef.current = null;
+            setVoiceStateSafe('idle');
+          }, 3000);
+          return;
+        }
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || chunksRef.current[0]?.type || 'audio/webm' });
         void doTranscribe(blob);
       };
       recorder.start();
@@ -196,7 +315,12 @@ export function VoiceInput({ e4bAvailable, greekTranscribeModel, transcribeModel
           recorder.stop();
         }
       }, 30000);
-    } catch {
+    } catch (error) {
+      logVoice('start:catch', error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack ?? null,
+      } : { error: String(error) });
       stopActiveStream();
       setVoiceStateSafe('error');
       clearTimer(errorResetTimerRef);

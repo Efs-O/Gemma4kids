@@ -177,7 +177,7 @@ function macSayVoice(lang: string | undefined): string {
 
 function speakWithSay(text: string, lang: string | undefined): Promise<Buffer> {
   const voice = macSayVoice(lang);
-  const tmp = path.join(app.getPath('temp'), `g4k_tts_${Date.now()}.wav`);
+  const tmp = path.join(app.getPath('temp'), `g4k_tts_${Date.now()}.aiff`);
   return new Promise<Buffer>((resolve, reject) => {
     const proc = spawn('say', ['-v', voice, '-o', tmp, '--', text]);
     proc.on('error', reject);
