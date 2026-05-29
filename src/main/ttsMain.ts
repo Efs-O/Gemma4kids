@@ -221,10 +221,57 @@ function speakWithSay(text: string, lang: string | undefined): Promise<Buffer> {
   });
 }
 
+function selectVoice(voices: VoiceInfo[], lang: string | undefined): VoiceInfo {
+  const hint = (lang ?? 'en').slice(0, 2).toLowerCase();
+  return (
+    voices.find((v) => v.lang.toLowerCase().startsWith(hint)) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith('en')) ??
+    voices[0]
+  );
+}
+
+// macOS arm-build piper uses --output_file instead of --output-raw (self-contained PyInstaller bundle)
+function speakWithPiperFile(binary: string, text: string, lang: string | undefined): Promise<Buffer> {
+  const voices = scanVoices();
+  if (voices.length === 0) throw new Error('No voice models found. Run: npm run download-voices');
+  const voice = selectVoice(voices, lang);
+  const stamp = `${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+  const wavPath = path.join(app.getPath('temp'), `g4k_tts_${stamp}.wav`);
+
+  try { fs.chmodSync(binary, 0o755); } catch { /* best effort */ }
+
+  return new Promise<Buffer>((resolve, reject) => {
+    const proc = spawn(binary, ['--model', voice.model, '--output_file', wavPath], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const stderr: Buffer[] = [];
+    proc.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
+    proc.stdin.write(text);
+    proc.stdin.end();
+    proc.on('error', reject);
+    proc.on('close', (code: number | null) => {
+      try {
+        if (code !== 0) {
+          const detail = Buffer.concat(stderr).toString('utf8').trim();
+          reject(new Error(`Piper exited with code ${String(code)}${detail ? `: ${detail}` : ''}`));
+          return;
+        }
+        resolve(fs.readFileSync(wavPath));
+      } catch (err) {
+        reject(err);
+      } finally {
+        try { fs.unlinkSync(wavPath); } catch { /* best effort */ }
+      }
+    });
+  });
+}
+
 export function registerTtsIpcHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('tts-speak', async (_event, text: string, lang?: string): Promise<Buffer> => {
-    // macOS: use built-in `say` — Piper dylibs are not bundled and won't load
     if (process.platform === 'darwin') {
+      const binary = findPiperBinary();
+      if (binary) return speakWithPiperFile(binary, text, lang);
+      // fallback: no piper binary bundled, use system say
       return speakWithSay(text, lang);
     }
 
@@ -234,11 +281,7 @@ export function registerTtsIpcHandlers(ipcMain: IpcMain): void {
     const voices = scanVoices();
     if (voices.length === 0) throw new Error('No voice models found. Put bundled voice files in resources/voices or run: npm run download-voices');
 
-    const hint = (lang ?? 'en').slice(0, 2).toLowerCase();
-    const voice =
-      voices.find((v) => v.lang.toLowerCase().startsWith(hint)) ??
-      voices.find((v) => v.lang.toLowerCase().startsWith('en')) ??
-      voices[0];
+    const voice = selectVoice(voices, lang);
 
     return new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = [];
