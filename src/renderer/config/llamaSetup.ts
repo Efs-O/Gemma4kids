@@ -1,6 +1,7 @@
 import type { RuntimeKind } from '../services/OllamaService';
 import { OLLAMA_CHAT_PROFILE, OLLAMA_CHAT_WORKSTATION_CTX, OLLAMA_CHAT_WORKSTATION_PREDICT } from '../ollamaConstants';
 import {
+  isGemma412b,
   isGemma426b,
   isGemma431b,
   isGemma4EdgeE2b,
@@ -51,6 +52,16 @@ export const LLAMA_MODEL_PRESETS = [
     repoSegment: 'models--unsloth--gemma-4-31B-it-GGUF',
     snapshot: '43e80d41a220ac7c83023daacd6a0d1fd8559251',
   },
+  {
+    // Local flat-folder GGUF (not HF hub layout) — absolutePath wins in buildPresetPath.
+    id: '12b',
+    label: 'Gemma 4 12B',
+    modelTag: 'gemma4:12b',
+    filename: 'gemma-4-12b-it-UD-Q4_K_XL.gguf',
+    repoSegment: 'models--unsloth--gemma-4-12b-it-GGUF',
+    snapshot: 'local',
+    absolutePath: 'N:\\GEMMA GGUF UNSLOTH\\12B\\gemma-4-12b-it-UD-Q4_K_XL.gguf',
+  },
 ] as const;
 
 export type LlamaModelPresetId = typeof LLAMA_MODEL_PRESETS[number]['id'];
@@ -73,6 +84,7 @@ export const LLAMA_MODEL_PATH_KEYS: Record<LlamaModelPresetId, string> = {
   e4b: 'runtime.llama_cpp.modelPath.e4b',
   '26b': 'runtime.llama_cpp.modelPath.26b',
   '31b': 'runtime.llama_cpp.modelPath.31b',
+  '12b': 'runtime.llama_cpp.modelPath.12b',
 };
 export const LLAMA_NUM_CTX_KEY = 'runtime.llama_cpp.numCtx';
 export const LLAMA_NUM_PREDICT_KEY = 'runtime.llama_cpp.numPredict';
@@ -84,6 +96,7 @@ export function normalizeHubRoot(root: string): string {
 }
 
 export function buildPresetPath(baseRoot: string, preset: typeof LLAMA_MODEL_PRESETS[number]): string {
+  if ('absolutePath' in preset && preset.absolutePath) return preset.absolutePath;
   return `${normalizeHubRoot(baseRoot)}\\${preset.repoSegment}\\snapshots\\${preset.snapshot}\\${preset.filename}`;
 }
 
@@ -99,6 +112,7 @@ function makeDefaultLlamaModelPaths(baseRoot: string): LlamaModelPaths {
     e4b: buildPresetPath(baseRoot, LLAMA_MODEL_PRESETS[1]),
     '26b': buildPresetPath(baseRoot, LLAMA_MODEL_PRESETS[2]),
     '31b': buildPresetPath(baseRoot, LLAMA_MODEL_PRESETS[3]),
+    '12b': buildPresetPath(baseRoot, LLAMA_MODEL_PRESETS[4]),
   };
 }
 
@@ -109,6 +123,7 @@ function mergeModelPaths(current: Partial<LlamaModelPaths>, baseRoot: string): L
     e4b: current.e4b?.trim() ? current.e4b : defaults.e4b,
     '26b': current['26b']?.trim() ? current['26b'] : defaults['26b'],
     '31b': current['31b']?.trim() ? current['31b'] : defaults['31b'],
+    '12b': current['12b']?.trim() ? current['12b'] : defaults['12b'],
   };
 }
 
@@ -178,15 +193,20 @@ export function readLlamaCppSetupConfig(): LlamaCppSetupConfig {
 export function getConfiguredLlamaPathForModel(model: string, modelPaths: LlamaModelPaths): string {
   if (isGemma431b(model)) return modelPaths['31b'];
   if (isGemma426b(model)) return modelPaths['26b'];
+  if (isGemma412b(model)) return modelPaths['12b'];
   if (isGemma4EdgeE4b(model)) return modelPaths.e4b;
   if (isGemma4EdgeE2b(model)) return modelPaths.e2b;
   return modelPaths.e2b;
 }
 
 export function getDefaultLlamaNumCtx(model: string): number {
-  return isGemma431b(model) || isGemma426b(model) ? OLLAMA_CHAT_WORKSTATION_CTX : OLLAMA_CHAT_PROFILE.numCtx;
+  return isGemma431b(model) || isGemma426b(model) || isGemma412b(model)
+    ? OLLAMA_CHAT_WORKSTATION_CTX
+    : OLLAMA_CHAT_PROFILE.numCtx;
 }
 
 export function getDefaultLlamaNumPredict(model: string): number {
-  return isGemma431b(model) || isGemma426b(model) ? OLLAMA_CHAT_WORKSTATION_PREDICT : OLLAMA_CHAT_PROFILE.numPredict;
+  return isGemma431b(model) || isGemma426b(model) || isGemma412b(model)
+    ? OLLAMA_CHAT_WORKSTATION_PREDICT
+    : OLLAMA_CHAT_PROFILE.numPredict;
 }

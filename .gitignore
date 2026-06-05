@@ -25,6 +25,16 @@ assets/icon.icns
 # Voice model backups — local only, never commit
 *.bak
 
+# Large local-only data / staging dirs — never commit (the packaged Joy voice
+# lives in voices/, which IS tracked; these are duplicates / training data / HF upload staging)
+human_voice_dataset/
+JOY/
+joy-greek-tts-upload/
+animations/
+New folder (4)/
+.coordination/
+.mcp.json
+
 # Local tooling / artifacts — never commit
 **/video-frame-exports/
 **/tts-test-output/

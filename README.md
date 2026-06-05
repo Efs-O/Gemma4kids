@@ -51,9 +51,13 @@ Download from [ollama.com](https://ollama.com) and keep it running. Pull what fi
 ```bash
 ollama pull gemma4:e2b   # lightest — older GPUs, ~3 GB VRAM (default at startup)
 ollama pull gemma4:e4b   # edge — STT + full chat/tools, ~6 GB VRAM
+ollama pull gemma4:12b   # full tier — dense 12B, 64 k context, ~8 GB VRAM (4-bit)
 ollama pull gemma4:26b   # workstation — excellent quality, ~17 GB VRAM
 ollama pull gemma4:31b   # workstation — highest quality, 64 k context, ~20 GB VRAM
 ```
+
+> `gemma4:12b` may not be in the Ollama registry yet. If `ollama pull` can't find it, register a local GGUF instead:
+> `ollama create gemma4:12b -f Modelfile` where `Modelfile` contains `FROM <path-to>\gemma-4-12b-it-UD-Q4_K_XL.gguf`.
 
 > The app auto-selects the **lightest model you have pulled**. You can switch to a larger one in the header dropdown at any time.
 >
@@ -132,7 +136,7 @@ Electron shell
     ├── ProjectList — sidebar: load / delete KidAnimations/*.html; injects active file context
     ├── CodeRunner — side-scroller game during streaming (26B/31B only); Space to jump
     ├── htmlAudit.ts — Acorn-based JS/HTML repair; badge shows fix count
-    └── pickCodingModel.ts — E2B→E4B→26B→31B auto-select; getModelTier(); pickGreekTranscribeModel()
+    └── pickCodingModel.ts — E2B→E4B→12B→26B→31B auto-select; getModelTier(); pickGreekTranscribeModel()
 ```
 
 **Typical pipelines**
@@ -171,6 +175,7 @@ All benchmark scripts and results live under [`scripts/`](scripts/) and [`gemma_
 
 - **gemma4:e2b** — lightest model in the family; runs on older or low-VRAM GPUs; default at startup.
 - **gemma4:e4b** — natively multimodal (audio-in); serves as the STT engine for English, German, and Greek, with stricter Greek prompting and retry logic to keep transcripts in Greek script. It can also run the full agent loop on its own on smaller GPUs.
+- **gemma4:12b** — dense 12B, full tier, 64 k context, ~8 GB VRAM at 4-bit (Q4_K_XL). A mid-weight step between the edge models and the 26B/31B workstation tier. Same voice pipeline as the larger models — E4B handles STT, Piper handles TTS.
 - **gemma4:26b** — text-only workstation model, 98 k context. **Gains full voice I/O** through the pipeline: E4B/E2B transcribes speech → text → 26B, and Piper TTS speaks 26B's replies back to the child. `keep_alive: 0` on the STT call forces immediate VRAM unload so 26B can load cleanly.
 - **gemma4:31b** — text-only, highest quality, 64 k context. Same voice pipeline as 26B — STT handles input, Piper handles output — giving it capabilities it does not natively possess.
 - **Ollama** — local native `/api/chat` for tool calling and thinking; painless model pulls; aligned with competition requirements.

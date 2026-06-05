@@ -114,6 +114,7 @@ function inferModelFamily(name: string): string | null {
   const lower = name.toLowerCase();
   if (lower.includes('e2b')) return 'e2b';
   if (lower.includes('e4b')) return 'e4b';
+  if (lower.includes('12b')) return 'e12b';
   if (lower.includes('26b')) return 'e26b';
   if (lower.includes('31b')) return 'e31b';
   return null;

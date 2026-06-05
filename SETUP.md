@@ -25,6 +25,7 @@ Gemma4kids lets you choose which Gemma model generates animations. Pick based on
 |---|---|---|---|---|
 | `gemma4:31b` | ~20 GB | 24 GB VRAM | Not recommended | High-end workstation — highest quality animations (64 k context) |
 | `gemma4:26b` | ~17 GB | 20 GB VRAM | Not recommended | Workstation / gaming GPU — excellent animation quality |
+| `gemma4:12b` | ~8 GB (4-bit) | 10 GB VRAM | Not recommended | Mid-range GPU — strong quality, lighter than 26B (64 k context) |
 | `gemma4:e4b` | ~6 GB | 8 GB VRAM | 16 GB RAM | Most modern laptops with a dedicated GPU |
 | `gemma4:e2b` | ~2.5 GB | 4 GB VRAM | 8 GB RAM | **Older laptops, school computers, integrated graphics** |
 
@@ -36,7 +37,7 @@ Ollama will use your CPU instead. It still works — animations will just take *
 - Your computer fan runs at full speed and the system slows down
 - Generation never finishes
 
-**Solution:** Switch to a lighter model in the model selector (e2b → e4b → 26b → 31b, lightest first), or close other apps to free RAM before generating.
+**Solution:** Switch to a lighter model in the model selector (e2b → e4b → 12b → 26b → 31b, lightest first), or close other apps to free RAM before generating.
 
 ### Voice transcription (mic button)
 The mic button always uses `gemma4:e4b` regardless of which coding model is selected. On machines with less than 8 GB VRAM, Ollama may need to unload the coding model first, then load e4b — this causes a 10–30 second pause before transcription starts. This is normal.
@@ -69,6 +70,14 @@ ollama pull gemma4:26b   # excellent quality — richest animations
 ollama pull gemma4:e4b   # required for mic / voice input
 ```
 
+### Mid-range GPU (10–16 GB VRAM)
+```bash
+# gemma4:12b may not be in the Ollama registry yet — if pull fails, register a local GGUF:
+#   ollama create gemma4:12b -f Modelfile   (Modelfile: FROM <path>\gemma-4-12b-it-UD-Q4_K_XL.gguf)
+ollama pull gemma4:12b   # dense 12B, full tier — strong quality, ~8 GB at 4-bit
+ollama pull gemma4:e4b   # required for mic / voice input
+```
+
 ### Good laptop or older desktop
 ```bash
 ollama pull gemma4:e4b   # coding + mic voice input
@@ -82,7 +91,7 @@ ollama pull gemma4:e4b   # add this too if you also want mic input
 
 **Notes:**
 - If **`gemma4:e4b` is missing** → mic button stays disabled; typing always works.
-- The **Coding model** selector in the header auto-picks the best available model at launch: prefers `gemma4:31b` → `gemma4:26b` → `gemma4:e4b` → `gemma4:e2b` → any other Gemma variant → first model found.
+- The **Coding model** selector in the header auto-picks the **lightest** available model at launch so the app loads fast: prefers `gemma4:e2b` → `gemma4:e4b` → `gemma4:12b` → `gemma4:26b` → `gemma4:31b` → any other Gemma variant → first model found. Switch to a heavier one anytime in the header dropdown.
 - Voice STT always uses `gemma4:e4b` regardless of which coding model is selected.
 
 ---

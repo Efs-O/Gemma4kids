@@ -11,7 +11,7 @@ import {
   OLLAMA_CHAT_WORKSTATION_PREDICT,
 } from '../ollamaConstants';
 import { auditHtml } from '../htmlAudit';
-import { isGemma426b, isGemma431b } from '../utils/pickCodingModel';
+import { isGemma412b, isGemma426b, isGemma431b } from '../utils/pickCodingModel';
 import { SIMPLE_VIDEO_UNDERSTANDING_CONTEXT, VIDEO_EXPORT_TOOL_CONTEXT } from '../videoPromptNotes';
 import {
   buildRequestMessages,
@@ -223,7 +223,7 @@ export function useChat(
   const runLoop = useCallback(async (startHistory: ChatMessage[], token: CancellationToken) => {
     const myClearId = clearIdRef.current;
     let history = startHistory;
-    const workstationLarge = isGemma426b(model) || isGemma431b(model);
+    const workstationLarge = isGemma426b(model) || isGemma431b(model) || isGemma412b(model);
     let effectiveThinkEnabled = thinkEnabled && thinkingAvailable;
     const defaultNumCtx = workstationLarge ? OLLAMA_CHAT_WORKSTATION_CTX : OLLAMA_CHAT_PROFILE.numCtx;
     const defaultNumPredict = workstationLarge ? OLLAMA_CHAT_WORKSTATION_PREDICT : OLLAMA_CHAT_PROFILE.numPredict;

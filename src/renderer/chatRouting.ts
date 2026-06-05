@@ -246,8 +246,9 @@ export function buildRequestMessages(history: ChatMessage[], tier: ModelTier, si
 
 function smallerModelHint(model: string): string {
   const lower = model.toLowerCase();
-  if (lower.includes('31b')) return 'gemma4:26b or gemma4:e4b';
-  if (lower.includes('26b')) return 'gemma4:e4b or gemma4:e2b';
+  if (lower.includes('31b')) return 'gemma4:26b or gemma4:12b';
+  if (lower.includes('26b')) return 'gemma4:12b or gemma4:e4b';
+  if (lower.includes('12b')) return 'gemma4:e4b or gemma4:e2b';
   if (lower.includes('e4b')) return 'gemma4:e2b';
   if (lower.includes('e2b')) return 'a smaller Gemma model or close other apps first';
   return 'a smaller Gemma model';

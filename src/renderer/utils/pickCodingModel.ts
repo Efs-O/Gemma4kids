@@ -29,6 +29,12 @@ export function isPlainGemma4E2b(name: string): boolean {
   return normalizeOllamaModelRef(name).toLowerCase() === 'gemma4:e2b';
 }
 
+/** True for Gemma 4 12B dense tags (gemma4:12b, gemma4:12b-it-...). Full tier. */
+export function isGemma412b(name: string): boolean {
+  const n = normalizeOllamaModelRef(name);
+  return /^gemma4:12b(?:$|[-.])/i.test(n);
+}
+
 /** True for Gemma 4 26B workstation / MoE tags. */
 export function isGemma426b(name: string): boolean {
   const n = normalizeOllamaModelRef(name);
@@ -59,12 +65,13 @@ function findFirstMatchingModel(models: string[], candidates: string[]): string 
 function gemma4CodingModelSizeRank(name: string): number {
   if (isGemma4EdgeE2b(name)) return 0;
   if (isGemma4EdgeE4b(name)) return 1;
-  if (isGemma426b(name)) return 2;
-  if (isGemma431b(name)) return 3;
+  if (isGemma412b(name)) return 2;
+  if (isGemma426b(name)) return 3;
+  if (isGemma431b(name)) return 4;
   return 99;
 }
 
-/** Drop-down order: E2B, E4B, 26B, 31B; same tier sorted by tag string. */
+/** Drop-down order: E2B, E4B, 12B, 26B, 31B; same tier sorted by tag string. */
 export function sortGemma4CodingModelsSmallestFirst(names: string[]): string[] {
   return [...names].sort((a, b) => {
     const d = gemma4CodingModelSizeRank(a) - gemma4CodingModelSizeRank(b);
@@ -76,7 +83,7 @@ export function sortGemma4CodingModelsSmallestFirst(names: string[]): string[] {
 }
 
 /**
- * Auto-select default coding model: E2B > E4B > 26B > 31B > any gemma > first.
+ * Auto-select default coding model: E2B > E4B > 12B > 26B > 31B > any gemma > first.
  * Starts with the fastest/lightest model so the app loads quickly; user can
  * upgrade manually during the session.
  * When tags are still loading, callers may pass [] -- default to E2B tag.
@@ -87,6 +94,8 @@ export function pickCodingModel(models: string[]): string {
   if (e2b) return e2b;
   const e4b = models.find(isGemma4EdgeE4b);
   if (e4b) return e4b;
+  const g12 = models.find(isGemma412b);
+  if (g12) return g12;
   const g26 = models.find(isGemma426b);
   if (g26) return g26;
   const g31 = models.find(isGemma431b);
