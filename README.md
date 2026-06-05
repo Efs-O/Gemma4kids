@@ -67,6 +67,10 @@ ollama pull gemma4:31b   # workstation — highest quality, 64 k context, ~20 GB
 
 Download a [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) and point Gemma4kids at your GGUF model files via the setup screen. Gemma4kids spawns and manages `llama-server` automatically — one instance for the coding model, a separate one for STT. No Ollama installation needed. **You can paste a folder path** — if the folder contains exactly one non-mmproj `.gguf`, the app selects it automatically. Vision and video features require an `mmproj` companion file alongside your GGUF; Gemma4kids searches for it automatically (including one level up from the model folder). Advanced options include GPU layer count, context size, max tokens, and K/V cache quantization (f16, bf16, q8_0, q5_1, q5_0, q4_1, q4_0, iq4_nl).
 
+> ⚠️ **Minimum llama.cpp build: `b9524` or newer.** The **Gemma 4 12B** model is a *unified* (encoder-free) multimodal model whose projector is the `gemma4uv` type; older `llama-server` builds reject it with `unknown projector type: gemma4uv` and fail to start. Build **b9524** (or later) loads it correctly. The smaller models (E2B/E4B) and the `gemma4v`-projector models (26B/31B) work on older builds too, but **b9524+ is required for the 12B**. (This only affects the llama.cpp runtime — Ollama users are unaffected.)
+>
+> **Tip — version-agnostic path:** point the llama-server path at the *folder* that holds your `llama.cpp-bNNNN` build(s) (e.g. `…\Llamacpp`). Gemma4kids picks the newest build inside it automatically, so dropping in a future release needs no reconfiguration.
+
 **Video features (both runtimes):** frame extraction and audio capture require **ffmpeg** on your PATH.
 
 ### 2. Install Gemma4kids
@@ -256,7 +260,7 @@ Verbatim **[Kaggle foundational rules](docs/competition/kaggle-foundational-rule
 
 Thank you to the teams behind the tools Gemma4kids depends on:
 
-- **[Google Gemma](https://ai.google.dev/gemma)** — Gemma 4 model family (E2B, E4B, 26B, 31B) run locally via Ollama or llama.cpp.
+- **[Google Gemma](https://ai.google.dev/gemma)** — Gemma 4 model family (E2B, E4B, **12B**, 26B, 31B) run locally via Ollama or llama.cpp. The **12B** is the unified encoder-free multimodal model (requires llama.cpp build b9524+ under the llama.cpp runtime).
 - **[Ollama](https://ollama.com)** — local inference, native `/api/chat` for tool calling and thinking, painless model pulls.
 - **[llama.cpp](https://github.com/ggml-org/llama.cpp)** (ggml-org) — GGUF inference engine powering the alternative runtime; Gemma4kids manages `llama-server` directly for both coding and STT workloads.
 - **[ffmpeg](https://ffmpeg.org/)** — video frame extraction and audio capture for the multimodal attachment pipeline.

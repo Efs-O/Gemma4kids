@@ -16,6 +16,7 @@ function extractGemmaFamilyToken(filePath: string): string | null {
   const lower = filePath.toLowerCase();
   if (lower.includes('e2b')) return 'e2b';
   if (lower.includes('e4b')) return 'e4b';
+  if (lower.includes('12b')) return '12b';
   if (lower.includes('26b')) return '26b';
   if (lower.includes('31b')) return '31b';
   return null;
@@ -385,6 +386,82 @@ export function getLlamaStartupTimeoutMs(modelPath: string): number {
   return LLAMA_SMALL_MODEL_STARTUP_TIMEOUT_MS;
 }
 
+function llamaServerExeName(): string {
+  return process.platform === 'win32' ? 'llama-server.exe' : 'llama-server';
+}
+
+function isExistingFile(filePath: string): boolean {
+  try {
+    return fs.existsSync(filePath) && fs.statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function isExistingDir(dirPath: string): boolean {
+  try {
+    return fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/** Build number from a path like ".../llama.cpp-b9524/...", or -1 if none. */
+function extractLlamaBuildNumber(filePath: string): number {
+  const match = filePath.toLowerCase().match(/b(\d{3,})/);
+  return match ? Number.parseInt(match[1], 10) : -1;
+}
+
+function fileMtimeMs(filePath: string): number {
+  try {
+    return fs.statSync(filePath).mtimeMs;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Find the newest llama-server executable inside a directory: checks the directory
+ * itself and one level of subdirectories (e.g. <root>/llama.cpp-bNNNN/llama-server.exe),
+ * preferring the highest build number, then most recently modified. This lets a user
+ * drop a new llama.cpp-bNNNN build into the same parent folder — or point the path at
+ * that parent folder — and have the latest version picked up without reconfiguring.
+ */
+function findNewestLlamaServerExe(rootDir: string): string | null {
+  const exeName = llamaServerExeName();
+  const candidates: string[] = [];
+  const direct = path.join(rootDir, exeName);
+  if (isExistingFile(direct)) candidates.push(direct);
+  try {
+    for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const nested = path.join(rootDir, entry.name, exeName);
+      if (isExistingFile(nested)) candidates.push(nested);
+    }
+  } catch {
+    // unreadable directory — ignore
+  }
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => {
+    const byBuild = extractLlamaBuildNumber(b) - extractLlamaBuildNumber(a);
+    if (byBuild !== 0) return byBuild;
+    return fileMtimeMs(b) - fileMtimeMs(a);
+  });
+  return candidates[0];
+}
+
+/** Walk up from a path until an existing directory is found. */
+function nearestExistingDir(startPath: string): string | null {
+  let current = startPath;
+  for (let i = 0; i < 16; i++) {
+    if (isExistingDir(current)) return current;
+    const parent = path.dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+  return null;
+}
+
 export function resolveLlamaServerCommand(serverPath: string): { command: string; args: string[] } {
   const trimmed = serverPath.trim();
   if (!trimmed) {
@@ -395,35 +472,38 @@ export function resolveLlamaServerCommand(serverPath: string): { command: string
     return { command: trimmed, args: [] };
   }
 
-  const candidates: string[] = [];
-  if (fs.existsSync(trimmed)) {
-    const st = fs.statSync(trimmed);
-    if (st.isFile()) {
-      candidates.push(trimmed);
-    } else if (st.isDirectory()) {
-      const exeName = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server';
-      candidates.push(path.join(trimmed, exeName));
-    }
-  } else {
-    candidates.push(trimmed);
-    if (process.platform === 'win32' && !path.extname(trimmed)) {
-      candidates.push(`${trimmed}.exe`);
+  // 1) An exact existing file wins — an explicitly pinned build.
+  if (isExistingFile(trimmed)) {
+    return { command: trimmed, args: [] };
+  }
+
+  // 2) Windows: allow a path that omits the .exe suffix.
+  if (process.platform === 'win32' && !path.extname(trimmed)) {
+    const withExe = `${trimmed}.exe`;
+    if (isExistingFile(withExe)) {
+      return { command: withExe, args: [] };
     }
   }
 
-  for (const candidate of candidates) {
-    try {
-      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-        return { command: candidate, args: [] };
-      }
-    } catch {
-      // ignore stat errors for candidate
-    }
+  // 3) A directory (e.g. the install container): pick the newest build inside it.
+  if (isExistingDir(trimmed)) {
+    const best = findNewestLlamaServerExe(trimmed);
+    if (best) return { command: best, args: [] };
+  }
+
+  // 4) The configured path no longer exists (e.g. a build folder was renamed or
+  //    replaced by a newer one): search the nearest existing ancestor directory for
+  //    the newest llama-server build.
+  const anchor = nearestExistingDir(path.dirname(trimmed));
+  if (anchor) {
+    const best = findNewestLlamaServerExe(anchor);
+    if (best) return { command: best, args: [] };
   }
 
   throw new Error(
     `llama-server binary not found at ${trimmed}. Use the path to the llama-server program ` +
-      `(on Windows, often ...\\bin\\llama-server.exe), not only the source or build folder.)`,
+      `(on Windows, often ...\\bin\\llama-server.exe) or the folder that contains a ` +
+      `llama.cpp-bNNNN build.`,
   );
 }
 

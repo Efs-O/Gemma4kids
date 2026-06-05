@@ -93,6 +93,7 @@ ollama pull gemma4:e4b   # add this too if you also want mic input
 - If **`gemma4:e4b` is missing** → mic button stays disabled; typing always works.
 - The **Coding model** selector in the header auto-picks the **lightest** available model at launch so the app loads fast: prefers `gemma4:e2b` → `gemma4:e4b` → `gemma4:12b` → `gemma4:26b` → `gemma4:31b` → any other Gemma variant → first model found. Switch to a heavier one anytime in the header dropdown.
 - Voice STT always uses `gemma4:e4b` regardless of which coding model is selected.
+- **llama.cpp runtime only:** the `gemma4:12b` model needs a **`llama-server` build of `b9524` or newer** — its `gemma4uv` projector is rejected by older builds (`unknown projector type: gemma4uv`). E2B/E4B/26B/31B work on older builds. Tip: point the llama-server path at the *folder* containing your `llama.cpp-bNNNN` build(s) and Gemma4kids auto-uses the newest one.
 
 ---
 
