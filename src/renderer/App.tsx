@@ -18,6 +18,7 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import type { AppLanguage } from './components/WelcomeScreen';
 import { ACTIVE_DRAFT_FILENAME, useDraftAutosave } from './hooks/useDraftAutosave';
 import { usePanelResize } from './hooks/usePanelResize';
+import { useAutoSaveOnStreamEnd } from './hooks/useAutoSaveOnStreamEnd';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
 const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
@@ -27,12 +28,6 @@ const MUSIC_FADE_OUT_DELAY_MS = 150;  // brief pause before fade starts when mic
 const MUSIC_FADE_OUT_MS = 300;        // time to reach 0
 const MUSIC_FADE_IN_MS = 500;        // time to ramp back to normal after mic closes
 const MUSIC_FADE_STEP_MS = 16;        // ~60 fps
-
-function titleToFilename(html: string, fallback: string): string {
-  const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  if (!m) return fallback;
-  return m[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || fallback;
-}
 
 function pointsToMmproj(filePath: string): boolean {
   return /mmproj/i.test(filePath.split(/[\\/]/).pop() ?? '');
@@ -244,15 +239,11 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false);
 
   const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingAutoSave = useRef(false);
-  const streamStartSaved = useRef<string | null>(null);
-  const filenameRef = useRef(filename);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musicFadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const musicFadeDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { filenameRef.current = filename; }, [filename]);
   useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
   useEffect(() => { if (displayCode && savedCode && displayCode !== savedCode) setSaveStatus('unsaved'); }, [displayCode, savedCode]);
   useEffect(() => { localStorage.setItem(MUSIC_ENABLED_KEY, String(musicEnabled)); }, [musicEnabled]);
@@ -389,27 +380,12 @@ export default function App() {
     if (latestCode) flashSaved(latestCode);
   }, [baseFilename, flashSaved, lastSaved, latestCode]);
 
-  useEffect(() => {
-    if (status === 'streaming') {
-      pendingAutoSave.current = true;
-      streamStartSaved.current = lastSaved;
-      return;
-    }
-    if (status !== 'idle' || !pendingAutoSave.current || !latestCode) return;
-    pendingAutoSave.current = false;
-    if (lastSaved !== streamStartSaved.current) return;
-    const code = latestCode;
-    const name = titleToFilename(code, filenameRef.current);
-    void (async () => {
-      const audited = auditHtml(code);
-      const result = await window.electronAPI.saveAnimation(name, audited.html, 'gemma');
-      if (result.success) {
-        setCurrentProjectFilename(result.filename);
-        setFilename(baseFilename(result.filename));
-        flashSaved(audited.html);
-      }
-    })();
-  }, [status, latestCode, lastSaved, baseFilename, flashSaved]);
+  const handleAutoSaved = useCallback((savedFilename: string, auditedHtml: string) => {
+    setCurrentProjectFilename(savedFilename);
+    setFilename(baseFilename(savedFilename));
+    flashSaved(auditedHtml);
+  }, [baseFilename, flashSaved]);
+  useAutoSaveOnStreamEnd({ status, latestCode, lastSaved, filename, onAutoSaved: handleAutoSaved });
 
   const handleModelChange = useCallback((modelName: string) => setUserModel(modelName), []);
   const handleThinkToggle = useCallback((enabled: boolean) => {
