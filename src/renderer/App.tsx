@@ -17,6 +17,7 @@ import { auditHtml } from './htmlAudit';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import type { AppLanguage } from './components/WelcomeScreen';
 import { ACTIVE_DRAFT_FILENAME, useDraftAutosave } from './hooks/useDraftAutosave';
+import { usePanelResize } from './hooks/usePanelResize';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
 const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
@@ -233,8 +234,7 @@ export default function App() {
     videoAttachmentFileRef,
   );
 
-  const [sidebarWidth, setSidebarWidth] = useState(() => { const stored = localStorage.getItem('g4k-sidebar-width'); const value = stored ? parseInt(stored, 10) : 196; return Number.isNaN(value) || value < 80 || value > 400 ? 196 : value; });
-  const [chatWidth, setChatWidth] = useState(() => { const stored = localStorage.getItem('g4k-chat-width'); const value = stored ? parseInt(stored, 10) : 390; return Number.isNaN(value) || value < 200 || value > 700 ? 390 : value; });
+  const { sidebarWidth, chatWidth, onSidebarDividerMouseDown, onChatDividerMouseDown } = usePanelResize();
   const [displayCode, setDisplayCode] = useState('');
   const [savedCode, setSavedCode] = useState('');
   const [saveStatus, setSaveStatus] = useState<'unsaved' | 'saved' | null>(null);
@@ -243,9 +243,6 @@ export default function App() {
   const [uiError, setUiError] = useState('');
   const [helpOpen, setHelpOpen] = useState(false);
 
-  const draggingTarget = useRef<'sidebar' | 'chat' | null>(null);
-  const dragStartX = useRef(0);
-  const dragStartWidth = useRef(0);
   const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSave = useRef(false);
   const streamStartSaved = useRef<string | null>(null);
@@ -258,8 +255,6 @@ export default function App() {
   useEffect(() => { filenameRef.current = filename; }, [filename]);
   useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
   useEffect(() => { if (displayCode && savedCode && displayCode !== savedCode) setSaveStatus('unsaved'); }, [displayCode, savedCode]);
-  useEffect(() => { localStorage.setItem('g4k-sidebar-width', String(sidebarWidth)); }, [sidebarWidth]);
-  useEffect(() => { localStorage.setItem('g4k-chat-width', String(chatWidth)); }, [chatWidth]);
   useEffect(() => { localStorage.setItem(MUSIC_ENABLED_KEY, String(musicEnabled)); }, [musicEnabled]);
   useEffect(() => { localStorage.setItem(THINKING_DISABLED_MODELS_KEY, JSON.stringify(thinkingDisabledModels)); }, [thinkingDisabledModels]);
   useEffect(() => {
@@ -379,27 +374,6 @@ export default function App() {
     audioRef.current.currentTime = 0;
   }, []);
 
-  useEffect(() => {
-    const onMouseMove = (event: MouseEvent) => {
-      if (!draggingTarget.current) return;
-      if (draggingTarget.current === 'sidebar') {
-        const delta = event.clientX - dragStartX.current;
-        setSidebarWidth(Math.max(80, Math.min(500, dragStartWidth.current + delta)));
-        return;
-      }
-      const delta = dragStartX.current - event.clientX;
-      const maxChat = window.innerWidth - 350;
-      setChatWidth(Math.max(0, Math.min(maxChat, dragStartWidth.current + delta)));
-    };
-    const onMouseUp = () => { draggingTarget.current = null; };
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-  }, []);
-
   const baseFilename = useCallback((name: string) => name.replace(/\.html$/, ''), []);
   const flashSaved = useCallback((code: string) => {
     setSavedCode(code);
@@ -494,19 +468,6 @@ export default function App() {
     setShowSetupAssistant(false);
     warmup();
   }, [warmup]);
-  const onSidebarDividerMouseDown = useCallback((event: React.MouseEvent) => {
-    draggingTarget.current = 'sidebar';
-    dragStartX.current = event.clientX;
-    dragStartWidth.current = sidebarWidth;
-    event.preventDefault();
-  }, [sidebarWidth]);
-  const onChatDividerMouseDown = useCallback((event: React.MouseEvent) => {
-    draggingTarget.current = 'chat';
-    dragStartX.current = event.clientX;
-    dragStartWidth.current = chatWidth;
-    event.preventDefault();
-  }, [chatWidth]);
-
   const handleSave = useCallback(async () => {
     if (!displayCode) return;
     const audited = auditHtml(displayCode);
