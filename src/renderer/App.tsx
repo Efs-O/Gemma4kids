@@ -19,15 +19,10 @@ import type { AppLanguage } from './components/WelcomeScreen';
 import { ACTIVE_DRAFT_FILENAME, useDraftAutosave } from './hooks/useDraftAutosave';
 import { usePanelResize } from './hooks/usePanelResize';
 import { useAutoSaveOnStreamEnd } from './hooks/useAutoSaveOnStreamEnd';
+import { useBackgroundMusic } from './hooks/useBackgroundMusic';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
 const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
-const MUSIC_TRACK_SRC = './Glassroom Pulse.mp3';
-const MUSIC_VOLUME_NORMAL = 0.35;
-const MUSIC_FADE_OUT_DELAY_MS = 150;  // brief pause before fade starts when mic opens
-const MUSIC_FADE_OUT_MS = 300;        // time to reach 0
-const MUSIC_FADE_IN_MS = 500;        // time to ramp back to normal after mic closes
-const MUSIC_FADE_STEP_MS = 16;        // ~60 fps
 
 function pointsToMmproj(filePath: string): boolean {
   return /mmproj/i.test(filePath.split(/[\\/]/).pop() ?? '');
@@ -239,10 +234,6 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false);
 
   const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const musicRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const musicFadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const musicFadeDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { if (latestCode) setDisplayCode(latestCode); }, [latestCode]);
   useEffect(() => { if (displayCode && savedCode && displayCode !== savedCode) setSaveStatus('unsaved'); }, [displayCode, savedCode]);
@@ -264,106 +255,7 @@ export default function App() {
     const modelsForCleanup = runtimeInUse === 'ollama' ? ollamaCleanupModels : [];
     void window.electronAPI.setOllamaCleanupTargets(runtimeInUse, modelsForCleanup);
   }, [ollamaCleanupModels, runtimeInUse]);
-  useEffect(() => {
-    if (musicRetryTimeoutRef.current) {
-      clearTimeout(musicRetryTimeoutRef.current);
-      musicRetryTimeoutRef.current = null;
-    }
-    const shouldHoldMusic = workspaceScreenVisible && hasEnteredWorkspace;
-    if (!musicEnabled || !shouldHoldMusic) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-      return;
-    }
-
-    const audio = audioRef.current ?? new Audio(MUSIC_TRACK_SRC);
-    audioRef.current = audio;
-    audio.loop = true;
-    audio.preload = 'auto';
-    audio.volume = MUSIC_VOLUME_NORMAL;
-
-    let cancelled = false;
-
-    const handleError = () => {
-      if (cancelled) return;
-      audio.pause();
-      audio.currentTime = 0;
-      setUiError('I could not play the background music yet. Make sure "Glassroom Pulse.mp3" is in the app bundle and try again.');
-    };
-
-    const tryPlay = (attempt: number) => {
-      if (cancelled) return;
-      const playPromise = audio.play();
-      if (!playPromise) return;
-      void playPromise.then(() => {
-        if (cancelled) return;
-        setUiError('');
-      }).catch(() => {
-        if (cancelled) return;
-        if (attempt >= 4) {
-          handleError();
-          return;
-        }
-        musicRetryTimeoutRef.current = setTimeout(() => {
-          tryPlay(attempt + 1);
-        }, attempt === 0 ? 250 : 1000);
-      });
-    };
-
-    const handleCanPlay = () => {
-      tryPlay(0);
-    };
-
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('canplaythrough', handleCanPlay);
-    audio.load();
-    tryPlay(0);
-
-    return () => {
-      cancelled = true;
-      if (musicRetryTimeoutRef.current) {
-        clearTimeout(musicRetryTimeoutRef.current);
-        musicRetryTimeoutRef.current = null;
-      }
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('canplaythrough', handleCanPlay);
-    };
-  }, [hasEnteredWorkspace, musicEnabled, workspaceScreenVisible]);
-  useEffect(() => {
-    if (!audioRef.current || !musicEnabled) return;
-    const audio = audioRef.current;
-    if (musicFadeIntervalRef.current) { clearInterval(musicFadeIntervalRef.current); musicFadeIntervalRef.current = null; }
-    if (musicFadeDelayRef.current) { clearTimeout(musicFadeDelayRef.current); musicFadeDelayRef.current = null; }
-    if (voiceActive) {
-      musicFadeDelayRef.current = setTimeout(() => {
-        const steps = Math.round(MUSIC_FADE_OUT_MS / MUSIC_FADE_STEP_MS);
-        const decrement = audio.volume / steps;
-        musicFadeIntervalRef.current = setInterval(() => {
-          const next = Math.max(0, audio.volume - decrement);
-          audio.volume = next;
-          if (next <= 0) { clearInterval(musicFadeIntervalRef.current!); musicFadeIntervalRef.current = null; }
-        }, MUSIC_FADE_STEP_MS);
-      }, MUSIC_FADE_OUT_DELAY_MS);
-    } else {
-      const start = audio.volume;
-      const steps = Math.round(MUSIC_FADE_IN_MS / MUSIC_FADE_STEP_MS);
-      const increment = (MUSIC_VOLUME_NORMAL - start) / steps;
-      musicFadeIntervalRef.current = setInterval(() => {
-        const next = Math.min(MUSIC_VOLUME_NORMAL, audio.volume + increment);
-        audio.volume = next;
-        if (next >= MUSIC_VOLUME_NORMAL) { clearInterval(musicFadeIntervalRef.current!); musicFadeIntervalRef.current = null; }
-      }, MUSIC_FADE_STEP_MS);
-    }
-  }, [musicEnabled, voiceActive]);
-  useEffect(() => () => {
-    if (musicFadeIntervalRef.current) { clearInterval(musicFadeIntervalRef.current); musicFadeIntervalRef.current = null; }
-    if (musicFadeDelayRef.current) { clearTimeout(musicFadeDelayRef.current); musicFadeDelayRef.current = null; }
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
-  }, []);
+  useBackgroundMusic({ musicEnabled, voiceActive, workspaceScreenVisible, hasEnteredWorkspace, setUiError });
 
   const baseFilename = useCallback((name: string) => name.replace(/\.html$/, ''), []);
   const flashSaved = useCallback((code: string) => {
