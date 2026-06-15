@@ -16,6 +16,7 @@ import { hasSupportedOllamaTranscribeModel, isGemma426b, isGemma431b, isPlainGem
 import { auditHtml } from './htmlAudit';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import type { AppLanguage } from './components/WelcomeScreen';
+import { ACTIVE_DRAFT_FILENAME, useDraftAutosave } from './hooks/useDraftAutosave';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
 const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
@@ -25,8 +26,6 @@ const MUSIC_FADE_OUT_DELAY_MS = 150;  // brief pause before fade starts when mic
 const MUSIC_FADE_OUT_MS = 300;        // time to reach 0
 const MUSIC_FADE_IN_MS = 500;        // time to ramp back to normal after mic closes
 const MUSIC_FADE_STEP_MS = 16;        // ~60 fps
-const ACTIVE_DRAFT_FILENAME = '__active_draft';
-const DRAFT_AUTOSAVE_DELAY_MS = 700;
 
 function titleToFilename(html: string, fallback: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -248,7 +247,6 @@ export default function App() {
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
   const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const draftAutosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSave = useRef(false);
   const streamStartSaved = useRef<string | null>(null);
   const filenameRef = useRef(filename);
@@ -269,23 +267,7 @@ export default function App() {
       setHasEnteredWorkspace(true);
     }
   }, [runtimeStatus, workspaceScreenVisible]);
-  useEffect(() => {
-    if (draftAutosaveTimerRef.current) {
-      clearTimeout(draftAutosaveTimerRef.current);
-      draftAutosaveTimerRef.current = null;
-    }
-    const trimmed = displayCode.trim();
-    if (!trimmed) return;
-    draftAutosaveTimerRef.current = setTimeout(() => {
-      void window.electronAPI.saveAnimation(ACTIVE_DRAFT_FILENAME, trimmed, 'draft');
-    }, DRAFT_AUTOSAVE_DELAY_MS);
-    return () => {
-      if (draftAutosaveTimerRef.current) {
-        clearTimeout(draftAutosaveTimerRef.current);
-        draftAutosaveTimerRef.current = null;
-      }
-    };
-  }, [displayCode]);
+  useDraftAutosave(displayCode);
   useEffect(() => {
     if (!thinkingAvailable && chatThinkEnabled) {
       setChatThinkEnabled(false);
@@ -390,10 +372,6 @@ export default function App() {
     }
   }, [musicEnabled, voiceActive]);
   useEffect(() => () => {
-    if (draftAutosaveTimerRef.current) {
-      clearTimeout(draftAutosaveTimerRef.current);
-      draftAutosaveTimerRef.current = null;
-    }
     if (musicFadeIntervalRef.current) { clearInterval(musicFadeIntervalRef.current); musicFadeIntervalRef.current = null; }
     if (musicFadeDelayRef.current) { clearTimeout(musicFadeDelayRef.current); musicFadeDelayRef.current = null; }
     if (!audioRef.current) return;
