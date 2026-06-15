@@ -27,6 +27,7 @@ import {
   type SimpleMode,
 } from '../chatRouting';
 import { executeToolCall, parseInlineExecuteTool, type AuditSummary } from '../chatTools';
+import { isCodeCreationIntent, isVideoFrameExportIntent, isVideoUnderstandingIntent } from '../intent';
 
 export type { AuditSummary } from '../chatTools';
 
@@ -42,76 +43,6 @@ function stripHeavyMultimodalForUi(messages: ChatMessage[]): ChatMessage[] {
     const { images: _images, videos: _videos, ...rest } = message;
     return rest;
   });
-}
-
-function isCodeCreationIntent(text: string): boolean {
-  const lower = text.toLowerCase();
-  return [
-    'animation',
-    'animate',
-    'game',
-    'html',
-    'code',
-    'canvas',
-    'css',
-    'javascript',
-    'js',
-    'web page',
-    'webpage',
-    'editor',
-    'open in browser',
-  ].some((term) => lower.includes(term));
-}
-
-function isVideoFrameExportIntent(text: string): boolean {
-  const lower = text.toLowerCase();
-  return [
-    'save frame',
-    'save frames',
-    'save some frames',
-    'save a few frames',
-    'export frame',
-    'export frames',
-    'grab frame',
-    'grab frames',
-    'pick frame',
-    'pick frames',
-    'capture frame',
-    'capture frames',
-    'video frame',
-    'video frames',
-    'still frame',
-    'still frames',
-    'snapshot',
-    'snapshots',
-  ].some((term) => lower.includes(term));
-}
-
-function isVideoUnderstandingIntent(text: string): boolean {
-  const lower = text.toLowerCase();
-  return [
-    'what is happening',
-    "what's happening",
-    'what happens',
-    'what is this video about',
-    "what's this video about",
-    'what this video is about',
-    'what is in this video',
-    "what's in this video",
-    'what does this video show',
-    'describe this video',
-    'describe the video',
-    'summarize this video',
-    'summarise this video',
-    'about this video',
-    'tell me about this video',
-    'what do you see',
-    'who is in the video',
-    'what color',
-    'what colour',
-    'is it',
-    'are they',
-  ].some((term) => lower.includes(term));
 }
 
 export interface UseChatResult {

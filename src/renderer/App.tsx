@@ -20,6 +20,7 @@ import { ACTIVE_DRAFT_FILENAME, useDraftAutosave } from './hooks/useDraftAutosav
 import { usePanelResize } from './hooks/usePanelResize';
 import { useAutoSaveOnStreamEnd } from './hooks/useAutoSaveOnStreamEnd';
 import { useBackgroundMusic } from './hooks/useBackgroundMusic';
+import { shouldUseDraftForMessage } from './intent';
 
 const MUSIC_ENABLED_KEY = 'g4k-background-music-enabled';
 const THINKING_DISABLED_MODELS_KEY = 'g4k-thinking-disabled-models';
@@ -30,15 +31,6 @@ function pointsToMmproj(filePath: string): boolean {
 
 function getInputText(input: string | { text: string }): string {
   return typeof input === 'string' ? input : input.text;
-}
-
-function shouldUseDraftForMessage(text: string): boolean {
-  const lower = text.toLowerCase();
-  return [
-    'fix', 'broken', 'bug', 'review', 'debug', 'check', 'edit', 'change', 'update',
-    'continue', 'improve', 'make it', 'add', 'remove', 'color', 'colour',
-    'faster', 'slower', 'bigger', 'smaller', 'wrong',
-  ].some((term) => lower.includes(term));
 }
 
 function pickDefaultLlamaCppCodingModel(models: string[]): string {
