@@ -29,6 +29,8 @@ export interface Obs {
 export interface GS {
   phase: 'idle' | 'running' | 'dead';
   score: number;
+  /** Cumulative semicolon-collection bonus; persists across ticks (score is otherwise recomputed from elapsed time). */
+  bonusTotal: number;
   ry: number;
   rx: number;
   jumping: boolean;
@@ -49,6 +51,7 @@ export function mkGS(): GS {
   return {
     phase: 'idle',
     score: 0,
+    bonusTotal: 0,
     ry: 0,
     rx: START_RX,
     jumping: false,
@@ -113,6 +116,7 @@ export function tickRunningState(
 ): TickRunningResult {
   let {
     score,
+    bonusTotal,
     ry,
     rx,
     jumping,
@@ -210,10 +214,14 @@ export function tickRunningState(
     }
   }
 
-  score += bonus;
+  // Bonus must persist: `score` is recomputed from elapsed time every tick, so a
+  // collected semicolon (removed from `obs` the same tick) would otherwise vanish
+  // after a single frame. Accumulate into bonusTotal, then fold it into the score.
+  bonusTotal += bonus;
+  score += bonusTotal;
 
   if (dead) {
-    const gs: GS = { ...current, phase: 'dead', score, obs: kept };
+    const gs: GS = { ...current, phase: 'dead', score, bonusTotal, obs: kept };
     const newHighScore = score > bestSoFar ? score : undefined;
     return { gs, newHighScore };
   }
@@ -221,6 +229,7 @@ export function tickRunningState(
   const gs: GS = {
     phase: 'running',
     score,
+    bonusTotal,
     ry,
     rx,
     jumping,

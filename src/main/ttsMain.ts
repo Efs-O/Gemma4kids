@@ -139,7 +139,13 @@ function scanVoices(): VoiceInfo[] {
       const model = path.join(dir, f);
       const jsonPath = model + '.json';
       if (!fs.existsSync(jsonPath)) continue;
-      const cfg = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')) as Record<string, unknown>;
+      let cfg: Record<string, unknown>;
+      try {
+        cfg = JSON.parse(fs.readFileSync(jsonPath, 'utf-8')) as Record<string, unknown>;
+      } catch {
+        // One malformed voice config must not take down voice listing/playback for all voices.
+        continue;
+      }
       const audio = cfg.audio as Record<string, unknown> | undefined;
       const espeak = cfg.espeak as Record<string, unknown> | undefined;
       const sampleRate = typeof audio?.sample_rate === 'number' ? audio.sample_rate : 22050;

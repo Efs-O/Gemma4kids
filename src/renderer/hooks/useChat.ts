@@ -21,6 +21,7 @@ import {
   extractPartialHtml,
   formatRuntimeError,
   getLatestUserText,
+  isEditIntent,
   isSimpleMotionKeyword,
   previewText,
   type SimpleMode,
@@ -41,16 +42,6 @@ function stripHeavyMultimodalForUi(messages: ChatMessage[]): ChatMessage[] {
     const { images: _images, videos: _videos, ...rest } = message;
     return rest;
   });
-}
-
-function isEditIntent(text: string): boolean {
-  const lower = text.toLowerCase();
-  if (lower.startsWith('[context:')) return true;
-  return [
-    'fix', 'bug', 'broken', 'check', 'review', 'debug', 'read', 'update',
-    'change', 'edit', 'continue', 'improve', 'make it', 'add more',
-    'faster', 'slower', 'color', 'bigger', 'smaller', 'wrong',
-  ].some((term) => lower.includes(term));
 }
 
 function isCodeCreationIntent(text: string): boolean {
@@ -352,7 +343,7 @@ export function useChat(
         }
 
         setStatus('error');
-        setErrorMsg(formatRuntimeError(normalizedError, model));
+        setErrorMsg(formatRuntimeError(normalizedError, model, runtimeAdapter.runtime === 'llama_cpp' ? 'llama.cpp' : 'Ollama'));
         resetPendingStreamUi();
         setStreamingText('');
         setStreamingThinking('');

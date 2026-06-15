@@ -9,6 +9,7 @@
     "build": "node esbuild.config.mjs",
     "dev": "npm run build && electron .",
     "typecheck": "tsc --noEmit",
+    "test": "node scripts/run-tests.mjs",
     "download-voices": "node scripts/download-voices.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "dist": "npm run build && electron-builder",

@@ -42,8 +42,12 @@ export function previewText(text: string, max = 140): string {
 }
 
 export function extractHtml(text: string): string | null {
-  const match = text.match(/```(?:html)?\n([\s\S]*?)```/i);
-  return match ? match[1].trim() : null;
+  // Tolerate fences without a trailing newline / with CRLF / with trailing spaces
+  // (```html , ```html\r\n, ```\n). Falls back to a raw <!DOCTYPE…</html> scan so an
+  // un-fenced full document is still captured.
+  const fenced = text.match(/```(?:html)?[ \t]*\r?\n?([\s\S]*?)```/i);
+  if (fenced) return fenced[1].trim();
+  return extractPartialHtml(text);
 }
 
 export function extractPartialHtml(text: string): string | null {
@@ -69,7 +73,7 @@ export function getLatestUserText(history: ChatMessage[]): string {
   return '';
 }
 
-function isEditIntent(text: string): boolean {
+export function isEditIntent(text: string): boolean {
   const lower = text.toLowerCase();
   if (lower.startsWith('[context:')) return true;
   return [
@@ -234,12 +238,52 @@ export async function classifySimpleMode(
   return parsed;
 }
 
+/**
+ * Independent slicing of conversation vs tool messages can leave a tool result
+ * without its parent `assistant(tool_calls)`, or an assistant tool-call whose
+ * result was truncated away. Both shapes make Ollama / OpenAI-compatible servers
+ * reject the request (HTTP 400/500). This drops any such orphans so the kept
+ * window is always internally consistent.
+ */
+function pruneOrphanToolMessages(messages: ChatMessage[]): ChatMessage[] {
+  const calledIds = new Set<string>();
+  for (const m of messages) {
+    if (m.role === 'assistant' && m.tool_calls) {
+      for (const call of m.tool_calls) calledIds.add(call.id);
+    }
+  }
+  // 1. Drop tool results with no parent assistant tool-call in the window.
+  let result = messages.filter(
+    (m) => m.role !== 'tool' || (m.tool_call_id != null && calledIds.has(m.tool_call_id)),
+  );
+  // 2. Drop assistant tool-call messages whose results are not all present.
+  const resolvedIds = new Set<string>();
+  for (const m of result) {
+    if (m.role === 'tool' && m.tool_call_id) resolvedIds.add(m.tool_call_id);
+  }
+  result = result.filter(
+    (m) => m.role !== 'assistant' || !m.tool_calls?.length || m.tool_calls.every((call) => resolvedIds.has(call.id)),
+  );
+  // 3. Re-prune tool results orphaned by step 2.
+  const finalCalledIds = new Set<string>();
+  for (const m of result) {
+    if (m.role === 'assistant' && m.tool_calls) {
+      for (const call of m.tool_calls) finalCalledIds.add(call.id);
+    }
+  }
+  return result.filter(
+    (m) => m.role !== 'tool' || (m.tool_call_id != null && finalCalledIds.has(m.tool_call_id)),
+  );
+}
+
 export function buildRequestMessages(history: ChatMessage[], tier: ModelTier, simpleMode: SimpleMode | null): ChatMessage[] {
   const toolMessages = history.filter((m) => m.role === 'tool');
   const conversationMessages = history.filter((m) => m.role === 'user' || m.role === 'assistant');
   const keptConversation = conversationMessages.slice(-20);
   const keptTools = toolMessages.slice(-4);
-  const kept = history.filter((m) => keptConversation.includes(m) || keptTools.includes(m));
+  const kept = pruneOrphanToolMessages(
+    history.filter((m) => keptConversation.includes(m) || keptTools.includes(m)),
+  );
   const systemPrompt = getPromptForMode(history, tier, simpleMode);
   return [{ role: 'system', content: systemPrompt }, ...kept];
 }
@@ -254,7 +298,7 @@ function smallerModelHint(model: string): string {
   return 'a smaller Gemma model';
 }
 
-export function formatRuntimeError(error: Error, model: string): string {
+export function formatRuntimeError(error: Error, model: string, runtimeLabel = 'Ollama'): string {
   const raw = error.message.trim();
   const memoryMatch = raw.match(/requires more system memory\s+([0-9.]+\s+GiB)\s+than is available\s+([0-9.]+\s+GiB)/i);
 
@@ -266,7 +310,7 @@ export function formatRuntimeError(error: Error, model: string): string {
       'Try closing other apps, then press Try Again.',
       `If it still happens, ask a grown-up to switch to ${smallerModelHint(model)} in the model menu.`,
       '',
-      `Grown-up note: Ollama could not load ${model} because it needs ${required} RAM and only ${available} was free.`,
+      `Grown-up note: ${runtimeLabel} could not load ${model} because it needs ${required} RAM and only ${available} was free.`,
     ].join('\n');
   }
 

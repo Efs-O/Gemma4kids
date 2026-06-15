@@ -389,8 +389,12 @@ export function registerLlamaRuntimeIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('llama-cpp-clear-kv', async (_event, { port }: { port: number }) => {
+    // Prefer the live server's resolved port: the preferred port from setup may have
+    // been bumped (port+1/2/3) when it was busy, so trusting the renderer-supplied
+    // port would silently erase nothing.
+    const targetPort = getManagedLlamaResolvedPort() ?? port;
     try {
-      const res = await fetch(`http://127.0.0.1:${port}/slots/0?action=erase`, { method: 'POST' });
+      const res = await fetch(`http://127.0.0.1:${targetPort}/slots/0?action=erase`, { method: 'POST' });
       if (!res.ok) return { success: false, error: `HTTP ${res.status}` };
       return { success: true };
     } catch (e) {

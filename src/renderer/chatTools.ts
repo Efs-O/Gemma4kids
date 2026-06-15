@@ -86,7 +86,9 @@ export function parseInlineExecuteTool(text: string): ToolCall[] | null {
       break;
     }
 
-    cursor = nextField + 1;
+    // Advance past the whole `<|"|>,` separator, not just one char — otherwise the
+    // next key match starts mid-marker and every field after the first is dropped.
+    cursor = nextField + nextMarker.length;
   }
 
   if (Object.keys(args).length === 0) return null;
