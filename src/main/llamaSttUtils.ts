@@ -7,6 +7,7 @@ import { spawn } from 'child_process';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { resolveLlamaServerCommand } from './llamaCppUtils';
 import { looksLikeTranscriptionRefusal, stripPromptEcho } from '../shared/transcription';
 
 export const LLAMA_STT_CTX_SIZE = 8192;
@@ -126,74 +127,39 @@ export function validateSttConfig(config: LlamaCppSttConfig): LlamaCppHealthResu
 }
 
 export function resolveSttServerCommand(serverPath: string): { command: string; args: string[] } {
-  const trimmed = serverPath.trim();
-  if (!trimmed) throw new Error('llama-server binary path is empty.');
-
-  if (!path.isAbsolute(trimmed)) return { command: trimmed, args: [] };
-
-  const candidates: string[] = [];
-  if (fs.existsSync(trimmed)) {
-    const st = fs.statSync(trimmed);
-    if (st.isFile()) {
-      candidates.push(trimmed);
-    } else if (st.isDirectory()) {
-      const exeName = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server';
-      candidates.push(path.join(trimmed, exeName));
-    }
-  } else {
-    candidates.push(trimmed);
-    if (process.platform === 'win32' && !path.extname(trimmed)) {
-      candidates.push(`${trimmed}.exe`);
-    }
-  }
-
-  for (const candidate of candidates) {
-    try {
-      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-        return { command: candidate, args: [] };
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  throw new Error(`llama-server binary not found at ${trimmed}.`);
+  // Delegate to the main resolver so a directory / newest-build layout
+  // (e.g. <root>\llama.cpp-bNNNN\llama-server.exe) resolves identically to the
+  // coding server. The previous STT-only copy only checked <dir>\llama-server.exe
+  // directly and failed when the exe lived in a build subfolder.
+  return resolveLlamaServerCommand(serverPath);
 }
 
 function resolveMtmdCliCommand(serverPath: string): { command: string; args: string[] } {
-  const trimmed = serverPath.trim();
-  if (!trimmed) throw new Error('llama-server binary path is empty.');
-
   const cliName = process.platform === 'win32' ? 'llama-mtmd-cli.exe' : 'llama-mtmd-cli';
-  const serverExeName = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server';
+
+  // Resolve the real llama-server exe first (handles dir / newest-build subdirs),
+  // then look for llama-mtmd-cli beside it.
+  let resolvedServer: string;
+  try {
+    resolvedServer = resolveLlamaServerCommand(serverPath).command;
+  } catch {
+    resolvedServer = serverPath.trim();
+  }
 
   const candidates: string[] = [];
-  if (!path.isAbsolute(trimmed)) {
-    candidates.push(trimmed.replace(/llama-server(?:\.exe)?$/i, cliName));
-    candidates.push(cliName);
-  } else if (fs.existsSync(trimmed)) {
-    const st = fs.statSync(trimmed);
-    if (st.isFile()) {
-      const dir = path.dirname(trimmed);
-      const base = path.basename(trimmed);
-      if (base.toLowerCase() === serverExeName.toLowerCase()) {
-        candidates.push(path.join(dir, cliName));
-      }
-      candidates.push(path.join(dir, cliName));
-    } else if (st.isDirectory()) {
-      candidates.push(path.join(trimmed, cliName));
-    }
+  if (path.isAbsolute(resolvedServer)) {
+    candidates.push(path.join(path.dirname(resolvedServer), cliName));
   } else {
-    const dir = path.dirname(trimmed);
-    candidates.push(path.join(dir, cliName));
+    candidates.push(resolvedServer.replace(/llama-server(?:\.exe)?$/i, cliName));
+    candidates.push(cliName);
   }
 
   for (const candidate of candidates) {
     try {
-      if (path.isAbsolute(candidate) && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      if (!path.isAbsolute(candidate)) {
         return { command: candidate, args: [] };
       }
-      if (!path.isAbsolute(candidate)) {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
         return { command: candidate, args: [] };
       }
     } catch {
