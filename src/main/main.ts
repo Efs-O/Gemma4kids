@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { ensureAnimationsDir, registerAnimationIpcHandlers } from './animationStore';
 import { cleanupLlamaRuntimeOnQuit, registerLlamaRuntimeIpcHandlers } from './llamaRuntime';
+import { reapStaleManagedProcesses } from './llamaCppUtils';
 import { registerLlamaSttIpcHandlers } from './llamaSttRuntime';
 import { registerVideoPreprocessIpcHandlers } from './videoPreprocess';
 import { registerTtsIpcHandlers } from './ttsMain';
@@ -85,6 +86,8 @@ if (!gotSingleInstanceLock) {
       app.setAppUserModelId('com.gemma4kids.app');
     }
     Menu.setApplicationMenu(null);
+    // Kill any llama-server orphaned by a previous crash/force-close that still holds VRAM.
+    reapStaleManagedProcesses();
     ensureAnimationsDir();
     session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
       callback(permission === 'media');

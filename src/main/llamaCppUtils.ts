@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron';
+import { spawn, spawnSync, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import net from 'net';
 import path from 'path';
@@ -505,6 +506,146 @@ export function resolveLlamaServerCommand(serverPath: string): { command: string
       `(on Windows, often ...\\bin\\llama-server.exe) or the folder that contains a ` +
       `llama.cpp-bNNNN build.`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Managed-process lifecycle: force-kill + crash-orphan reaping.
+//
+// A spawned llama-server holds GPU VRAM until it exits. On Windows a plain
+// ChildProcess.kill() can leave it alive, and if the app crashes or is
+// force-closed before before-quit cleanup runs, the child is orphaned and keeps
+// the VRAM. We (1) force-kill the whole process tree on quit and (2) persist
+// spawned PIDs to a file so the next launch can reap any survivors.
+// ---------------------------------------------------------------------------
+
+const LLAMA_MANAGED_PID_FILE = 'llama-cpp-managed-pids.json';
+const MANAGED_PROCESS_IMAGE_HINTS = ['llama-server', 'llama-mtmd-cli'] as const;
+
+function getManagedPidFilePath(): string {
+  return path.join(app.getPath('userData'), LLAMA_MANAGED_PID_FILE);
+}
+
+function readManagedPids(): number[] {
+  try {
+    const parsed: unknown = JSON.parse(fs.readFileSync(getManagedPidFilePath(), 'utf8'));
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((v): v is number => typeof v === 'number' && Number.isInteger(v) && v > 0);
+  } catch {
+    return [];
+  }
+}
+
+function writeManagedPids(pids: number[]): void {
+  try {
+    fs.writeFileSync(getManagedPidFilePath(), JSON.stringify([...new Set(pids)]), 'utf8');
+  } catch {
+    // best-effort: a missing pid file only disables crash-orphan reaping
+  }
+}
+
+/** Remember a spawned llama process so a later launch can reap it if we crash. */
+export function recordManagedPid(pid: number | undefined): void {
+  if (!pid) return;
+  const pids = readManagedPids();
+  if (!pids.includes(pid)) {
+    pids.push(pid);
+    writeManagedPids(pids);
+  }
+}
+
+/** Drop a PID from the reap list once it has exited cleanly. */
+export function forgetManagedPid(pid: number | undefined): void {
+  if (!pid) return;
+  writeManagedPids(readManagedPids().filter((p) => p !== pid));
+}
+
+/**
+ * Force-terminate a spawned process and its children, then wait for exit.
+ * Windows uses `taskkill /T /F` (a plain kill can leave the VRAM-holding
+ * llama-server alive); POSIX escalates SIGTERM -> SIGKILL after the timeout.
+ */
+export async function killProcessTree(proc: ChildProcess | null, timeoutMs = 4000): Promise<void> {
+  if (!proc || proc.pid === undefined) return;
+  const pid = proc.pid;
+  if (proc.exitCode !== null || proc.killed) {
+    forgetManagedPid(pid);
+    return;
+  }
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const done = (): void => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      forgetManagedPid(pid);
+      resolve();
+    };
+    proc.once('exit', done);
+    timer = setTimeout(() => {
+      if (proc.exitCode === null && !proc.killed) {
+        try {
+          proc.kill('SIGKILL');
+        } catch {
+          // already exited
+        }
+      }
+      done();
+    }, timeoutMs);
+    if (process.platform === 'win32') {
+      try {
+        spawn('taskkill', ['/pid', String(pid), '/t', '/f'], { windowsHide: true });
+      } catch {
+        try {
+          proc.kill();
+        } catch {
+          // already exited
+        }
+      }
+    } else {
+      try {
+        proc.kill('SIGTERM');
+      } catch {
+        // already exited
+      }
+    }
+  });
+}
+
+/** True if `pid` is still alive AND is one of our llama processes (guards PID reuse). */
+function isManagedProcessStillLlama(pid: number): boolean {
+  try {
+    const res =
+      process.platform === 'win32'
+        ? spawnSync('tasklist', ['/fi', `PID eq ${pid}`, '/fo', 'csv', '/nh'], { encoding: 'utf8', windowsHide: true })
+        : spawnSync('ps', ['-p', String(pid), '-o', 'comm='], { encoding: 'utf8' });
+    const out = (res.stdout ?? '').toLowerCase();
+    return MANAGED_PROCESS_IMAGE_HINTS.some((hint) => out.includes(hint));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Kill llama.cpp servers orphaned by a previous run that crashed or was
+ * force-closed before before-quit cleanup finished. Call once at startup.
+ */
+export function reapStaleManagedProcesses(): void {
+  const pids = readManagedPids();
+  if (pids.length === 0) return;
+  for (const pid of pids) {
+    if (!isManagedProcessStillLlama(pid)) continue;
+    try {
+      if (process.platform === 'win32') {
+        spawnSync('taskkill', ['/pid', String(pid), '/t', '/f'], { windowsHide: true });
+      } else {
+        process.kill(pid, 'SIGKILL');
+      }
+    } catch {
+      // best-effort
+    }
+  }
+  writeManagedPids([]);
 }
 
 export async function canReachLlamaServer(port: number, timeoutMs: number): Promise<boolean> {

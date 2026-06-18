@@ -16,6 +16,9 @@ import {
   resolveLlamaServerCommand,
   canReachLlamaServer,
   resolveLocalServerPort,
+  killProcessTree,
+  recordManagedPid,
+  forgetManagedPid,
 } from './llamaCppUtils';
 import { streamLlamaChat } from './llamaCppStream';
 
@@ -52,29 +55,7 @@ async function stopManagedLlamaServer(): Promise<void> {
   if (!current) return;
 
   managedLlamaServer = null;
-  const proc = current.process;
-  if (!proc) {
-    return;
-  }
-  if (proc.exitCode !== null || proc.killed) {
-    return;
-  }
-
-  await new Promise<void>((resolve) => {
-    const timer = setTimeout(() => {
-      if (proc.exitCode === null && !proc.killed) {
-        proc.kill();
-      }
-      resolve();
-    }, 3000);
-
-    proc.once('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-
-    proc.kill();
-  });
+  await killProcessTree(current.process);
 }
 
 async function unloadOllamaModels(models: string[]): Promise<void> {
@@ -210,6 +191,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
     appendLlamaRuntimeLog(logPath, `[spawn:config] ctx_size=${String(ctxSize)} startup_timeout_s=${String(Math.round(startupTimeoutMs / 1000))}`);
     appendLlamaRuntimeLog(logPath, `[spawn] ${commandInfo.command} ${spawnArgs.join(' ')}`);
     const proc = spawn(commandInfo.command, spawnArgs, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    recordManagedPid(proc.pid);
 
     let spawnProcessError: string | null = null;
     proc.once('error', (err) => {
@@ -232,6 +214,7 @@ async function ensureManagedLlamaServer(config: LlamaCppConfig): Promise<LlamaCp
       appendLlamaRuntimeLog(logPath, `[stderr] ${text.trimEnd()}`);
     });
     proc.once('exit', (code, signal) => {
+      forgetManagedPid(proc.pid);
       appendLlamaRuntimeLog(logPath, `[exit] code=${String(code)} signal=${String(signal)}`);
     });
 

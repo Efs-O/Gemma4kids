@@ -1,7 +1,7 @@
 import { type IpcMain } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import path from 'path';
-import { resolveGgufPath, resolveLocalServerPort } from './llamaCppUtils';
+import { resolveGgufPath, resolveLocalServerPort, killProcessTree, recordManagedPid, forgetManagedPid } from './llamaCppUtils';
 import { getManagedLlamaResolvedPort } from './llamaRuntime';
 import { buildTranscribePrompt } from '../shared/transcription';
 import {
@@ -52,25 +52,7 @@ export async function stopManagedSttServer(): Promise<void> {
   if (!current) return;
 
   managedSttServer = null;
-  const proc = current.process;
-  if (!proc) return;
-  if (proc.exitCode !== null || proc.killed) return;
-
-  await new Promise<void>((resolve) => {
-    const timer = setTimeout(() => {
-      if (proc.exitCode === null && !proc.killed) {
-        proc.kill();
-      }
-      resolve();
-    }, 3000);
-
-    proc.once('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-
-    proc.kill();
-  });
+  await killProcessTree(current.process);
 }
 
 async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaCppHealthResult> {
@@ -168,6 +150,7 @@ async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaC
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     });
+    recordManagedPid(proc.pid);
 
     let spawnProcessError: string | null = null;
     proc.once('error', (err) => {
@@ -190,6 +173,7 @@ async function ensureManagedSttServer(config: LlamaCppSttConfig): Promise<LlamaC
       appendSttRuntimeLog(logPath, `[stderr] ${text.trimEnd()}`);
     });
     proc.once('exit', (code, signal) => {
+      forgetManagedPid(proc.pid);
       appendSttRuntimeLog(logPath, `[exit] code=${String(code)} signal=${String(signal)}`);
     });
 
